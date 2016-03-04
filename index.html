@@ -1,573 +1,79 @@
-
- <!DOCTYPE HTML>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  
-    <title>褚哥说|</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
-    
-    <meta name="author" content="Valleylord">
-    
-    <meta name="description" content="Valleylord&#39;s Blog">
-    
-    
-    
-    
-    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
-    
-    
-    <link rel="icon" href="/img/favicon.ico">
-    
-    
-    <link rel="apple-touch-icon" href="/img/author.jpg">
-    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
-    
-
+---
+layout: default
+title: "首页：Home"
+---
+<!-- 
+<h1 class="page-header">
+  <small>
+    {{ site.description }}
+  </small>
+</h1>
+-->
+<!-- Loop output paged posts -->
+<div id="index" class="row">
+    <div class="post-area">
+     	 <div class="post-list-body">
+        <div post-cate="All">
+        <ul class="posts">
+	{% for post in paginator.posts %}
+	<li>	
+	<h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
+	<span class="date">{{ post.date | date_to_string }}</span>
 	
-	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
-	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
-	<script>hljs.initHighlightingOnLoad();</script>
-	
-
-    <link rel="stylesheet" href="/css/style.css" type="text/css">
-
-
-</head>
-
-  <body>
-    <header>
-      <div>
-		
-			<div id="textlogo">
-				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
-				<h2 class="blog-motto">我想写一些东西</h2>
-			</div>
-			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
-			</a></div>
-			<nav class="animated">
-				<ul><li> <a href="/atom.xml">RSS</a> </li>
-                    <ul>
-					 
-						<li><a href="/">首页</a></li>
-					
-						<li><a href="/archives">归档</a></li>
-					
-						<li><a href="/tags">标签</a></li>
-					
-						<li><a href="/links">链接</a></li>
-					
-						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
-					
-						<li><a href="/about">关于</a></li>
-					
-					<li>
-					
-					</li>
-                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
-
-				</ul>
-			</nav>
-</div>
-
-    </header>
-    <div id="container" class="clearfix">
-      <div id="main">
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201602-kubernetes-install/" title="Kubernetes 安装（Centos环境）" itemprop="url">
-      
-        Kubernetes 安装（Centos环境）
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >本文主要参考12。
-物理环境和网络
-理论上，Kubernetes将服务放在两台主机上。第一台主机，centos-master，是 Kubernetes 主节点，主要运行kube-apiserver, kube-controller-manager, 和 kube-schedule</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-02-28T06:41:52.000Z" itemprop="datePublished">2016-02-28</time>
-      
-          <a href="/post/201602-kubernetes-install/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201602-kubernetes-concepts2/" title="Kubernetes 原理简介（续）" itemprop="url">
-      
-        Kubernetes 原理简介（续）
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >Kubernetes 的调度流程
-Controller Manager 是集群内部的管理控制中心，负责集群内的 Node、Pod副本、Endpoint、Namespace、Service Account、Resource Quota 等的管理，并执行自动化修复流程，以确保集群处于</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-02-20T06:51:08.000Z" itemprop="datePublished">2016-02-20</time>
-      
-          <a href="/post/201602-kubernetes-concepts2/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201602-mycat-multinode-sql/" title="MyCAT多节点sql" itemprop="url">
-      
-        MyCAT多节点sql
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >MyCAT在多节点（MultiNode）的查询和事务上提供了非常不错的支持，但也有一些限制，本文将部分特性予以讨论。
-多分片排序查询
-在执行类似这样的sql，select * from travelrecord order by fee limit 100000,100，的时候，</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-02-13T07:14:32.000Z" itemprop="datePublished">2016-02-13</time>
-      
-          <a href="/post/201602-mycat-multinode-sql/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201601-mycat-sharding/" title="MyCAT分片" itemprop="url">
-      
-        MyCAT分片
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >MyCAT提供了多种分片规则，本文以实例展示这些常用的分片方法。
-ER分片
-传统的表分片多数是采用连续（如时间分片）或离散（如hash分片）分片，这样分片在有表join的时候，需要访问所有分片上的表，消耗巨大。ER分片解决了这个问题，将有关联的数据放在同一个分片上，这样，在需要表</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-01-31T02:56:40.000Z" itemprop="datePublished">2016-01-31</time>
-      
-          <a href="/post/201601-mycat-sharding/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201601-kubernetes-concepts/" title="Kubernetes原理简介" itemprop="url">
-      
-        Kubernetes原理简介
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >Kubernetes是Google开源的容器集群管理系统。它构建Ddocker技术之上，为容器化的应用提供资源调度、部署运行、服务发现、扩容缩容等整一套功能，本质上可看作是基于容器技术的mini-PaaS平台。本文旨在梳理Kubernetes的架构、概念及基本工作流1234。
-
-</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-01-30T09:58:27.000Z" itemprop="datePublished">2016-01-30</time>
-      
-          <a href="/post/201601-kubernetes-concepts/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201601-mycat-log-analysis/" title="MyCAT 日志分析" itemprop="url">
-      
-        MyCAT 日志分析
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >MyCAT 的日志还是相对比较简明的，看系统细节的话需要打开debug级别的 log，修改log4j.xml，
-12345&amp;lt;root&amp;gt;  &amp;lt;level value=&quot;debug&quot; /&amp;gt;  &amp;lt;appender-ref ref=&quot;FILE&quot; /&amp;gt; </p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-01-23T06:50:21.000Z" itemprop="datePublished">2016-01-23</time>
-      
-          <a href="/post/201601-mycat-log-analysis/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201601-docker-shipyard/" title="Shipyard管理Docker容器" itemprop="url">
-      
-        Shipyard管理Docker容器
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >Shipyard 是一个基于 Web 的 Docker 管理工具,支持多 host,可以把多个 Docker host 上的 containers 统一管理;可以查看 images,甚至 build images;并提供 RESTful API 等等。
-Shipyard 的部署</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-01-23T02:47:00.000Z" itemprop="datePublished">2016-01-23</time>
-      
-          <a href="/post/201601-docker-shipyard/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201601-quantlib-install/" title="Ubuntu上完全编译安装QuantLib" itemprop="url">
-      
-        Ubuntu上完全编译安装QuantLib
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >QuantLib 是一个基于 boost 的 Quant 程序库。QuantLib 的安装比较简单1，本文在 Ubuntu上安装 Quantlib1.7.1。
-解包 QuantLib-1.7.tar.gz 后，使用./configure 来配置编译环境，也可以用./config</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-01-20T11:18:00.000Z" itemprop="datePublished">2016-01-20</time>
-      
-          <a href="/post/201601-quantlib-install/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201601-boost-install/" title="Ubuntu上完全编译安装boost" itemprop="url">
-      
-        Ubuntu上完全编译安装boost
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >boost是C++世界中相当优秀的第三方库，被选入STL的也有不少，其中用到的C++奇技淫巧更是数不胜数。
-安装依赖
-boost 在类 Unix 系统上的安装，可以参考官方文档的 Get Started，除此之外，网上的博客1234也有很多。本文在 Ubuntu14.04 上</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-01-19T12:48:00.000Z" itemprop="datePublished">2016-01-19</time>
-      
-          <a href="/post/201601-boost-install/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-  <section class="post" itemscope itemprop="blogPost">
-  <article>
-    <h1 itemprop="name">
-      
-        <a href="/post/201601-mycat-readwrite/" title="MyCAT读写分离" itemprop="url">
-      
-        MyCAT读写分离
-      </a>
-    </h1>
-    
-     
-           <p itemprop="description" >MyCAT的一个典型应用是用于数据库的读写分离，本文以Mysql为例，展示读写分离的MyCAT应用场景。本次操作使用的是Ubuntu14.04。
-安装Mysql主从复制
-本文仅仅展示最简单的Mysql主从复制配置，实际使用中应该会更加复杂。
-先配置主Mysql，先要修改/etc/</p>
-        
-    
-    <p class="article-more-link">
-      <time datetime="2016-01-16T07:14:00.000Z" itemprop="datePublished">2016-01-16</time>
-      
-          <a href="/post/201601-mycat-readwrite/">阅读更多&raquo;</a>
-      
-    </p>
-
-  </article>
-</section>
-
-
-  <nav id="page-nav" class="clearfix">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
-  </nav>
-
-</div>
-      
-<div id="asidepart">
-<div id="authorInfo">
-	
-		<div class="author-logo"></div>		
-	
-	
-	<section class="author-info">
-		
-			<p> 欢迎来到Valleylord的博客！</p>
-		
-		
-			<p>	本博的文章尽量原创。</p>
-		
-	</section>
-	 
-	<div class="social-font" class="clearfix">
-		
-		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
-		
-		
-		
-		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
-		
-		
+	<hr>
+	<p>{% if post.excerpt.size > 32 %}{{ post.excerpt }}{% else %}{{ post.content | strip_html | strip_newlines | truncate: 160 }}{% endif %}</p>
+		<p> <a href="{{ post.url }}"><span >阅读全文 &raquo; </span></a></p>
+	<hr>
+	</li>
+	{% endfor %}
+	</ul>
+	<!-- Pager indicator -->
+	<ul class="pager">
+	  {% if paginator.previous_page %} {% if paginator.previous_page == 1 %}
+	  <li class="previous">
+	    <a href="{{ site.url }}/">
+	      &larr; Older
+	    </a>
+	  </li>
+	  {% else %}
+	  <li class="previous">
+	    <a href="{{ site.url }}/page{{ paginator.previous_page }}">
+	      &larr; Older
+	    </a>
+	  </li>
+	  {% endif %} {% endif %} {% if paginator.next_page %}
+	  <li class="next">
+	    <a href="{{ site.url }}/page{{ paginator.next_page }}">
+	      Newer &rarr;
+	    </a>
+	  </li>
+	  {% endif %}
+	</ul>
 	</div>
-</div>
-<aside class="clearfix">
+	
 
+	 
+       {% for category in site.categories %}
+	<div post-cate="{{category | first}}">
 
-  
-  <div class="archiveslist">
-    <p class="asidetitle"><a href="/archives">归档</a></p>
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
-  </div>
-
-
-  
-<div class="categorieslist">
-	<p class="asidetitle">分类</p>
-		<ul>
-		
-			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
-		
-			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
-		
-			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
-		
-			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
-		
-			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
-		
-			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
-		
-			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
-		
-			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
-		
-			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
-		
-			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
-		
-			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
-		
-			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
-		
-			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
-		
-		</ul>
-</div>
-
-
-  
-<div class="tagslist">
-	<p class="asidetitle">标签</p>
-		<ul class="clearfix">
-		
-			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
-		
-			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
-		
-			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
-		
-			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
-		
-			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
-		
-			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
-		
-			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
-		
-			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
-		
-			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
-		
-			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
-		
-			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
-		
-			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
-		
-			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
-		
-			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
-		
-			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
-		
-			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
-		
-			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
-		
-			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
-		
-			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
-		
-			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
-		
-		</ul>
-</div>
-
-
-  
-  <div class="tagcloudlist">
-    <p class="asidetitle">标签云</p>
-    <div class="tagcloudlist clearfix">
-       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
-    </div>
-  </div>
-
-
-  <div class="linkslist">
-  <p class="asidetitle">友情链接</p>
-    <ul>
-      <!--
-      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
-      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
-      -->
-    </ul>
-</div>
-
-  <div class="rsspart">
-	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
-</div>
-
-</aside>
-</div>
-    </div>
-    <footer><div id="footer" >
+          <ul class="posts">
+            {% for posts in category  %}
+              {% for post in posts %}
+                {% if post.url %}
+		<li>
+                  <a href="{{ post.url }}" class="post-list-item">
+                    <h2>{{ post.title }}</h2>
+                    <span class="date">{{ post.date | date: "%b %-d, %Y" }}</span>
+                  </a>
+		</li>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </ul>
+	</div>
+        {% endfor %}
+	
+	 </div>
 
 </div>
-</footer>
-    <script src="/js/jquery-2.1.0.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function(){ 
-  //back to top
-  function backToTop(){
-    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
-    buttonHTML.appendTo($("body"));
-    var buttonToTop = $("#back-top");
-    // hide #back-top first
-    buttonToTop.hide();
-
-    // fade in #back-top
-    $(function() {
-        $(window).scroll(function() {
-            if ($(this).scrollTop() > 200) {
-                buttonToTop.fadeIn();
-            } else {
-                buttonToTop.fadeOut();
-            }
-        });
-        // scroll body to 0px on click
-        buttonToTop.click(function() {
-            $('body,html').animate({
-                scrollTop: 0
-            }, 800);
-            return false;
-        });
-    });
-  }
-  backToTop();
-
-  $('.navbar').click(function(){
-    $('header nav').toggleClass('shownav');
-  });
-  var myWidth = 0;
-  function getSize(){
-    if( typeof( window.innerWidth ) == 'number' ) {
-      myWidth = window.innerWidth;
-    } else if( document.documentElement && document.documentElement.clientWidth) {
-      myWidth = document.documentElement.clientWidth;
-    };
-  };
-  var m = $('#main'),
-      a = $('#asidepart'),
-      c = $('.closeaside'),
-      ta = $('#toc.toc-aside');
-  $(window).resize(function(){
-    getSize(); 
-    if (myWidth >= 1024) {
-      $('header nav').removeClass('shownav');
-    }else
-    {
-      m.removeClass('moveMain');
-      a.css('display', 'block').removeClass('fadeOut');
-        
-    }
-  });
-
-  var show = true;
-  c.click(function(){
-    if(show == true){
-        a.addClass('fadeOut').css('display', 'none');
-        ta.css('display', 'block').addClass('fadeIn');
-        m.addClass('moveMain');  
-    }else{
-        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
-        ta.css('display', 'none'); 
-        m.removeClass('moveMain');
-        $('#toc.toc-aside').css('display', 'none');
-    }
-    show = !show;
-  });
-});
-</script>
-
-
-
-
-
-
-
-  </body>
- </html>
+</div>
