@@ -1,0 +1,534 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Kubernetes 安装（Centos环境） | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="本文主要参考12。
+物理环境和网络
+理论上，Kubernetes将服务放在两台主机上。第一台主机，centos-master，是 Kubernetes 主节点，主要运行kube-apiserver, kube-controller-manager, 和 kube-scheduler，以及 etcd。">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201602-kubernetes-install/" title="Kubernetes 安装（Centos环境）" itemprop="url">Kubernetes 安装（Centos环境）</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2016-02-28T06:41:52.000Z" itemprop="datePublished">2016-02-28</time>
+    更新日期:<time datetime="2016-02-28T14:27:11.131Z" itemprop="dateModified">2016-02-28</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">物理环境和网络</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">yum 源配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">安装 Kubernetes</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">4.</span> <span class="toc-text">节点配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">5.</span> <span class="toc-text">主节点配置和启动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">6.</span> <span class="toc-text">工作节点配置和启动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">7.</span> <span class="toc-text">检查 Kubernetes 运行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">8.</span> <span class="toc-text">常用脚本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">9.</span> <span class="toc-text">启动一个 mysql</span></a></li></ol>
+		</div>
+		
+		<p>本文主要参考<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a><a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>。</p>
+<h2>物理环境和网络</h2>
+<p>理论上，Kubernetes将服务放在两台主机上。第一台主机，centos-master，是 Kubernetes 主节点，主要运行kube-apiserver, kube-controller-manager, 和 kube-scheduler，以及 etcd。另一台主机，centos-minion，是工作节点，主要运行 kubelet, proxy, cadvisor 和 docker。</p>
+<p>本文简单处理，物理机只有1台，分别配置 host 如下。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">192.168.2.202   centos-master</div><div class="line">192.168.2.202   centos-minion</div></pre></td></tr></table></figure></p>
+<p>centos-master 操作系统是 Centos 7。</p>
+<h2>yum 源配置</h2>
+<p>增加 Kubernetes 的 yum 源，<code>sudo vi /etc/yum.repos.d/virt7-docker-common-release.repo</code>，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">[virt7-docker-common-release]</span></div><div class="line"><span class="setting">name=<span class="value">virt7-docker-common-release</span></span></div><div class="line"><span class="setting">baseurl=<span class="value">http://cbs.centos.org/repos/virt7-docker-common-release/x86_64/os/</span></span></div><div class="line"><span class="setting">gpgcheck=<span class="value"><span class="number">0</span></span></span></div></pre></td></tr></table></figure></p>
+<h2>安装 Kubernetes</h2>
+<blockquote>
+<p>注意：Kubernetes 目前尚不能支持 Docker 的最新版，如果本机已经安装 Docker，建议先删除 Docker。</p>
+</blockquote>
+<p>由于已经配置 yum 源，安装就比较简单，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum <span class="operator"><span class="keyword">install</span> <span class="comment">--enablerepo=virt7-docker-common-release kubernetes etcd</span></span></div></pre></td></tr></table></figure></p>
+<h2>节点配置</h2>
+<p>在所有主机上，做如下配置，<code>vi /etc/kubernetes/config</code>，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># logging to stderr means we get it in the systemd journal</span></div><div class="line"><span class="variable">KUBE_LOGTOSTDERR=</span><span class="string">"--logtostderr=true"</span></div><div class="line"></div><div class="line"><span class="comment"># journal message level, 0 is debug</span></div><div class="line"><span class="variable">KUBE_LOG_LEVEL=</span><span class="string">"--v=0"</span></div><div class="line"></div><div class="line"><span class="comment"># Should this cluster be allowed to run privileged docker containers</span></div><div class="line"><span class="variable">KUBE_ALLOW_PRIV=</span><span class="string">"--allow-privileged=false"</span></div><div class="line"></div><div class="line"><span class="comment"># How the controller-manager, scheduler, and proxy find the apiserver</span></div><div class="line"><span class="variable">KUBE_MASTER=</span><span class="string">"--master=http://centos-master:8080"</span></div><div class="line"></div><div class="line"><span class="comment"># Comma separated list of nodes in the etcd cluster</span></div><div class="line"><span class="variable">KUBE_ETCD_SERVERS=</span><span class="string">"--etcd-servers=http://centos-master:2379"</span></div></pre></td></tr></table></figure></p>
+<blockquote>
+<p>注意，上述的 KUBE_ETCD_SERVERS 参数要根据 etcd 的实际情况来配置，etcd 的配置请在 <code>/etc/etcd/etcd.conf</code>。</p>
+</blockquote>
+<p>在主节点和工作节点上禁用防火墙，因为 docker 并不擅长防火墙规则管理，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">systemctl disable iptables-services firewalld</div><div class="line">systemctl <span class="keyword">stop</span> iptables-services firewalld</div></pre></td></tr></table></figure></p>
+<h2>主节点配置和启动</h2>
+<p>在主节点上配置如下，<code>vi /etc/kubernetes/apiserver</code></p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># The address on the local server to listen to.</span></div><div class="line"><span class="variable">KUBE_API_ADDRESS=</span><span class="string">"--address=0.0.0.0"</span></div><div class="line"></div><div class="line"><span class="comment"># The port on the local server to listen on.</span></div><div class="line"><span class="variable">KUBE_API_PORT=</span><span class="string">"--port=8080"</span></div><div class="line"></div><div class="line"><span class="comment"># How the replication controller and scheduler find the kube-apiserver</span></div><div class="line"><span class="variable">KUBE_MASTER=</span><span class="string">"--master=http://centos-master:8080"</span></div><div class="line"></div><div class="line"><span class="comment"># Port kubelets listen on</span></div><div class="line"><span class="variable">KUBELET_PORT=</span><span class="string">"--kubelet-port=10250"</span></div><div class="line"></div><div class="line"><span class="comment"># Address range to use for services</span></div><div class="line"><span class="variable">KUBE_SERVICE_ADDRESSES=</span><span class="string">"--service-cluster-ip-range=10.254.0.0/16"</span></div><div class="line"></div><div class="line"><span class="comment"># Add your own!</span></div><div class="line"><span class="variable">KUBE_API_ARGS=</span><span class="string">""</span></div></pre></td></tr></table></figure></p>
+<p>然后用以下命令启动，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> etcd kube-apiserver kube-controller-manager kube-scheduler; <span class="keyword">do</span> </div><div class="line">    systemctl restart <span class="variable">$SERVICES</span></div><div class="line">    systemctl enable <span class="variable">$SERVICES</span></div><div class="line">    systemctl status <span class="variable">$SERVICES</span> </div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<p>将以上脚本保存在脚本<code>start_kubernetes.sh</code>中。以下是运行输出，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line">[root@Centos-L410 kubernetes]# ./start_kubernetes.sh </div><div class="line">● etcd.service - Etcd Server</div><div class="line">   Loaded: loaded (/usr/lib/systemd/system/etcd.service; enabled; vendor preset: disabled)</div><div class="line">   Active: active (running) since 日 2016-02-28 18:04:49 CST; 188ms ago</div><div class="line"> Main PID: 24669 (etcd)</div><div class="line">   CGroup: /system.slice/etcd.service</div><div class="line">           └─24669 /usr/bin/etcd <span class="comment">--name=default --data-dir=/var/lib/etcd/default.etcd --listen-client-urls=http://cen...</span></div><div class="line"></div><div class="line">2月 28 18:04:49 Centos-L410 etcd[24669]: election = 1000ms</div><div class="line">2月 28 18:04:49 Centos-L410 etcd[24669]: snapshot count = 10000</div><div class="line">2月 28 18:04:49 Centos-L410 etcd[24669]: advertise client URLs = http://centos-master:2379</div><div class="line">2月 28 18:04:49 Centos-L410 etcd[24669]: restarting member ce2a822cea30bfca in cluster 7e27652122e8b2ae at comm... 8613</div><div class="line">2月 28 18:04:49 Centos-L410 etcd[24669]: ce2a822cea30bfca became follower at term 7</div><div class="line">2月 28 18:04:49 Centos-L410 etcd[24669]: newRaft ce2a822cea30bfca [peers: [], term: 7, <span class="operator"><span class="keyword">commit</span>: <span class="number">8613</span>, applied: <span class="number">0.</span>..m: <span class="number">7</span>]</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">04</span>:<span class="number">49</span> Centos-L410 etcd[<span class="number">24669</span>]: <span class="keyword">starting</span> <span class="keyword">server</span>... [<span class="keyword">version</span>: <span class="number">2.2</span><span class="number">.2</span>, cluster <span class="keyword">version</span>: to_be_decided]</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">04</span>:<span class="number">49</span> Centos-L410 systemd[<span class="number">1</span>]: Started Etcd <span class="keyword">Server</span>.</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">04</span>:<span class="number">49</span> Centos-L410 etcd[<span class="number">24669</span>]: added <span class="keyword">local</span> member ce2a822cea30bfca [http://localhost:<span class="number">2380</span> http://loca..<span class="number">.8</span>b2ae</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">04</span>:<span class="number">49</span> Centos-L410 etcd[<span class="number">24669</span>]: <span class="keyword">set</span> the initial cluster <span class="keyword">version</span> <span class="keyword">to</span> <span class="number">2.2</span></div><div class="line">Hint: <span class="keyword">Some</span> <span class="keyword">lines</span> were ellipsized, <span class="keyword">use</span> -l <span class="keyword">to</span> <span class="keyword">show</span> <span class="keyword">in</span> <span class="keyword">full</span>.</div><div class="line">● kube-apiserver.service - Kubernetes API <span class="keyword">Server</span></div><div class="line">   Loaded: loaded (/usr/lib/systemd/system/kube-apiserver.service; enabled; vendor preset: disabled)</div><div class="line">   Active: active (running) since 日 2016-02-28 18:04:52 CST; 152ms ago</div><div class="line">     Docs: https://github.com/GoogleCloudPlatform/kubernetes</div><div class="line"> Main PID: 24726 (kube-apiserver)</div><div class="line">   CGroup: /system.slice/kube-apiserver.service</div><div class="line">           └─24726 /usr/bin/kube-apiserver <span class="comment">--logtostderr=true --v=0 --etcd-servers=http://centos-master:2379 --addres...</span></div><div class="line"></div><div class="line">2月 28 18:04:50 Centos-L410 systemd[1]: Starting Kubernetes API Server...</div><div class="line">2月 28 18:04:52 Centos-L410 systemd[1]: Started Kubernetes API Server.</div><div class="line">● kube-controller-manager.service - Kubernetes Controller Manager</div><div class="line">   Loaded: loaded (/usr/lib/systemd/system/kube-controller-manager.service; enabled; vendor preset: disabled)</div><div class="line">   Active: active (running) since 日 2016-02-28 18:04:52 CST; 207ms ago</div><div class="line">     Docs: https://github.com/GoogleCloudPlatform/kubernetes</div><div class="line"> Main PID: 24777 (kube-controller)</div><div class="line">   CGroup: /system.slice/kube-controller-manager.service</div><div class="line">           └─24777 /usr/bin/kube-controller-manager <span class="comment">--logtostderr=true --v=0 --master=http://centos-master:8080</span></div><div class="line"></div><div class="line">2月 28 18:04:52 Centos-L410 systemd[1]: Started Kubernetes Controller Manager.</div><div class="line">2月 28 18:04:52 Centos-L410 systemd[1]: Starting Kubernetes Controller Manager...</div><div class="line">2月 28 18:04:52 Centos-L410 kube-controller-manager[24777]: I0228 18:04:52.714705   24777 plugins.go:71] No cloud...ed.</div><div class="line">2月 28 18:04:52 Centos-L410 kube-controller-manager[24777]: I0228 18:04:52.722761   24777 nodecontroller.go:133] ...er.</div><div class="line">2月 28 18:04:52 Centos-L410 kube-controller-manager[24777]: E0228 18:04:52.722944   24777 controllermanager.go:27...er.</div><div class="line">Hint: Some lines were ellipsized, <span class="operator"><span class="keyword">use</span> -l <span class="keyword">to</span> <span class="keyword">show</span> <span class="keyword">in</span> <span class="keyword">full</span>.</span></div><div class="line">● kube-scheduler.service - Kubernetes Scheduler <span class="keyword">Plugin</span></div><div class="line">   Loaded: loaded (/usr/lib/systemd/system/kube-scheduler.service; enabled; vendor preset: disabled)</div><div class="line">   Active: active (running) since 日 2016-02-28 18:04:52 CST; 187ms ago</div><div class="line">     Docs: https://github.com/GoogleCloudPlatform/kubernetes</div><div class="line"> Main PID: 24829 (kube-scheduler)</div><div class="line">   CGroup: /system.slice/kube-scheduler.service</div><div class="line">           └─24829 /usr/bin/kube-scheduler <span class="comment">--logtostderr=true --v=0 --master=http://centos-master:8080</span></div><div class="line"></div><div class="line">2月 28 18:04:52 Centos-L410 systemd[1]: Started Kubernetes Scheduler Plugin.</div><div class="line">2月 28 18:04:52 Centos-L410 systemd[1]: Starting Kubernetes Scheduler Plugin...</div></pre></td></tr></table></figure></p>
+<h2>工作节点配置和启动</h2>
+<p>在工作节点上配置如下，<code>vi /etc/kubernetes/kubelet</code>，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># The address for the info server to serve on</span></div><div class="line"><span class="variable">KUBELET_ADDRESS=</span><span class="string">"--address=0.0.0.0"</span></div><div class="line"></div><div class="line"><span class="comment"># The port for the info server to serve on</span></div><div class="line"><span class="variable">KUBELET_PORT=</span><span class="string">"--port=10250"</span></div><div class="line"></div><div class="line"><span class="comment"># You may leave this blank to use the actual hostname</span></div><div class="line"><span class="variable">KUBELET_HOSTNAME=</span><span class="string">"--hostname-override=centos-minion"</span></div><div class="line"></div><div class="line"><span class="comment"># Location of the api-server</span></div><div class="line"><span class="variable">KUBELET_API_SERVER=</span><span class="string">"--api-servers=http://centos-master:8080"</span></div><div class="line"></div><div class="line"><span class="comment"># Add your own!</span></div><div class="line"><span class="variable">KUBELET_ARGS=</span><span class="string">""</span></div></pre></td></tr></table></figure></p>
+<p>然后用以下命令启动，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> kube-proxy kubelet docker; <span class="keyword">do</span> </div><div class="line">    systemctl restart <span class="variable">$SERVICES</span></div><div class="line">    systemctl enable <span class="variable">$SERVICES</span></div><div class="line">    systemctl status <span class="variable">$SERVICES</span> </div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<p>将以上脚本保存在脚本<code>start_kubernetes_work.sh</code>中。以下是运行输出，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div></pre></td><td class="code"><pre><div class="line">[root@Centos-L410 kubernetes]<span class="comment"># ./start_kubernetes_work.sh </span></div><div class="line">● kube-proxy.service - Kubernetes Kube-Proxy Server</div><div class="line">   Loaded: loaded (/usr/lib/systemd/system/kube-proxy.service; enabled; vendor preset: disabled)</div><div class="line">   Active: active (running) since 日 <span class="number">2016</span>-<span class="number">02</span>-<span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> CST; <span class="number">307</span>ms ago</div><div class="line">     Docs: https://github.com/GoogleCloudPlatform/kubernetes</div><div class="line"> Main PID: <span class="number">24880</span> (kube-proxy)</div><div class="line">   CGroup: /system.slice/kube-proxy.service</div><div class="line">           ├─<span class="number">24880</span> /usr/bin/kube-proxy <span class="variable">--logtostderr=</span><span class="constant">true</span> <span class="variable">--v=</span><span class="number">0</span> <span class="variable">--master=</span>http://centos-master:<span class="number">8080</span></div><div class="line">           └─<span class="number">24939</span> iptables -w -C KUBE-PORTALS-HOST -t nat -m comment --comment default/kubernetes:https -p tcp -m tc...</div><div class="line"></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> Centos-L410 systemd[<span class="number">1</span>]: Started Kubernetes Kube-Proxy Server.</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> Centos-L410 systemd[<span class="number">1</span>]: Starting Kubernetes Kube-Proxy Server...</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> Centos-L410 kube-proxy[<span class="number">24880</span>]: E0228 <span class="number">18</span>:<span class="number">05</span>:<span class="number">15.932316</span>   <span class="number">24880</span> server.go:<span class="number">324</span>] Not trying iptables...found</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> Centos-L410 kube-proxy[<span class="number">24880</span>]: E0228 <span class="number">18</span>:<span class="number">05</span>:<span class="number">15.966946</span>   <span class="number">24880</span> proxier.go:<span class="number">193</span>] Error removing pur...ctory</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> Centos-L410 kube-proxy[<span class="number">24880</span>]: Try `iptables -h' <span class="constant">or</span> 'iptables --help' for more information.</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> Centos-L410 kube-proxy[<span class="number">24880</span>]: E0228 <span class="number">18</span>:<span class="number">05</span>:<span class="number">15.970419</span>   <span class="number">24880</span> proxier.go:<span class="number">197</span>] Error removing pur...ctory</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">15</span> Centos-L410 kube-proxy[<span class="number">24880</span>]: Try `iptables -h' <span class="constant">or</span> 'iptables --help' for more information.</div><div class="line">Hint: Some lines were ellipsized, use -l to show <span class="keyword">in</span> full.</div><div class="line">● kubelet.service - Kubernetes Kubelet Server</div><div class="line">   Loaded: loaded (/usr/lib/systemd/system/kubelet.service; enabled; vendor preset: disabled)</div><div class="line">   Active: active (running) since 日 <span class="number">2016</span>-<span class="number">02</span>-<span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">17</span> CST; <span class="number">282</span>ms ago</div><div class="line">     Docs: https://github.com/GoogleCloudPlatform/kubernetes</div><div class="line"> Main PID: <span class="number">25036</span> (kubelet)</div><div class="line">   CGroup: /system.slice/kubelet.service</div><div class="line">           └─<span class="number">25036</span> /usr/bin/kubelet <span class="variable">--logtostderr=</span><span class="constant">true</span> <span class="variable">--v=</span><span class="number">0</span> <span class="variable">--api-servers=</span>http://centos-master:<span class="number">8080</span> <span class="variable">--address=</span><span class="number">0.0</span>.<span class="number">0</span>....</div><div class="line"></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">17</span> Centos-L410 systemd[<span class="number">1</span>]: Started Kubernetes Kubelet Server.</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">17</span> Centos-L410 systemd[<span class="number">1</span>]: Starting Kubernetes Kubelet Server...</div><div class="line">● docker.service - Docker Application Container Engine</div><div class="line">   Loaded: loaded (/usr/lib/systemd/system/docker.service; enabled; vendor preset: disabled)</div><div class="line">   Active: active (running) since 日 <span class="number">2016</span>-<span class="number">02</span>-<span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> CST; <span class="number">245</span>ms ago</div><div class="line">     Docs: http://docs.docker.com</div><div class="line"> Main PID: <span class="number">25120</span> (docker)</div><div class="line">   CGroup: /system.slice/docker.service</div><div class="line">           └─<span class="number">25120</span> /usr/bin/docker daemon</div><div class="line"></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.069063505+08:00"</span> <span class="variable">level=</span>info <span class="variable">msg=</span><span class="string">"Option De...idge"</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.069114767+08:00"</span> <span class="variable">level=</span>info <span class="variable">msg=</span><span class="string">"Option De...idge"</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.081358591+08:00"</span> <span class="variable">level=</span>warning <span class="variable">msg=</span><span class="string">"Runnin...us 1"</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.089480121+08:00"</span> <span class="variable">level=</span>info <span class="variable">msg=</span><span class="string">"Firewalld...alse"</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.386325219+08:00"</span> <span class="variable">level=</span>info <span class="variable">msg=</span><span class="string">"Loading c...art."</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: ..........</div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.391606225+08:00"</span> <span class="variable">level=</span>info <span class="variable">msg=</span><span class="string">"Loading c...one."</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.391633742+08:00"</span> <span class="variable">level=</span>info <span class="variable">msg=</span><span class="string">"Daemon ha...tion"</span></div><div class="line"><span class="number">2</span>月 <span class="number">28</span> <span class="number">18</span>:<span class="number">05</span>:<span class="number">18</span> Centos-L410 docker[<span class="number">25120</span>]: <span class="variable">time=</span><span class="string">"2016-02-28T18:05:18.391658744+08:00"</span> <span class="variable">level=</span>info <span class="variable">msg=</span><span class="string">"Docker da...entos</span></div><div class="line">2月 28 18:05:18 Centos-L410 systemd[1]: Started Docker Application Container Engine.</div><div class="line">Hint: Some lines were ellipsized, use -l to show in full.</div></pre></td></tr></table></figure></p>
+<h2>检查 Kubernetes 运行</h2>
+<p>运行以下命令可以查到工作节点，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">[root<span class="property">@Centos</span>-L410 kubernetes]<span class="comment"># kubectl get nodes</span></div><div class="line">NAME            LABELS                                 STATUS    AGE</div><div class="line">centos-minion   kubernetes.io/hostname=centos-minion   Ready     <span class="number">50</span>s</div><div class="line">[root<span class="property">@Centos</span>-L410 kubernetes]<span class="comment"># kubectl cluster-info</span></div><div class="line">Kubernetes master <span class="keyword">is</span> running at <span class="attribute">http</span>:<span class="regexp">//</span><span class="attribute">localhost</span>:<span class="number">8080</span></div></pre></td></tr></table></figure></p>
+<h2>常用脚本</h2>
+<p>常用的 Kubernetes 的脚本，总共6个，分别是对主节点和工作节点的启动、停止和获取状态，如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#start_kubernetes.sh</span></div><div class="line"></div><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> etcd kube-apiserver kube-controller-manager kube-scheduler; <span class="keyword">do</span> </div><div class="line">    systemctl restart <span class="variable">$SERVICES</span></div><div class="line">    systemctl enable <span class="variable">$SERVICES</span></div><div class="line">    systemctl status <span class="variable">$SERVICES</span> </div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#start_kubernetes_work.sh</span></div><div class="line"></div><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> kube-proxy kubelet docker; <span class="keyword">do</span> </div><div class="line">    systemctl restart <span class="variable">$SERVICES</span></div><div class="line">    systemctl enable <span class="variable">$SERVICES</span></div><div class="line">    systemctl status <span class="variable">$SERVICES</span> </div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#status_kubernetes.sh</span></div><div class="line"></div><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> etcd kube-apiserver kube-controller-manager kube-scheduler; <span class="keyword">do</span> </div><div class="line">    systemctl status <span class="variable">$SERVICES</span> </div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#status_kubernetes_work.sh</span></div><div class="line"></div><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> kube-proxy kubelet docker; <span class="keyword">do</span> </div><div class="line">    systemctl status <span class="variable">$SERVICES</span> </div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#stop_kubernetes.sh</span></div><div class="line"></div><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> etcd kube-apiserver kube-controller-manager kube-scheduler; <span class="keyword">do</span> </div><div class="line">    systemctl stop <span class="variable">$SERVICES</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#stop_kubernetes_work.sh</span></div><div class="line"></div><div class="line"><span class="keyword">for</span> SERVICES <span class="keyword">in</span> kube-proxy kubelet docker; <span class="keyword">do</span> </div><div class="line">    systemctl stop <span class="variable">$SERVICES</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure></p>
+<h2>启动一个 mysql</h2>
+<p>新建一个 mysql-pod.yaml 文件，用于描述 pod，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line">apiVersion: v1</div><div class="line">kind: Pod</div><div class="line">metadata:</div><div class="line">  <span class="property">name</span>: mysql</div><div class="line">  labels:</div><div class="line">    <span class="property">name</span>: mysql</div><div class="line">spec:</div><div class="line">  containers:</div><div class="line">    - resources:</div><div class="line">        limits :</div><div class="line">          cpu: <span class="number">0.5</span></div><div class="line">      image: docker.io/mysql</div><div class="line">      <span class="property">name</span>: mysql</div><div class="line">      env:</div><div class="line">        - <span class="property">name</span>: MYSQL_ROOT_PASSWORD</div><div class="line">          <span class="comment"># change this</span></div><div class="line">          value: <span class="string">"111111"</span></div><div class="line">      ports:</div><div class="line">        - containerPort: <span class="number">3306</span></div><div class="line">          hostPort: <span class="number">3326</span></div><div class="line">          <span class="property">name</span>: mysql</div><div class="line">      volumeMounts:</div><div class="line">          <span class="comment"># name must match the volume name below</span></div><div class="line">        - <span class="property">name</span>: mysql-persistent-storage</div><div class="line">          <span class="comment"># mount path within the container</span></div><div class="line">          mountPath: /var/lib/mysql</div><div class="line">  volumes:</div><div class="line">    - <span class="property">name</span>: mysql-persistent-storage</div><div class="line">      hostPath:</div><div class="line">        path: /home/arnes/kubernetes/mysql-kube-data</div></pre></td></tr></table></figure></p>
+<p>然后启动这个 pod，检查状态，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div></pre></td><td class="code"><pre><div class="line">[root@Centos-L410 kubernetes]# kubectl <span class="operator"><span class="keyword">create</span> -f mysql-pod.yaml </span></div><div class="line">pod <span class="string">"mysql"</span> created</div><div class="line">[root@Centos-L410 kubernetes]# kubectl <span class="keyword">get</span> pods</div><div class="line">NAME      READY     <span class="keyword">STATUS</span>    RESTARTS   AGE</div><div class="line">mysql     <span class="number">0</span>/<span class="number">1</span>       Pending   <span class="number">0</span>          <span class="number">31</span>s</div><div class="line">[root@Centos-L410 kubernetes]# kubectl <span class="keyword">get</span> pods mysql</div><div class="line">NAME      READY     <span class="keyword">STATUS</span>    RESTARTS   AGE</div><div class="line">mysql     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">8</span>s</div><div class="line">[root@Centos-L410 kubernetes]# kubectl <span class="keyword">describe</span> pod mysql </div><div class="line">Name:				mysql</div><div class="line">Namespace:			<span class="keyword">default</span></div><div class="line">Image(s):			docker.io/mysql</div><div class="line">Node:				centos-minion/<span class="number">192.168</span><span class="number">.2</span><span class="number">.202</span></div><div class="line"><span class="keyword">Start</span> <span class="keyword">Time</span>:			Sun, <span class="number">28</span> Feb <span class="number">2016</span> <span class="number">22</span>:<span class="number">21</span>:<span class="number">48</span> +<span class="number">0800</span></div><div class="line">Labels:				name=mysql</div><div class="line"><span class="keyword">Status</span>:				Running</div><div class="line">Reason:				</div><div class="line">Message:			</div><div class="line">IP:				<span class="number">172.17</span><span class="number">.1</span><span class="number">.26</span></div><div class="line">Replication Controllers:	&lt;none&gt;</div><div class="line">Containers:</div><div class="line">  mysql:</div><div class="line">    Container ID:	docker://<span class="number">4</span>ea08f19a85e71084bef939524f9adffd733944744fdb31dcfd25ba2ccb087fb</div><div class="line">    Image:		docker.io/mysql</div><div class="line">    Image ID:		docker://<span class="number">082e0</span>ea24cc00eced7b39d88f46e508ab83298f79e008b1e5d7fb0c928ff692b</div><div class="line">    QoS Tier:</div><div class="line">      cpu:	Guaranteed</div><div class="line">      memory:	BestEffort</div><div class="line">    Limits:</div><div class="line">      cpu:	<span class="number">500</span>m</div><div class="line">    Requests:</div><div class="line">      cpu:		<span class="number">500</span>m</div><div class="line">    State:		Running</div><div class="line">      Started:		Sun, <span class="number">28</span> Feb <span class="number">2016</span> <span class="number">22</span>:<span class="number">21</span>:<span class="number">55</span> +<span class="number">0800</span></div><div class="line">    Ready:		<span class="literal">True</span></div><div class="line">    Restart <span class="keyword">Count</span>:	<span class="number">0</span></div><div class="line">    Environment <span class="keyword">Variables</span>:</div><div class="line">      MYSQL_ROOT_PASSWORD:	<span class="number">111111</span></div><div class="line">Conditions:</div><div class="line">  Type		<span class="keyword">Status</span></div><div class="line">  Ready 	<span class="literal">True</span> </div><div class="line">Volumes:</div><div class="line">  mysql-persistent-storage:</div><div class="line">    Type:	HostPath (bare host directory volume)</div><div class="line">    Path:	/home/arnes/kubernetes/mysql-kube-<span class="keyword">data</span></div><div class="line"><span class="keyword">Events</span>:</div><div class="line">  FirstSeen	LastSeen	<span class="keyword">Count</span>	<span class="keyword">From</span>			SubobjectPath				Reason		Message</div><div class="line">  ─────────	────────	─────	────			─────────────				──────		───────</div><div class="line">  <span class="number">4</span>m		<span class="number">4</span>m		<span class="number">1</span>	{scheduler }							Scheduled	Successfully assigned mysql <span class="keyword">to</span> centos-minion</div><div class="line">  <span class="number">4</span>m		<span class="number">4</span>m		<span class="number">1</span>	{kubelet centos-minion}	implicitly required container POD	Pulled		Container image <span class="string">"registry.access.redhat.com/rhel7/pod-infrastructure:latest"</span> already present <span class="keyword">on</span> machine</div><div class="line">  <span class="number">4</span>m		<span class="number">4</span>m		<span class="number">1</span>	{kubelet centos-minion}	implicitly required container POD	Created		Created <span class="keyword">with</span> docker id <span class="number">84660e3722</span>fa</div><div class="line">  <span class="number">4</span>m		<span class="number">4</span>m		<span class="number">1</span>	{kubelet centos-minion}	implicitly required container POD	Started		Started <span class="keyword">with</span> docker id <span class="number">84660e3722</span>fa</div><div class="line">  <span class="number">4</span>m		<span class="number">4</span>m		<span class="number">1</span>	{kubelet centos-minion}	spec.containers{mysql}			Pulled		Container image <span class="string">"docker.io/mysql"</span> already present <span class="keyword">on</span> machine</div><div class="line">  <span class="number">4</span>m		<span class="number">4</span>m		<span class="number">1</span>	{kubelet centos-minion}	spec.containers{mysql}			Created		Created <span class="keyword">with</span> docker id <span class="number">4</span>ea08f19a85e</div><div class="line">  <span class="number">4</span>m		<span class="number">4</span>m		<span class="number">1</span>	{kubelet centos-minion}	spec.containers{mysql}			Started		Started <span class="keyword">with</span> docker id <span class="number">4</span>ea08f19a85e</div></pre></td></tr></table></figure></p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="https://github.com/kubernetes/kubernetes/blob/release-1.1/docs/getting-started-guides/centos/centos_manual_config.md" target="_blank" rel="external">https://github.com/kubernetes/kubernetes/blob/release-1.1/docs/getting-started-guides/centos/centos_manual_config.md</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://www.mamicode.com/info-detail-1129211.html" target="_blank" rel="external">http://www.mamicode.com/info-detail-1129211.html</a><a href="#fnref2">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Kubernetes/">Kubernetes</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Kubernetes/">Kubernetes</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201602-kubernetes-install/" data-title="Kubernetes 安装（Centos环境） | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+
+<div class="next">
+<a href="/post/201602-kubernetes-concepts2/"  title="Kubernetes 原理简介（续）">
+ <strong>NEXT:</strong><br/> 
+ <span>Kubernetes 原理简介（续）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">物理环境和网络</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">yum 源配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">安装 Kubernetes</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">4.</span> <span class="toc-text">节点配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">5.</span> <span class="toc-text">主节点配置和启动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">6.</span> <span class="toc-text">工作节点配置和启动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">7.</span> <span class="toc-text">检查 Kubernetes 运行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">8.</span> <span class="toc-text">常用脚本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">9.</span> <span class="toc-text">启动一个 mysql</span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

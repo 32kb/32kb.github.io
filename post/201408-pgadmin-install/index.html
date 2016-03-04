@@ -1,0 +1,533 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>pgAdmin源码安装 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="pgAdmin是Postgres的客户端管理工具，类似Oracle的sqldeveloper或者toad这样的工具。
+先去官网下载源码，本文使用的是pgAdmin3-1.18.1版本，源码下载地址在这里。然后解压。
+解压后的目录中，有README和INSTALL两个文件，其中详细说明了安装的步骤">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201408-pgadmin-install/" title="pgAdmin源码安装" itemprop="url">pgAdmin源码安装</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-08-10T06:51:00.000Z" itemprop="datePublished">2014-08-10</time>
+    更新日期:<time datetime="2014-12-03T01:15:14.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>pgAdmin是Postgres的客户端管理工具，类似Oracle的sqldeveloper或者toad这样的工具。</p>
+<p>先去官网下载源码，本文使用的是pgAdmin3-1.18.1版本，源码下载地址在<a href="http://ftp.postgresql.org/pub/pgadmin3/release/v1.18.1/src/pgadmin3-1.18.1.tar.gz" target="_blank" rel="external">这里</a>。然后解压。</p>
+<p>解压后的目录中，有README和INSTALL两个文件，其中详细说明了安装的步骤。这些步骤是标准的步骤，对各个系统来说可能略有一些差异，一些依赖有的系统已经安装了，有的没有。本文采用先安装，有问题再补的办法来安装。INSTALL中的安装步骤如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">bash bootstrap     <span class="comment"># Required only if building from a GIT checkout</span></div><div class="line">./configure</div><div class="line">make all</div><div class="line"><span class="built_in">sudo</span> make install</div></pre></td></tr></table></figure></p>
+<p>按INSTALL中的步骤先运行<code>bootstrap</code></p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment"># ./bootstrap</span></div><div class="line">Stamping the version number...</div><div class="line">Configuring the build system...</div><div class="line">+ aclocal</div><div class="line">./bootstrap: line <span class="number">38</span>: aclocal: command not found</div></pre></td></tr></table></figure></p>
+<p>缺少aclocal，需要安装libtool。命令如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div></pre></td><td class="code"><pre><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment"># yum install libtool</span></div><div class="line">Loaded plugins: fastestmirror, refresh-packagekit, security</div><div class="line">Loading mirror speeds from cached hostfile</div><div class="line"> * base: mirrors.<span class="number">163</span>.com</div><div class="line"> * extras: mirrors.<span class="number">163</span>.com</div><div class="line"> * updates: mirrors.<span class="number">163</span>.com</div><div class="line">Setting up Install Process</div><div class="line">Resolving Dependencies</div><div class="line">--&gt; Running transaction check</div><div class="line">---&gt; Package libtool.x86_64 <span class="number">0</span>:<span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6 will be installed</div><div class="line">--&gt; Processing Dependency: automake &gt;= <span class="number">1.4</span> <span class="keyword">for</span> package: libtool-<span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6.x86_64</div><div class="line">--&gt; Processing Dependency: autoconf &gt;= <span class="number">2.58</span> <span class="keyword">for</span> package: libtool-<span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6.x86_64</div><div class="line">--&gt; Running transaction check</div><div class="line">---&gt; Package autoconf.noarch <span class="number">0</span>:<span class="number">2.63</span>-<span class="number">5.1</span>.el6 will be installed</div><div class="line">---&gt; Package automake.noarch <span class="number">0</span>:<span class="number">1.11</span>.<span class="number">1</span>-<span class="number">4</span>.el6 will be installed</div><div class="line">--&gt; Finished Dependency Resolution</div><div class="line"></div><div class="line">Dependencies Resolved</div><div class="line"></div><div class="line">=======================================================================================================================================================================</div><div class="line"> Package                                 Arch                                  Version                                       Repository                           Size</div><div class="line">=======================================================================================================================================================================</div><div class="line">Installing:</div><div class="line"> libtool                                 x86_64                                <span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6                                base                                <span class="number">564</span> k</div><div class="line">Installing <span class="keyword">for</span> dependencies:</div><div class="line"> autoconf                                noarch                                <span class="number">2.63</span>-<span class="number">5.1</span>.el6                                  base                                <span class="number">781</span> k</div><div class="line"> automake                                noarch                                <span class="number">1.11</span>.<span class="number">1</span>-<span class="number">4</span>.el6                                  base                                <span class="number">550</span> k</div><div class="line"></div><div class="line">Transaction Summary</div><div class="line">=======================================================================================================================================================================</div><div class="line">Install       <span class="number">3</span> Package(s)</div><div class="line"></div><div class="line">Total download size: <span class="number">1.9</span> M</div><div class="line">Installed size: <span class="number">5.8</span> M</div><div class="line">Is this ok [y/N]: y</div><div class="line">Downloading Packages:</div><div class="line">(<span class="number">1</span>/<span class="number">3</span>): autoconf-<span class="number">2.63</span>-<span class="number">5.1</span>.el6.noarch.rpm                                                                                                         | <span class="number">781</span> kB     <span class="number">00</span>:<span class="number">00</span></div><div class="line">(<span class="number">2</span>/<span class="number">3</span>): automake-<span class="number">1.11</span>.<span class="number">1</span>-<span class="number">4</span>.el6.noarch.rpm                                                                                                         | <span class="number">550</span> kB     <span class="number">00</span>:<span class="number">00</span></div><div class="line">(<span class="number">3</span>/<span class="number">3</span>): libtool-<span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6.x86_64.rpm                                                                                                        | <span class="number">564</span> kB     <span class="number">00</span>:<span class="number">00</span></div><div class="line">-----------------------------------------------------------------------------------------------------------------------------------------------------------------------</div><div class="line">Total                                                                                                                                  <span class="number">532</span> kB/s | <span class="number">1.9</span> MB     <span class="number">00</span>:<span class="number">03</span></div><div class="line">Running rpm_check_debug</div><div class="line">Running Transaction Test</div><div class="line">Transaction Test Succeeded</div><div class="line">Running Transaction</div><div class="line">  Installing : autoconf-<span class="number">2.63</span>-<span class="number">5.1</span>.el6.noarch                                                                                                                        <span class="number">1</span>/<span class="number">3</span></div><div class="line">  Installing : automake-<span class="number">1.11</span>.<span class="number">1</span>-<span class="number">4</span>.el6.noarch                                                                                                                        <span class="number">2</span>/<span class="number">3</span></div><div class="line">  Installing : libtool-<span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6.x86_64                                                                                                                       <span class="number">3</span>/<span class="number">3</span></div><div class="line">  Verifying  : libtool-<span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6.x86_64                                                                                                                       <span class="number">1</span>/<span class="number">3</span></div><div class="line">  Verifying  : autoconf-<span class="number">2.63</span>-<span class="number">5.1</span>.el6.noarch                                                                                                                        <span class="number">2</span>/<span class="number">3</span></div><div class="line">  Verifying  : automake-<span class="number">1.11</span>.<span class="number">1</span>-<span class="number">4</span>.el6.noarch                                                                                                                        <span class="number">3</span>/<span class="number">3</span></div><div class="line"></div><div class="line">Installed:</div><div class="line">  libtool.x86_64 <span class="number">0</span>:<span class="number">2.2</span>.<span class="number">6</span>-<span class="number">15.5</span>.el6</div><div class="line"></div><div class="line">Dependency Installed:</div><div class="line">  autoconf.noarch <span class="number">0</span>:<span class="number">2.63</span>-<span class="number">5.1</span>.el6                                                     automake.noarch <span class="number">0</span>:<span class="number">1.11</span>.<span class="number">1</span>-<span class="number">4</span>.el6</div><div class="line"></div><div class="line">Complete!</div><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment"># ./bootstrap</span></div><div class="line">Stamping the version number...</div><div class="line">^[[AConfiguring the build system...</div><div class="line">+ aclocal</div><div class="line">+ autoheader</div><div class="line">+ cp <span class="operator">-f</span> config.rpath.in config/config.rpath</div><div class="line">+ automake --foreign --add-missing --copy</div><div class="line">+ autoconf</div><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment">#</span></div></pre></td></tr></table></figure></p>
+<p>看来<code>bootstrap</code>已经过了，下一步是<code>configure</code>，运行的时候报错，提示</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">configure: error: could <span class="operator">not</span> find <span class="operator">a</span> suitable C++ compiler <span class="built_in">to</span> build pgAdmin</div></pre></td></tr></table></figure></p>
+<p>原来是没有安装C++的编译环境，那就安装gcc，如下，输出比较长，不贴了</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment">#  yum install gcc-c++</span></div></pre></td></tr></table></figure></p>
+<p>安装完成后继续<code>configure</code>，仍然还是报错。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">configure: <span class="keyword">error</span>: Could <span class="keyword">not</span> find your wxWidgets installation. You might need <span class="keyword">to</span> use the --<span class="keyword">with</span>-wx=DIR configure <span class="keyword">option</span></div></pre></td></tr></table></figure></p>
+<p>于是安装wxGTK，用以下命令</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment"># yum install wxGTK wxGTK-devel</span></div></pre></td></tr></table></figure></p>
+<p>安装后继续<code>configure</code>，仍然还是报错。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">configure: <span class="keyword">error</span>: Could <span class="keyword">not</span> find your libxml2 installation. You might need <span class="keyword">to</span> use the --<span class="keyword">with</span>-libxml2=DIR configure <span class="keyword">option</span></div></pre></td></tr></table></figure></p>
+<p>还需要安装libxml2相关的东西，如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment"># yum install libxml2 libxml2-devel libxslt libxslt-devel</span></div></pre></td></tr></table></figure></p>
+<p>再次<code>configure</code>，提示成功，如下，中间内容省略，只贴最后部分</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">[root@anzhy pgadmin3-<span class="number">1.18</span>.<span class="number">1</span>]<span class="comment"># ./configure</span></div><div class="line"></div><div class="line">&lt;&lt;&lt;&lt;Omit Many Things Here......&gt;&gt;&gt;&gt;</div><div class="line"></div><div class="line">PostgreSQL directory:			/usr/local/pgsql</div><div class="line">PostgreSQL pg_config binary:		/usr/local/pgsql/bin/pg_config</div><div class="line">PostgreSQL version:			PostgreSQL <span class="number">9.3</span>.<span class="number">4</span></div><div class="line"></div><div class="line">PostgreSQL PQconninfoParse support:     Present</div><div class="line">PostgreSQL SSL support:			Missing</div><div class="line"></div><div class="line">wxWidgets directory:			/usr</div><div class="line">wxWidgets wx-config binary:		/usr/bin/wx-config</div><div class="line">wxWidgets version:			wxWidgets <span class="number">2.8</span>.<span class="number">12</span></div><div class="line"></div><div class="line">libxml2 directory:			/usr</div><div class="line">libxml2 xml2-config binary:		/usr/bin/xml2-config</div><div class="line">libxml2 version:			libxml2 <span class="number">2.7</span>.<span class="number">6</span></div><div class="line"></div><div class="line">libxslt directory:			/usr</div><div class="line">libxslt xslt-config binary:		/usr/bin/xslt-config</div><div class="line">libxslt version:			libxslt <span class="number">1.1</span>.<span class="number">26</span></div><div class="line"></div><div class="line">Building Database Designer:		No</div><div class="line"></div><div class="line">Building SSH Tunnel:			No</div><div class="line"></div><div class="line">Building a debug version of pgAdmin:	No</div><div class="line">Statically linking pgAdmin:		No</div><div class="line">Building a Mac OS X appbundle:		No</div><div class="line"></div><div class="line">sphinx-build executable:                &lt;not found&gt;</div><div class="line"></div><div class="line">pgAdmin configuration is now complete. You can now compile and</div><div class="line">install pgAdmin using <span class="string">'make; make install'</span>.</div></pre></td></tr></table></figure></p>
+<p>其实以上步骤中的依赖，如果已经知道缺少哪些了的话，也可以一次性安装完成。</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install libtool gcc-c++ wxGTK wxGTK-devel libxml2 libxml2-devel libxslt libxslt-devel</div></pre></td></tr></table></figure></p>
+<p>其实，以上依赖，在INSTALL中已经有描述，如下，而且安装的前3步基本就是在解决依赖</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">You will need:</div><div class="line"></div><div class="line">-<span class="ruby"> <span class="constant">A</span> modern development <span class="symbol">environment:</span></span></div><div class="line"></div><div class="line">    -<span class="ruby"> <span class="constant">GTK</span> <span class="number">2.2</span> <span class="keyword">or</span> above.</span></div><div class="line">    -<span class="ruby"> <span class="constant">GNU</span> automake <span class="number">1.9</span> <span class="keyword">or</span> above.</span></div><div class="line">    -<span class="ruby"> <span class="constant">GNU</span> autoconf <span class="number">2.59</span> <span class="keyword">or</span> above.</span></div><div class="line">    -<span class="ruby"> <span class="constant">GNU</span> gcc <span class="number">3.4</span> <span class="keyword">or</span> above.</span></div><div class="line"></div><div class="line">-<span class="ruby"> wxGTK <span class="number">2.8</span>.x from <span class="symbol">http:</span>/<span class="regexp">/www.wxwidgets.org/</span></span></div><div class="line">-<span class="ruby"> libxml2 <span class="number">2.6</span>.<span class="number">18</span> <span class="keyword">or</span> above from <span class="symbol">http:</span>/<span class="regexp">/www.xmlsoft.org/</span></span></div><div class="line">-<span class="ruby"> libxslt <span class="number">1.1</span>.x <span class="keyword">or</span> above from <span class="symbol">http:</span>/<span class="regexp">/www.xmlsoft.org/</span></span></div><div class="line">-<span class="ruby"> <span class="constant">PostgreSQL</span> <span class="number">8.4</span> <span class="keyword">or</span> above from <span class="symbol">http:</span>/<span class="regexp">/www.postgresql.org/</span></span></div><div class="line">-<span class="ruby"> <span class="constant">Sphinx</span> <span class="number">1.0</span> <span class="keyword">or</span> above from <span class="symbol">http:</span>/<span class="regexp">/sphinx.pocoo.org/</span></span></div></pre></td></tr></table></figure></p>
+<p>其中Sphinx应该不是必须的，证据就是，在没有它的情况下，<code>configure</code>也通过了。</p>
+<p>接下去就是make，make的时候报错，如下</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">make[<span class="number">3</span>]: Entering directory `/root/Downloads/pgadmin3-<span class="number">1.18</span><span class="number">.1</span>/xtra/png2c<span class="comment">'</span></div><div class="line">gcc -DHAVE_CONFIG_H -I. -I../.. -I../../pgadmin/include/libssh2   -I/usr/local/pgsql/include -I/usr/local/pgsql/include/server -I/usr/local/pgsql/include -DHAVE_CONNINFO_PARSE -I/usr/lib64/wx/include/gtk2-<span class="keyword">unicode</span>-release-<span class="number">2.8</span> -I/usr/include/wx-<span class="number">2.8</span> -D_FILE_OFFSET_BITS=<span class="number">64</span> -D_LARGE_FILES -D__WXGTK__ -DEMBED_XRC -I/usr/include/libxml2 -I/usr/include/libxml2  -O2 -MT png2c.o -MD -MP -MF .deps/png2c.Tpo -c -o png2c.o png2c.c</div><div class="line">mv -f .deps/png2c.Tpo .deps/png2c.Po</div><div class="line">gcc  -O2  -L/usr/local/pgsql/<span class="keyword">lib</span> -Wl,-<span class="keyword">as</span>-needed -L/usr/<span class="keyword">lib</span> -o png2c png2c.o  -L/usr/local/pgsql/<span class="keyword">lib</span> -lcrypto -lpq</div><div class="line">/usr/bin/ld: cannot find -lcrypto</div><div class="line">collect2: ld returned <span class="number">1</span> <span class="keyword">exit</span> status</div><div class="line">make[<span class="number">3</span>]: *** [png2c] <span class="keyword">Error</span> <span class="number">1</span></div><div class="line">make[<span class="number">3</span>]: Leaving directory `/root/Downloads/pgadmin3-<span class="number">1.18</span><span class="number">.1</span>/xtra/png2c<span class="comment">'</span></div><div class="line">make[<span class="number">2</span>]: *** [../xtra/png2c/png2c] <span class="keyword">Error</span> <span class="number">2</span></div><div class="line">make[<span class="number">2</span>]: Leaving directory `/root/Downloads/pgadmin3-<span class="number">1.18</span><span class="number">.1</span>/pgadmin<span class="comment">'</span></div><div class="line">make[<span class="number">1</span>]: *** [all-recursive] <span class="keyword">Error</span> <span class="number">1</span></div><div class="line">make[<span class="number">1</span>]: Leaving directory `/root/Downloads/pgadmin3-<span class="number">1.18</span><span class="number">.1</span><span class="comment">'</span></div><div class="line">make: *** [all] <span class="keyword">Error</span> <span class="number">2</span></div></pre></td></tr></table></figure></p>
+<p>提示<code>-lcrypto</code>找不到链接的lib，其实libcrypto应该已经安装(不然<code>configure</code>就应该要报错)，查一下安装在哪里了</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">[root@anzhy lib]<span class="comment"># locate libcrypto</span></div><div class="line">/usr/lib64/.libcrypto.so.<span class="number">1.0</span>.<span class="number">1</span>e.hmac</div><div class="line">/usr/lib64/.libcrypto.so.<span class="number">10</span>.hmac</div><div class="line">/usr/lib64/libcrypto.so.<span class="number">1.0</span>.<span class="number">1</span>e</div><div class="line">/usr/lib64/libcrypto.so.<span class="number">10</span></div></pre></td></tr></table></figure></p>
+<p>果然已经安装了，那就对libcrypto做一个软连接</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[root@anzhy ~]<span class="comment"># cd /usr/lib64</span></div><div class="line">[root@anzhy lib64]<span class="comment"># ln -s libcrypto.so.10 libcrypto.so</span></div></pre></td></tr></table></figure></p>
+<p>再次运行make，make的时间比较长，这次通过了，最后一段提示如下</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">Making all in src</div><div class="line">make[3]: Entering directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg/src'</span></div><div class="line">make[3]: Nothing to be done for <span class="smartquote">`all'</span>.</div><div class="line">make[3]: Leaving directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg/src'</span></div><div class="line">Making all in suse</div><div class="line">make[3]: Entering directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg/suse'</span></div><div class="line">make[3]: Nothing to be done for <span class="smartquote">`all'</span>.</div><div class="line">make[3]: Leaving directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg/suse'</span></div><div class="line">Making all in win32</div><div class="line">make[3]: Entering directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg/win32'</span></div><div class="line">make[3]: Nothing to be done for <span class="smartquote">`all'</span>.</div><div class="line">make[3]: Leaving directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg/win32'</span></div><div class="line">make[3]: Entering directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg'</span></div><div class="line">make[3]: Nothing to be done for <span class="smartquote">`all-am'</span>.</div><div class="line">make[3]: Leaving directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg'</span></div><div class="line">make[2]: Leaving directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1/pkg'</span></div><div class="line">make[2]: Entering directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1'</span></div><div class="line">make[2]: Leaving directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1'</span></div><div class="line">make[1]: Leaving directory <span class="smartquote">`/root/Downloads/pgadmin3-1.18.1'</span></div></pre></td></tr></table></figure></p>
+<p>然后就是make install，没有什么特别的，运行完就通过了。安装/usr/local/pgadmin3/，运行pgAdmin，提示错误，如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">[root@anzhy lib64]<span class="comment"># cd /usr/local/pgadmin3/</span></div><div class="line">[root@anzhy pgadmin3]<span class="comment"># ls</span></div><div class="line">bin  share</div><div class="line">[root@anzhy pgadmin3]<span class="comment"># cd bin</span></div><div class="line">[root@anzhy bin]<span class="comment"># ls</span></div><div class="line">pgadmin3</div><div class="line">[root@anzhy bin]<span class="comment"># ./pgadmin3</span></div><div class="line">./pgadmin3: error <span class="keyword">while</span> loading shared libraries: libpq.so.<span class="number">5</span>: cannot open shared object file: No such file or directory</div></pre></td></tr></table></figure></p>
+<p>libpq.so.5是Postgres的动态链接库，没有找到这个库，是因为没有将其配置在lib_path里面，要做如下配置，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[root@anzhy bin]<span class="comment"># export POSTGRESQLHOME=/usr/local/pgsql</span></div><div class="line">[root@anzhy bin]<span class="comment"># export LD_LIBRARY_PATH=$POSTGRESQLHOME/lib:$LD_LIBRARY_PATH</span></div><div class="line">[root@anzhy bin]<span class="comment"># ./pgadmin3</span></div></pre></td></tr></table></figure></p>
+<p>然后就能正常启动了。可以将上述两个环境变量放在.bashrc中，这样就可以不用每次都输入了。</p>
+<p>如果<code>su - postgres</code>来运行的话，会报错，gtk的问题，需要用xhost，如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">[postgres@anzhy bin]$ ./pgadmin3</div><div class="line">No protocol specified</div><div class="line">Error: Unable to initialize gtk, is DISPLAY <span class="keyword">set</span> properly?</div><div class="line">[postgres@anzhy bin]$ xhost +</div><div class="line">No protocol specified</div><div class="line">xhost:  unable to open display <span class="string">":0.0"</span></div><div class="line">[postgres@anzhy bin]$ <span class="built_in">sudo</span> xhost +</div><div class="line">[<span class="built_in">sudo</span>] password <span class="keyword">for</span> postgres:</div><div class="line">access control disabled, clients can connect from any host</div><div class="line">[postgres@anzhy bin]$ ./pgadmin3</div></pre></td></tr></table></figure></p>
+<p>如果有Oracle安装的经验的话，应该能很快想到这两个问题实际上是同一个，在此不再赘述。本文实验的截图如下，一并贴在下面</p>
+<p><img src="/images/201408-pgadmin-install/pgadmin1.png" alt=""></p>
+<p><img src="/images/201408-pgadmin-install/pgadmin2.png" alt=""></p>
+<p><img src="/images/201408-pgadmin-install/pgadmin3.png" alt=""></p>
+<p><img src="/images/201408-pgadmin-install/pgadmin4.png" alt=""></p>
+<p><img src="/images/201408-pgadmin-install/pgadmin5.png" alt=""></p>
+<p><img src="/images/201408-pgadmin-install/pgadmin6.png" alt=""></p>
+<p><img src="/images/201408-pgadmin-install/pgadmin7.png" alt=""></p>
+<p><img src="/images/201408-pgadmin-install/pgadmin8.png" alt=""></p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Postgres/">Postgres</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Postgres/">Postgres</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201408-pgadmin-install/" data-title="pgAdmin源码安装 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201408-psql-basic/" title="psql使用入门">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  psql使用入门</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201408-online-repl/"  title="Online REPL汇总(转载)">
+ <strong>NEXT:</strong><br/> 
+ <span>Online REPL汇总(转载)
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

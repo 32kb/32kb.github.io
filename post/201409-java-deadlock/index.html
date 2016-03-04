@@ -1,0 +1,520 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Java运行时死锁检测和分析 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="SUN JDK提供了一系列的运行时分析工具1可以用于分析运行时的JVM状况，这些工具包括jps、jstack、jstat、jinfo、jmap、jconsole、jvisualvm等。
+本文使用其中的部分工具来检测运行时是否发生死锁。先写一个运行时会发生死锁的程序，其实最经典的哲学家就餐问题2就是">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201409-java-deadlock/" title="Java运行时死锁检测和分析" itemprop="url">Java运行时死锁检测和分析</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-09-19T09:39:00.000Z" itemprop="datePublished">2014-09-19</time>
+    更新日期:<time datetime="2014-12-03T01:15:39.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>SUN JDK提供了一系列的运行时分析工具<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>可以用于分析运行时的JVM状况，这些工具包括jps、jstack、jstat、jinfo、jmap、jconsole、jvisualvm等。</p>
+<p>本文使用其中的部分工具来检测运行时是否发生死锁。先写一个运行时会发生死锁的程序，其实最经典的哲学家就餐问题<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>就是一个死锁的示例，以下程序对该程序略做修改，改成一个只要运行，就很容易（几乎是必然）发生死锁的版本。</p>
+<p>首先是Resource类，表示多个进程需要竞争的资源，即哲学家就餐问题中的“筷子”，如下，</p>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> problem1;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Resource</span> </span>{</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> id;</div><div class="line">    <span class="keyword">public</span> <span class="title">Resource</span>(<span class="keyword">int</span> id) { <span class="keyword">this</span>.id = id; }</div><div class="line">    <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getId</span>() { <span class="keyword">return</span> id; }</div><div class="line">    <span class="keyword">public</span> String <span class="title">toString</span>(){ <span class="keyword">return</span> <span class="string">""</span>+id; };</div><div class="line">}</div></pre></td></tr></table></figure></p>
+<p>然后是DeadLockExp类，表示会引发死锁的多个线程，即哲学家就餐问题中的“哲学家”，如下，</p>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> problem1;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DeadLockExp</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{</div><div class="line">      <span class="keyword">private</span> Resource myOwn, myNeed;</div><div class="line"></div><div class="line">      <span class="keyword">public</span> <span class="title">DeadLockExp</span>(Resource myOwn, Resource myNeed) {</div><div class="line">        <span class="keyword">this</span>.myOwn = myOwn; <span class="keyword">this</span>.myNeed = myNeed;</div><div class="line">      }</div><div class="line"></div><div class="line">      <span class="annotation">@Override</span></div><div class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">    	String threadName = Thread.currentThread().getName();</div><div class="line">        <span class="keyword">try</span> {</div><div class="line">          <span class="keyword">while</span>(<span class="keyword">true</span>) {</div><div class="line">            <span class="keyword">synchronized</span>(myOwn) {</div><div class="line">              System.out.println(<span class="string">"Thread "</span>+threadName+<span class="string">" has got Resource "</span>+myOwn);</div><div class="line">              Thread.sleep(<span class="number">1000</span>);</div><div class="line">              <span class="keyword">synchronized</span>(myNeed) {</div><div class="line">                System.out.println(<span class="string">"Thread "</span>+threadName+<span class="string">" has got Resource "</span>+myNeed);</div><div class="line">                Thread.sleep(<span class="number">1000</span>);</div><div class="line">                System.out.println(<span class="string">"Thread "</span>+threadName+<span class="string">"'s job has done."</span>);</div><div class="line">              }</div><div class="line">            }</div><div class="line">          }</div><div class="line">        } <span class="keyword">catch</span>(InterruptedException e) {}</div><div class="line">      }</div><div class="line">}</div></pre></td></tr></table></figure></p>
+<p>本文略作修改，把“哲学家”思考的时间和就餐的时间，这两段都去掉了。将问题中的两根筷子，改为<code>myOwn</code>和<code>myNeed</code>两个成员，表示本线程运行先后需要的资源。由于一定要引发死锁，将对两个成员加锁的间隔时间加长为1s。这样，所有线程同时启动，在1s内，每个线程都加锁了自己的资源，同时也都在请求别人的资源，就形成了死锁。而1s内，完成这些事情是几乎必然的，因此这个程序就一定会引发死锁。</p>
+<p>下面在main方法中初始化相互依赖关系，确保出现环形依赖，如下，</p>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> problem1;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</div><div class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Problem1</span> </span>{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">        <span class="keyword">int</span> num = <span class="number">4</span>;</div><div class="line">        Resource[] res = <span class="keyword">new</span> Resource[num];</div><div class="line">        ExecutorService exec = Executors.newFixedThreadPool(num);</div><div class="line"></div><div class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; num; i++){</div><div class="line">        	res[i] = <span class="keyword">new</span> Resource(i);</div><div class="line">        }</div><div class="line"></div><div class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; num; i++) {</div><div class="line">            exec.execute(<span class="keyword">new</span> DeadLockExp(res[i], res[(i+<span class="number">1</span>)%num]));</div><div class="line">        }</div><div class="line">        exec.shutdown();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure></p>
+<p>本例使用了4个线程（不是哲学家就餐问题中的5个），初始化<code>DeadLockExp</code>实例的时候，注意依赖关系为，DeadLockExp0-&gt;DeadLockExp1-&gt;DeadLockExp2-&gt;DeadLockExp3-&gt;DeadLockExp0。</p>
+<p>于是，运行这段程序的时候就会发现每个线程的第一次循环内就进入了死锁，输出为</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Thread pool-<span class="number">1</span>-thread-<span class="number">1</span> <span class="built_in">has</span> got Resource <span class="number">0</span></div><div class="line">Thread pool-<span class="number">1</span>-thread-<span class="number">3</span> <span class="built_in">has</span> got Resource <span class="number">2</span></div><div class="line">Thread pool-<span class="number">1</span>-thread-<span class="number">2</span> <span class="built_in">has</span> got Resource <span class="number">1</span></div><div class="line">Thread pool-<span class="number">1</span>-thread-<span class="number">4</span> <span class="built_in">has</span> got Resource <span class="number">3</span></div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-java-deadlock/deadlock-run.png" alt=""></p>
+<p>如果这4个线程有任何一个线程没有进入死锁的话，那应该会出现类似这样的输出，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="variable">Thread</span> pool-<span class="number">1</span>-thread-<span class="number">4</span>'s job has done.</div></pre></td></tr></table></figure></p>
+<p>本文是使用Eclipse来运行这个程序的，环境是Ubuntu Linux，下面开始用JDK提供的工具来检测这个死锁，先用jps，如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">~$ jps <span class="operator">-l</span> -m -v</div><div class="line"><span class="number">4004</span> /home/program/eclipse//plugins/org.eclipse.equinox.launcher_1.<span class="number">3.0</span>.v20130327-<span class="number">1440</span>.jar -os linux -ws gtk -arch x86_64 -showsplash /home/program/eclipse//plugins/org.eclipse.platform_4.<span class="number">3.2</span>.v20140221-<span class="number">1700</span>/splash.bmp -launcher /home/program/eclipse/eclipse -name Eclipse --launcher.library /home/program/eclipse//plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64_1.<span class="number">1.200</span>.v20140116-<span class="number">2212</span>/eclipse_1508.so -startup /home/program/eclipse//plugins/org.eclipse.equinox.launcher_1.<span class="number">3.0</span>.v20130327-<span class="number">1440</span>.jar --launcher.appendVmargs -exitdata <span class="number">22000</span>b -product org.eclipse.epp.package.standard.product -vm /home/program/jdk1.<span class="number">8.0</span>/bin/java -vmargs -Dosgi.requiredJavaVersion=<span class="number">1.6</span> -XX:MaxPermSize=<span class="number">256</span>m -Xms40m -Xmx512m -jar /home/program/eclipse//plugins/org.eclipse.equinox.launcher_1.<span class="number">3.0</span>.v20130327-<span class="number">1440</span>.jar -Dosgi.requiredJavaVersion=<span class="number">1.6</span> -XX:MaxPermSize=<span class="number">256</span>m -Xms40m -Xmx512m</div><div class="line"><span class="number">4633</span> sun.tools.jps.Jps <span class="operator">-l</span> -m -v -Denv.class.path=.:/home/program/jdk1.<span class="number">8.0</span>/lib:/home/program/jdk1.<span class="number">8.0</span>/lib/dt.jar:/home/program/jdk1.<span class="number">8.0</span>/lib/tools.jar -Dapplication.home=/home/program/jdk1.<span class="number">8.0</span> -Xms8m</div><div class="line"><span class="number">4607</span> problem1.Problem1 -Dfile.encoding=UTF-<span class="number">8</span></div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-java-deadlock/jps.png" alt=""></p>
+<p>可以发现发生死锁的进程是4607，用linux下的工具pidstat（需要安装sysstat）可以看到该进程的线程情况，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">~$ pidstat -p <span class="number">4607</span> -u <span class="number">1</span> <span class="number">1</span> -t</div><div class="line"></div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">15</span>秒      TGID       TID    %usr %system  %guest    %CPU   CPU  Command</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒      <span class="number">4607</span>         -    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">0</span>  java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4607</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">0</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4609</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">2</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4610</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">1</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4611</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">1</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4612</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">1</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4613</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">1</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4618</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">3</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4620</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">2</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4621</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">3</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4622</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">1</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4623</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">2</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4624</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">1</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4625</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">0</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4626</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">0</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4627</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">1</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4628</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">2</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4629</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">0</span>  |__java</div><div class="line"><span class="number">19</span>时<span class="number">22</span>分<span class="number">16</span>秒         -      <span class="number">4630</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>    <span class="number">0.00</span>     <span class="number">0</span>  |__java</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-java-deadlock/pidstat.png" alt=""></p>
+<p>用jstack打印线程的dump，如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">~$ jstack <span class="number">4607</span> &gt;&gt; a.txt</div></pre></td></tr></table></figure></p>
+<p>然后打开该文件，线程dump文件中的线程号用的是16进制，不利于分析，不过由于我们使用了<code>ExecutorService</code>，所以可以用线程名称来查找，线程名称以<code>pool-1-thread-</code>开头。文件的前一部分是每一个线程的状态和调用栈，在最后的地方，提示发现了一个死锁，如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">Java stack information <span class="keyword">for</span> <span class="keyword">the</span> threads listed <span class="keyword">above</span>:</div><div class="line">===================================================</div><div class="line"><span class="string">"pool-1-thread-4"</span>:</div><div class="line">        <span class="keyword">at</span> problem1.DeadLockExp.<span class="command">run</span>(DeadLockExp.java:<span class="number">19</span>)</div><div class="line">        - waiting <span class="keyword">to</span> lock &lt;<span class="number">0x00000000ebf96a00</span>&gt; (a problem1.Resource)</div><div class="line">        - locked &lt;<span class="number">0x00000000ebf96a30</span>&gt; (a problem1.Resource)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:<span class="number">895</span>)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.<span class="command">run</span>(ThreadPoolExecutor.java:<span class="number">918</span>)</div><div class="line">        <span class="keyword">at</span> java.lang.Thread.<span class="command">run</span>(Thread.java:<span class="number">662</span>)</div><div class="line"><span class="string">"pool-1-thread-1"</span>:</div><div class="line">        <span class="keyword">at</span> problem1.DeadLockExp.<span class="command">run</span>(DeadLockExp.java:<span class="number">19</span>)</div><div class="line">        - waiting <span class="keyword">to</span> lock &lt;<span class="number">0x00000000ebf96a10</span>&gt; (a problem1.Resource)</div><div class="line">        - locked &lt;<span class="number">0x00000000ebf96a00</span>&gt; (a problem1.Resource)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:<span class="number">895</span>)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.<span class="command">run</span>(ThreadPoolExecutor.java:<span class="number">918</span>)</div><div class="line">        <span class="keyword">at</span> java.lang.Thread.<span class="command">run</span>(Thread.java:<span class="number">662</span>)</div><div class="line"><span class="string">"pool-1-thread-2"</span>:</div><div class="line">        <span class="keyword">at</span> problem1.DeadLockExp.<span class="command">run</span>(DeadLockExp.java:<span class="number">19</span>)</div><div class="line">        - waiting <span class="keyword">to</span> lock &lt;<span class="number">0x00000000ebf96a20</span>&gt; (a problem1.Resource)</div><div class="line">        - locked &lt;<span class="number">0x00000000ebf96a10</span>&gt; (a problem1.Resource)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:<span class="number">895</span>)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.<span class="command">run</span>(ThreadPoolExecutor.java:<span class="number">918</span>)</div><div class="line">        <span class="keyword">at</span> java.lang.Thread.<span class="command">run</span>(Thread.java:<span class="number">662</span>)</div><div class="line"><span class="string">"pool-1-thread-3"</span>:</div><div class="line">        <span class="keyword">at</span> problem1.DeadLockExp.<span class="command">run</span>(DeadLockExp.java:<span class="number">19</span>)</div><div class="line">        - waiting <span class="keyword">to</span> lock &lt;<span class="number">0x00000000ebf96a30</span>&gt; (a problem1.Resource)</div><div class="line">        - locked &lt;<span class="number">0x00000000ebf96a20</span>&gt; (a problem1.Resource)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:<span class="number">895</span>)</div><div class="line">        <span class="keyword">at</span> java.util.concurrent.ThreadPoolExecutor$Worker.<span class="command">run</span>(ThreadPoolExecutor.java:<span class="number">918</span>)</div><div class="line">        <span class="keyword">at</span> java.lang.Thread.<span class="command">run</span>(Thread.java:<span class="number">662</span>)</div><div class="line"></div><div class="line">Found <span class="number">1</span> deadlock.</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-java-deadlock/jstack-dump.png" alt=""></p>
+<p>更加可视化的方式是用jvisualvm，在线程那一栏也可以看到有提示发现死锁，如下，</p>
+<p><img src="/images/201409-java-deadlock/jvisualvm.png" alt=""></p>
+<p>也可以点击线程dump，得到线程的dump文件，内容和我们之前用jstack得到几乎一样，</p>
+<p><img src="/images/201409-java-deadlock/jvisualvm-dump.png" alt=""></p>
+<p>这个线程dump文件和之前不同的地方在于多了一些jmx和rmi的线程，从此也可以看出来，jvisualvm这个工具是使用jmx做出来的。</p>
+<p>至此，分析完毕。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://blog.csdn.net/fenglibing/article/details/6411999" class="uri" target="_blank" rel="external">http://blog.csdn.net/fenglibing/article/details/6411999</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://zh.wikipedia.org/wiki/%E5%93%B2%E5%AD%A6%E5%AE%B6%E5%B0%B1%E9%A4%90%E9%97%AE%E9%A2%98" target="_blank" rel="external">http://zh.wikipedia.org/wiki/%E5%93%B2%E5%AD%A6%E5%AE%B6%E5%B0%B1%E9%A4%90%E9%97%AE%E9%A2%98</a><a href="#fnref2">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/JVM/">JVM</a><a href="/tags/Java/">Java</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/JVM/">JVM</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201409-java-deadlock/" data-title="Java运行时死锁检测和分析 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201409-java-heap-dump/" title="Java堆dump文件分析">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  Java堆dump文件分析</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201409-postgres-cluster-xl/"  title="PostgreSQL集群搭建（使用Postgres XL）">
+ <strong>NEXT:</strong><br/> 
+ <span>PostgreSQL集群搭建（使用Postgres XL）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

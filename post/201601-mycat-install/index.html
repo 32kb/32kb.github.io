@@ -1,0 +1,537 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>MyCAT安装与部署 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="MyCAT 是一款开源的Mysql企业级集群应用，它是基于阿里的开源产品Cobar发展出来的。MyCAT提供了类似Mysql的接口，可以平滑的将单机Mysql迁移到Mysql集群上，解决数据存储和业务规模迅速增长情况下的数据瓶颈问题。
+MyCAT目前最新版本的下载地址在这里。我使用的操作系统是Ub">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201601-mycat-install/" title="MyCAT安装与部署" itemprop="url">MyCAT安装与部署</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2016-01-02T05:43:00.000Z" itemprop="datePublished">2016-01-02</time>
+    更新日期:<time datetime="2016-01-02T10:00:58.000Z" itemprop="dateModified">2016-01-02</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>MyCAT 是一款开源的Mysql企业级集群应用，它是基于阿里的开源产品Cobar发展出来的。MyCAT提供了类似Mysql的接口，可以平滑的将单机Mysql迁移到Mysql集群上，解决数据存储和业务规模迅速增长情况下的数据瓶颈问题。</p>
+<p>MyCAT目前最新版本的下载地址在<a href="https://github.com/MyCATApache/Mycat-download/tree/master/1.5-ALPHA" target="_blank" rel="external">这里</a>。我使用的操作系统是Ubuntu 14.04，因此下载的是linux版Mycat-server-1.5-alpha-20151221110028-linux.tar.gz。</p>
+<p>解压后可以发现，MyCAT的目录下主要包括以下文件，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">$ ls | xargs ls</div><div class="line">version.txt</div><div class="line"></div><div class="line">bin:</div><div class="line">init_zk_data.sh  mycat	rehash.sh  startup_nowrap.sh  wrapper-linux-ppc-64  wrapper-linux-x86-32  wrapper-linux-x86-64</div><div class="line"></div><div class="line">catlet:</div><div class="line"></div><div class="line">conf:</div><div class="line">autopartition-long.txt	     myid.properties	      schema.xml		     wrapper.conf</div><div class="line">cacheservice.properties      partition-hash-int.txt   sequence_conf.properties	     zk-<span class="operator"><span class="keyword">create</span>.yaml</span></div><div class="line">ehcache.<span class="keyword">xml</span>		     <span class="keyword">partition</span>-range-<span class="keyword">mod</span>.txt  sequence_db_conf.properties</div><div class="line">index_to_charset.properties  router.<span class="keyword">xml</span>		      sequence_time_conf.properties</div><div class="line">log4j.<span class="keyword">xml</span>		     rule.<span class="keyword">xml</span>		      <span class="keyword">server</span>.<span class="keyword">xml</span></div><div class="line"></div><div class="line">lib:</div><div class="line">curator-client-<span class="number">2.9</span><span class="number">.0</span>.jar     leveldb-<span class="number">0.7</span>.jar		   netty-<span class="number">3.7</span><span class="number">.0</span>.Final.jar</div><div class="line">curator-framework-<span class="number">2.9</span><span class="number">.0</span>.jar  leveldb-api-<span class="number">0.7</span>.jar	   sequoiadb-java-driver-<span class="number">1.0</span>-<span class="number">20150615.070208</span>-<span class="number">1.</span>jar</div><div class="line">dom4j-<span class="number">1.6</span><span class="number">.1</span>.jar		     libwrapper-linux-ppc-<span class="number">64.</span>so    slf4j-api-<span class="number">1.7</span><span class="number">.12</span>.jar</div><div class="line">druid-<span class="number">1.0</span><span class="number">.14</span>.jar	     libwrapper-linux-x86-<span class="number">32.</span>so    slf4j-log4j12-<span class="number">1.7</span><span class="number">.12</span>.jar</div><div class="line">ehcache-core-<span class="number">2.6</span><span class="number">.11</span>.jar      libwrapper-linux-x86-<span class="number">64.</span>so    snakeyaml-<span class="number">1.16</span>.jar</div><div class="line">fastjson-<span class="number">1.2</span><span class="number">.7</span>.jar	     log4j-<span class="number">1.2</span><span class="number">.17</span>.jar		   univocity-parsers-<span class="number">1.5</span><span class="number">.4</span>.jar</div><div class="line">guava-<span class="number">18.0</span>.jar		     mapdb-<span class="number">1.0</span><span class="number">.7</span>.jar		   wrapper.jar</div><div class="line">jline-<span class="number">0.9</span><span class="number">.94</span>.jar	     mongo-java-driver-<span class="number">2.11</span><span class="number">.4</span>.jar  <span class="keyword">xml</span>-apis-<span class="number">1.0</span>.b2.jar</div><div class="line">json-<span class="number">20151123.</span>jar	     Mycat-<span class="keyword">server</span>-<span class="number">1.5</span>-alpha.jar    zookeeper-<span class="number">3.4</span><span class="number">.6</span>.jar</div><div class="line"></div><div class="line"><span class="keyword">logs</span>:</div></pre></td></tr></table></figure></p>
+<p>其中，<code>lib</code>目录下是MyCAT的主要的依赖库文件，<code>bin</code>目录下是MyCAT的运行脚本文件，<code>conf</code>目录下是MyCAT是主要配置文件。本次安装过程中需要改到的相关MyCAT配置主要在<code>schema.xml</code>和<code>server.xml</code>。</p>
+<p><code>server.xml</code>是MyCAT对外的“虚拟数据库”配置文件。所谓的“虚拟数据库”是说，MyCAT将多个Mysql集群整合起来对外提供服务，提供服务的接口仍然采用Mysql的形式，因此，通过仿造Mysql接口，让调用程序以为自己是在访问Mysql数据库，就是所谓的“虚拟数据库”。<code>server.xml</code>的主要内容如下（已删除原有的注释），</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span></div><div class="line"><span class="doctype">&lt;!DOCTYPE mycat:server SYSTEM "server.dtd"&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">mycat:server</span> <span class="attribute">xmlns:mycat</span>=<span class="value">"http://org.opencloudb/"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="title">system</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"defaultSqlParser"</span>&gt;</span>druidparser<span class="tag">&lt;/<span class="title">property</span>&gt;</span></div><div class="line">	<span class="tag">&lt;/<span class="title">system</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="title">user</span> <span class="attribute">name</span>=<span class="value">"test"</span>&gt;</span></div><div class="line">		<span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"password"</span>&gt;</span>test<span class="tag">&lt;/<span class="title">property</span>&gt;</span></div><div class="line">		<span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"schemas"</span>&gt;</span>TESTDB<span class="tag">&lt;/<span class="title">property</span>&gt;</span></div><div class="line">	<span class="tag">&lt;/<span class="title">user</span>&gt;</span></div><div class="line"></div><div class="line">	<span class="tag">&lt;<span class="title">user</span> <span class="attribute">name</span>=<span class="value">"user"</span>&gt;</span></div><div class="line">		<span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"password"</span>&gt;</span>user<span class="tag">&lt;/<span class="title">property</span>&gt;</span></div><div class="line">		<span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"schemas"</span>&gt;</span>TESTDB<span class="tag">&lt;/<span class="title">property</span>&gt;</span></div><div class="line">		<span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"readOnly"</span>&gt;</span>true<span class="tag">&lt;/<span class="title">property</span>&gt;</span></div><div class="line">	<span class="tag">&lt;/<span class="title">user</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">mycat:server</span>&gt;</span></div></pre></td></tr></table></figure></p>
+<p>该配置文件很容易读懂，表明该虚拟数据库有一个schema，<code>TESTDB</code>；有2个用户<code>test</code>和<code>user</code>，密码分别是<code>test</code>和<code>user</code>，<code>user</code>用户是只读的，<code>test</code>用户未设置只读；默认的SQL解析器是<code>druidparser</code>。</p>
+<p><code>schema.xml</code>的主要内容如下（已删除部分注释），</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line">&lt;?xml <span class="variable">version=</span><span class="string">"1.0"</span>?&gt;</div><div class="line">&lt;!DOCTYPE mycat:schema SYSTEM <span class="string">"schema.dtd"</span>&gt;</div><div class="line">&lt;mycat:schema xmlns:<span class="variable">mycat=</span><span class="string">"http://org.opencloudb/"</span>&gt;</div><div class="line"></div><div class="line">	&lt;schema <span class="variable">name=</span><span class="string">"TESTDB"</span> <span class="variable">checkSQLschema=</span><span class="string">"false"</span> <span class="variable">sqlMaxLimit=</span><span class="string">"100"</span>&gt;</div><div class="line">		&lt;table <span class="variable">name=</span><span class="string">"travelrecord"</span> <span class="variable">dataNode=</span><span class="string">"dn1,dn2,dn3"</span> <span class="variable">rule=</span><span class="string">"auto-sharding-long"</span> /&gt;</div><div class="line"></div><div class="line">		&lt;table <span class="variable">name=</span><span class="string">"company"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">type=</span><span class="string">"global"</span> <span class="variable">dataNode=</span><span class="string">"dn1,dn2,dn3"</span> /&gt;</div><div class="line">		&lt;table <span class="variable">name=</span><span class="string">"goods"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">type=</span><span class="string">"global"</span> <span class="variable">dataNode=</span><span class="string">"dn1,dn2"</span> /&gt;</div><div class="line">		&lt;!-- random sharding using mod sharind rule --&gt;</div><div class="line">		&lt;table <span class="variable">name=</span><span class="string">"hotnews"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">dataNode=</span><span class="string">"dn1,dn2,dn3"</span></div><div class="line">			<span class="variable">rule=</span><span class="string">"mod-long"</span> /&gt;</div><div class="line">		&lt;!-- &lt;table <span class="variable">name=</span><span class="string">"dual"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">dataNode=</span><span class="string">"dnx,dnoracle2"</span> <span class="variable">type=</span><span class="string">"global"</span> </div><div class="line">			<span class="variable">needAddLimit=</span><span class="string">"false"</span>/&gt; &lt;table <span class="variable">name=</span><span class="string">"worker"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">dataNode=</span><span class="string">"jdbc_dn1,jdbc_dn2,jdbc_dn3"</span> </div><div class="line">			<span class="variable">rule=</span><span class="string">"mod-long"</span> /&gt; --&gt;</div><div class="line">		&lt;table <span class="variable">name=</span><span class="string">"employee"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">dataNode=</span><span class="string">"dn1,dn2"</span></div><div class="line">			<span class="variable">rule=</span><span class="string">"sharding-by-intfile"</span> /&gt;</div><div class="line">		&lt;table <span class="variable">name=</span><span class="string">"customer"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">dataNode=</span><span class="string">"dn1,dn2"</span></div><div class="line">			<span class="variable">rule=</span><span class="string">"sharding-by-intfile"</span>&gt;</div><div class="line">			&lt;childTable <span class="variable">name=</span><span class="string">"orders"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">joinKey=</span><span class="string">"customer_id"</span></div><div class="line">				<span class="variable">parentKey=</span><span class="string">"id"</span>&gt;</div><div class="line">				&lt;childTable <span class="variable">name=</span><span class="string">"order_items"</span> <span class="variable">joinKey=</span><span class="string">"order_id"</span></div><div class="line">					<span class="variable">parentKey=</span><span class="string">"id"</span> /&gt;</div><div class="line">			&lt;/childTable&gt;</div><div class="line">			&lt;childTable <span class="variable">name=</span><span class="string">"customer_addr"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">joinKey=</span><span class="string">"customer_id"</span></div><div class="line">				<span class="variable">parentKey=</span><span class="string">"id"</span> /&gt;</div><div class="line">		&lt;/table&gt;</div><div class="line">		&lt;!-- &lt;table <span class="variable">name=</span><span class="string">"oc_call"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">dataNode=</span><span class="string">"dn1$0-743"</span> <span class="variable">rule=</span><span class="string">"latest-month-calldate"</span> </div><div class="line">			/&gt; --&gt;</div><div class="line">	&lt;/schema&gt;</div><div class="line">	&lt;!-- &lt;dataNode <span class="variable">name=</span><span class="string">"dn1$0-743"</span> <span class="variable">dataHost=</span><span class="string">"localhost1"</span> <span class="variable">database=</span><span class="string">"db$0-743"</span> </div><div class="line">		/&gt; --&gt;</div><div class="line">	&lt;dataNode <span class="variable">name=</span><span class="string">"dn1"</span> <span class="variable">dataHost=</span><span class="string">"localhost1"</span> <span class="variable">database=</span><span class="string">"db1"</span> /&gt;</div><div class="line">	&lt;dataNode <span class="variable">name=</span><span class="string">"dn2"</span> <span class="variable">dataHost=</span><span class="string">"localhost1"</span> <span class="variable">database=</span><span class="string">"db2"</span> /&gt;</div><div class="line">	&lt;dataNode <span class="variable">name=</span><span class="string">"dn3"</span> <span class="variable">dataHost=</span><span class="string">"localhost1"</span> <span class="variable">database=</span><span class="string">"db3"</span> /&gt;</div><div class="line">	&lt;!--&lt;dataNode <span class="variable">name=</span><span class="string">"dn4"</span> <span class="variable">dataHost=</span><span class="string">"sequoiadb1"</span> <span class="variable">database=</span><span class="string">"SAMPLE"</span> /&gt;</div><div class="line">	 &lt;dataNode <span class="variable">name=</span><span class="string">"jdbc_dn1"</span> <span class="variable">dataHost=</span><span class="string">"jdbchost"</span> <span class="variable">database=</span><span class="string">"db1"</span> /&gt; </div><div class="line">	&lt;dataNode	<span class="variable">name=</span><span class="string">"jdbc_dn2"</span> <span class="variable">dataHost=</span><span class="string">"jdbchost"</span> <span class="variable">database=</span><span class="string">"db2"</span> /&gt; </div><div class="line">	&lt;dataNode <span class="variable">name=</span><span class="string">"jdbc_dn3"</span> 	<span class="variable">dataHost=</span><span class="string">"jdbchost"</span> <span class="variable">database=</span><span class="string">"db3"</span> /&gt; --&gt;</div><div class="line">	&lt;dataHost <span class="variable">name=</span><span class="string">"localhost1"</span> <span class="variable">maxCon=</span><span class="string">"1000"</span> <span class="variable">minCon=</span><span class="string">"10"</span> <span class="variable">balance=</span><span class="string">"0"</span></div><div class="line">		<span class="variable">writeType=</span><span class="string">"0"</span> <span class="variable">dbType=</span><span class="string">"mysql"</span> <span class="variable">dbDriver=</span><span class="string">"native"</span> <span class="variable">switchType=</span><span class="string">"1"</span>  <span class="variable">slaveThreshold=</span><span class="string">"100"</span>&gt;</div><div class="line">		&lt;heartbeat&gt;select user()&lt;/heartbeat&gt;</div><div class="line">		&lt;!-- can have multi write hosts --&gt;</div><div class="line">		&lt;writeHost <span class="variable">host=</span><span class="string">"hostM1"</span> <span class="variable">url=</span><span class="string">"localhost:3306"</span> <span class="variable">user=</span><span class="string">"root"</span></div><div class="line">			<span class="variable">password=</span><span class="string">"123456"</span>&gt;</div><div class="line">			&lt;!-- can have multi read hosts --&gt;</div><div class="line"></div><div class="line">		&lt;/writeHost&gt;</div><div class="line">		&lt;writeHost <span class="variable">host=</span><span class="string">"hostS1"</span> <span class="variable">url=</span><span class="string">"localhost:3316"</span> <span class="variable">user=</span><span class="string">"root"</span></div><div class="line">			<span class="variable">password=</span><span class="string">"123456"</span> /&gt;</div><div class="line">		&lt;!-- &lt;writeHost <span class="variable">host=</span><span class="string">"hostM2"</span> <span class="variable">url=</span><span class="string">"localhost:3316"</span> <span class="variable">user=</span><span class="string">"root"</span> <span class="variable">password=</span><span class="string">"123456"</span>/&gt; --&gt;</div><div class="line">	&lt;/dataHost&gt;</div><div class="line">&lt;/mycat:schema&gt;</div></pre></td></tr></table></figure></p>
+<p>这个配置文件稍微复杂一些，主要分3块。第1块是<code>schema</code>块，主要描述了虚拟数据库的schema<code>TESTDB</code>中有哪些表，每个表分布在哪些数据节点上，分布的方法采用哪种算法。例如<code>&lt;table name=&quot;travelrecord&quot; dataNode=&quot;dn1,dn2,dn3&quot; rule=&quot;auto-sharding-long&quot; /&gt;</code>，表示<code>travelrecord</code>表分布在<code>dn1,dn2,dn3</code>这3个节点上，分布的方法采用<code>auto-sharding-long</code>算法。第2块是<code>dataNode</code>，表示该数据库有哪些数据节点，以及这些数据节点实际对应的数据服务器和数据库名，这里配置了3个节点<code>dn1,dn2,dn3</code>，都是在<code>localhost1</code>服务器上，数据库名分别是<code>db1,db2,db3</code>，其实，这也正是前面<code>schema</code>块中用到的。第3块是<code>dataHost</code>，这部分是实际的数据库服务器配置，这里配置了2个Mysql数据库，<code>hostM1</code>和<code>hostS1</code>，地址分别在“localhost:3306”，用户名都是<code>root</code>，密码是<code>123456</code>，并且指定了心跳是<code>select user()</code>。</p>
+<p>有了这些信息之后，我们就可以根据自己的需要来进行设置。例如，我的数据库地址不在<code>localhost</code>密码也不是<code>123456</code>，安装在这里，</p>
+<p><img src="/images/201601-mycat-install/mycat-install-mysql-1.png" alt=""></p>
+<p>于是重设MyCAT中这部分配置如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">&lt;writeHost <span class="variable">host=</span><span class="string">"hostM1"</span> <span class="variable">url=</span><span class="string">"workstation:3306"</span> <span class="variable">user=</span><span class="string">"root"</span></div><div class="line">	<span class="variable">password=</span><span class="string">"111111"</span>&gt;</div><div class="line">&lt;writeHost <span class="variable">host=</span><span class="string">"hostS1"</span> <span class="variable">url=</span><span class="string">"workstation:3316"</span> <span class="variable">user=</span><span class="string">"root"</span></div><div class="line">	<span class="variable">password=</span><span class="string">"111111"</span> /&gt;</div></pre></td></tr></table></figure></p>
+<p>启动MyCAT之前，需要先检查一些配置：</p>
+<ol>
+<li>java的版本需要是1.7或以上；</li>
+<li>Mysql的配置文件需要加一行<code>lower_case_table_names = 1</code>在<code>[mysqld]</code>栏目中，这个设置为Mysql大小写不敏感，否则可能会发生表找不到的问题；</li>
+<li>在示例的2个数据<code>hostM1</code>和<code>hostS1</code>上，新建3个数据库<code>db1,db2,db3</code>，如不新建，可能提示找不到数据库<code>ERROR 3009 (HY000): java.lang.IllegalArgumentException: Invalid DataSource:0</code>（这个提示不够友好，是在运行很长一段时间后才提示）；</li>
+<li>添加<code>MYCAT_HOME</code>环境变量指向解压的mycat目录，主要是为了一些<code>bin</code>目录下的脚本的使用。</li>
+</ol>
+<p>一些文章<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>中说，还需要创建mycat用户和用户组，实际中我发现这不是必须的。之后就可以启动MyCAT了，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ ./bin/mycat <span class="operator"><span class="keyword">start</span></span></div><div class="line"><span class="keyword">Starting</span> Mycat-<span class="keyword">server</span>...</div></pre></td></tr></table></figure></p>
+<p>之后就可以登陆MyCAT了，可以使用mysql的客户端像登陆mysql那样登陆，如下，</p>
+<p><img src="/images/201601-mycat-install/mycat-install-login.png" alt=""></p>
+<p>如果登陆成功，可以建表了，建表语句<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a><a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>与普通sql一样，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">mysql<span class="subst">&gt;</span> create table travelrecord (id bigint <span class="literal">not</span> <span class="built_in">null</span> primary key,user_id varchar(<span class="number">100</span>),traveldate <span class="built_in">DATE</span>, fee <span class="built_in">decimal</span>,days int);</div><div class="line">Query OK, <span class="number">0</span> <span class="keyword">rows</span> affected (<span class="number">0.77</span> sec)</div><div class="line"></div><div class="line">mysql<span class="subst">&gt;</span> desc travelrecord;</div><div class="line"><span class="subst">+------------+---------------+------+-----+---------+-------+</span></div><div class="line"><span class="subst">|</span> Field      <span class="subst">|</span> <span class="keyword">Type</span>          <span class="subst">|</span> <span class="built_in">Null</span> <span class="subst">|</span> Key <span class="subst">|</span> Default <span class="subst">|</span> Extra <span class="subst">|</span></div><div class="line"><span class="subst">+------------+---------------+------+-----+---------+-------+</span></div><div class="line"><span class="subst">|</span> id         <span class="subst">|</span> bigint(<span class="number">20</span>)    <span class="subst">|</span> NO   <span class="subst">|</span> PRI <span class="subst">|</span> <span class="built_in">NULL</span>    <span class="subst">|</span>       <span class="subst">|</span></div><div class="line"><span class="subst">|</span> user_id    <span class="subst">|</span> varchar(<span class="number">100</span>)  <span class="subst">|</span> YES  <span class="subst">|</span>     <span class="subst">|</span> <span class="built_in">NULL</span>    <span class="subst">|</span>       <span class="subst">|</span></div><div class="line"><span class="subst">|</span> traveldate <span class="subst">|</span> <span class="built_in">date</span>          <span class="subst">|</span> YES  <span class="subst">|</span>     <span class="subst">|</span> <span class="built_in">NULL</span>    <span class="subst">|</span>       <span class="subst">|</span></div><div class="line"><span class="subst">|</span> fee        <span class="subst">|</span> <span class="built_in">decimal</span>(<span class="number">10</span>,<span class="number">0</span>) <span class="subst">|</span> YES  <span class="subst">|</span>     <span class="subst">|</span> <span class="built_in">NULL</span>    <span class="subst">|</span>       <span class="subst">|</span></div><div class="line"><span class="subst">|</span> days       <span class="subst">|</span> int(<span class="number">11</span>)       <span class="subst">|</span> YES  <span class="subst">|</span>     <span class="subst">|</span> <span class="built_in">NULL</span>    <span class="subst">|</span>       <span class="subst">|</span></div><div class="line"><span class="subst">+------------+---------------+------+-----+---------+-------+</span></div><div class="line"><span class="number">5</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="built_in">set</span> (<span class="number">0.00</span> sec)</div><div class="line"></div><div class="line">mysql<span class="subst">&gt;</span> create table abc (id bigint <span class="literal">not</span> <span class="built_in">null</span> primary key, name varchar(<span class="number">100</span>));</div><div class="line">ERROR <span class="number">1064</span> (HY000): op table <span class="literal">not</span> <span class="keyword">in</span> schema<span class="subst">----</span>ABC</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201601-mycat-install/mycat-install-create-table.png" alt=""></p>
+<blockquote>
+<p>注意：如果建立的表之前没有在<code>schema.xml</code>中定义，那么不可以建立此表。</p>
+</blockquote>
+<p>建表成功后，就可以插入数据了，而且还可以使用<code>explain</code>查看插入了哪个数据库，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="header">mysql&gt;  explain insert into travelrecord (id,user_id,traveldate,fee,days) values(1000000,'abc','2016-01-02',100.01,3);</span></div><div class="line">+-----------+-------------------------------------------------------------------------------------------------------+</div><div class="line"><span class="header">| DATA_NODE | SQL                                                                                                   |</span></div><div class="line">+-----------+-------------------------------------------------------------------------------------------------------+</div><div class="line"><span class="header">| dn1       | insert into travelrecord (id,user_id,traveldate,fee,days) values(1000000,'abc','2016-01-02',100.01,3) |</span></div><div class="line">+-----------+-------------------------------------------------------------------------------------------------------+</div><div class="line">1 row in set (0.00 sec)</div><div class="line"></div><div class="line"><span class="header">mysql&gt;  explain insert into travelrecord (id,user_id,traveldate,fee,days) values(7000000,'abc','2016-01-02',100.01,3);</span></div><div class="line">+-----------+-------------------------------------------------------------------------------------------------------+</div><div class="line"><span class="header">| DATA_NODE | SQL                                                                                                   |</span></div><div class="line">+-----------+-------------------------------------------------------------------------------------------------------+</div><div class="line"><span class="header">| dn2       | insert into travelrecord (id,user_id,traveldate,fee,days) values(7000000,'abc','2016-01-02',100.01,3) |</span></div><div class="line">+-----------+-------------------------------------------------------------------------------------------------------+</div><div class="line">1 row in set (0.00 sec)</div><div class="line"></div><div class="line">mysql&gt; insert into travelrecord (id,user<span class="emphasis">_id,traveldate,fee,days) values(1000000,'abc','2016-01-02',100.01,3);</span></div><div class="line">Query OK, 1 row affected, 1 warning (0.10 sec)</div><div class="line"></div><div class="line">mysql&gt; insert into travelrecord (id,user<span class="emphasis">_id,traveldate,fee,days) values(7000000,'abc','2016-01-02',100.01,3);</span></div><div class="line">Query OK, 1 row affected, 1 warning (0.06 sec)</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201601-mycat-install/mycat-install-insert.png" alt=""></p>
+<p>然后还可以select，可以发现，select 不过是对每个数据库上进行，同时默认加上了<code>limit 100</code>的限制。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="header">mysql&gt; explain select * from travelrecord;</span></div><div class="line">+-----------+--------------------------------------+</div><div class="line"><span class="header">| DATA_NODE | SQL                                  |</span></div><div class="line">+-----------+--------------------------------------+</div><div class="line">| dn1       | SELECT * FROM travelrecord LIMIT 100 |</div><div class="line">| dn2       | SELECT * FROM travelrecord LIMIT 100 |</div><div class="line"><span class="header">| dn3       | SELECT * FROM travelrecord LIMIT 100 |</span></div><div class="line">+-----------+--------------------------------------+</div><div class="line">3 rows in set (0.00 sec)</div><div class="line"></div><div class="line"><span class="header">mysql&gt; select * from travelrecord;</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line"><span class="header">| id      | user_id | traveldate | fee  | days |</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line">| 1000000 | abc     | 2016-01-02 |  100 |    3 |</div><div class="line"><span class="header">| 7000000 | abc     | 2016-01-02 |  100 |    3 |</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line">2 rows in set (0.00 sec)</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201601-mycat-install/mycat-install-select.png" alt=""></p>
+<p>如果mysql是innodb存储引擎，还可以设置<code>autocommit</code>，之前的操作采用默认<code>autocommit=1</code>，如果设置<code>autocommit=0</code>，还可以使用事务，挺好用的，如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">mysql&gt; set autocommit=0;</div><div class="line">Query OK, 0 rows affected (0.02 sec)</div><div class="line"></div><div class="line">mysql&gt; insert into travelrecord (id,user<span class="emphasis">_id,traveldate,fee,days) values(8000000,'abc','2016-01-02',100.01,3);</span></div><div class="line">Query OK, 1 row affected, 1 warning (0.00 sec)</div><div class="line"></div><div class="line">mysql&gt; rollback;</div><div class="line">Query OK, 0 rows affected (0.09 sec)</div><div class="line"></div><div class="line"><span class="header">mysql&gt; select * from travelrecord limit 1000;</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line"><span class="header">| id      | user_id | traveldate | fee  | days |</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line">| 1000000 | abc     | 2016-01-02 |  100 |    3 |</div><div class="line"><span class="header">| 7000000 | abc     | 2016-01-02 |  100 |    3 |</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line">2 rows in set (0.00 sec)</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201601-mycat-install/mycat-install-autocommit.png" alt=""></p>
+<p>在实验中还发现，如果使用<code>autocommit=0</code>还可以产生锁，与使用单Mysql数据库很相似，很有意思。</p>
+<p>此时，返回来看看实际数据库Mysql中的数据，如下，</p>
+<p><img src="/images/201601-mycat-install/mycat-install-mysql-2.png" alt=""></p>
+<p>发现一个很奇怪的事情，端口3306的数据库，也就是配置文件中的<code>hostM1</code>似乎没有创建<code>travelrecord</code>表，也就是说，配置文件中的<code>hostS1</code>似乎覆盖了<code>hostM1</code>，这与注释中的“can have multi write hosts”似乎有不符之处，不知为何。</p>
+<p>另外，在实验的过程中，<code>travelrecord</code>表中插入数据过程中，似乎总是无法将数据分片到<code>dn3</code>上，感觉是其分片算法<code>auto-sharding-long</code>有问题，不确定这是一个bug还是算法特性。</p>
+<p>最后，吐槽下MyCAT的示例，其默认的几张表的建表语句我实在是找了半天，才在MyCAT的doc中找到，而且呈现形式还是.docx形式的一篇安装指南，实在太不规范。比较好一点的呈现，可能是一个sql脚本，包含了所有建表语句和示例数据的insert语句；或者分为建表语句sql脚本和insert示例数据sql脚本2个文件，也是个不错的主意。</p>
+<p>综上，可以认为，MyCAT模拟了一个虚拟Mysql数据库，并通过简单的配置文件配置，将虚拟数据库中的表映射到实际数据库中。只有那些在配置文件中配置了的表，才可以被MyCAT管理，实现分片。MyCAT还提供了很多分片算法，本文没有详述。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://blog.csdn.net/dreamcode/article/details/44307377" class="uri" target="_blank" rel="external">http://blog.csdn.net/dreamcode/article/details/44307377</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://blog.sina.com.cn/s/blog_638b7ebb0102vv80.html" class="uri" target="_blank" rel="external">http://blog.sina.com.cn/s/blog_638b7ebb0102vv80.html</a><a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p><a href="https://github.com/MyCATApache/Mycat-doc/blob/master/%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97/MyCat_%E5%AE%89%E8%A3%85%E6%8C%87%E5%8D%97%28linux%29.doc" target="_blank" rel="external">https://github.com/MyCATApache/Mycat-doc/blob/master/%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97/MyCat_%E5%AE%89%E8%A3%85%E6%8C%87%E5%8D%97%28linux%29.doc</a><a href="#fnref3">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/MyCAT/">MyCAT</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MyCAT/">MyCAT</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201601-mycat-install/" data-title="MyCAT安装与部署 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201601-docker-network/" title="Docker容器间网络互联">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  Docker容器间网络互联</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201601-docker-volumn/"  title="Docker存储(Volumn)">
+ <strong>NEXT:</strong><br/> 
+ <span>Docker存储(Volumn)
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

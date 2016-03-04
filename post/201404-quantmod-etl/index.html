@@ -1,0 +1,506 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>R的Quantmod包ETL功能试用 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="本次试用使用的os是ubuntu，r-base是2.15版本
+quantmod的ETL函数下载Apple,Microsoft,Oracle,Google四家公司全量股票行情数据 1)求出Apple公司在2013.1-2013.10的股票总成交量使用 这个比较简单，代码如下，
+1234567891">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201404-quantmod-etl/" title="R的Quantmod包ETL功能试用" itemprop="url">R的Quantmod包ETL功能试用</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-04-27T06:00:00.000Z" itemprop="datePublished">2014-04-27</time>
+    更新日期:<time datetime="2014-12-03T01:10:20.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>本次试用使用的os是ubuntu，r-base是2.15版本</p>
+<p>quantmod的ETL函数下载Apple,Microsoft,Oracle,Google四家公司全量股票行情数据 1)求出Apple公司在2013.1-2013.10的股票总成交量使用 这个比较简单，代码如下，</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">&gt; myenv&lt;-new.env()</div><div class="line">&gt; getSymbols(<span class="string">"AAPL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>)</div><div class="line"></div><div class="line">&gt; ls(envir=myenv)</div><div class="line">[<span class="number">1</span>] <span class="string">"AAPL"</span></div><div class="line"></div><div class="line">&gt; head(get(<span class="string">"AAPL"</span>,env=myenv))</div><div class="line">           AAPL.Open AAPL.High AAPL.Low AAPL.Close AAPL.Volume AAPL.Adjusted</div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">02</span>    <span class="number">553.82</span>    <span class="number">555.00</span>   <span class="number">541.63</span>     <span class="number">549.03</span>    <span class="number">20018500</span>        <span class="number">532.39</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">03</span>    <span class="number">547.88</span>    <span class="number">549.67</span>   <span class="number">541.00</span>     <span class="number">542.10</span>    <span class="number">12605900</span>        <span class="number">525.67</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">04</span>    <span class="number">536.97</span>    <span class="number">538.63</span>   <span class="number">525.83</span>     <span class="number">527.00</span>    <span class="number">21226200</span>        <span class="number">511.03</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">07</span>    <span class="number">522.00</span>    <span class="number">529.30</span>   <span class="number">515.20</span>     <span class="number">523.90</span>    <span class="number">17291300</span>        <span class="number">508.02</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">08</span>    <span class="number">529.21</span>    <span class="number">531.89</span>   <span class="number">521.25</span>     <span class="number">525.31</span>    <span class="number">16382400</span>        <span class="number">509.39</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">09</span>    <span class="number">522.50</span>    <span class="number">525.01</span>   <span class="number">515.99</span>     <span class="number">517.10</span>    <span class="number">14557300</span>        <span class="number">501.43</span></div><div class="line"></div><div class="line">&gt; sum(Vo(get(<span class="string">"AAPL"</span>,env=myenv)))</div><div class="line">[<span class="number">1</span>] <span class="number">3219250600</span></div></pre></td></tr></table></figure></p>
+<p>可以得出期间的成交量是3219250600，当然单位是美元</p>
+<p>2)找出这些股票暴涨暴跌的时间点（例如开盘价或收盘价比前一天涨跌幅度超过2%），通过搜索引擎寻找是什么原因导致这些暴涨暴跌，观察（或用程序分析）数据，看就暴涨暴跌事件是否有可以利用的买卖规律 Apple,Microsoft,Oracle,Google的股票简称分别是AAPL，MSFT，ORCL，GOOGL。yahoo上还有一个代码是GOOG的Google公司，很奇怪，只有2014-03-28至2014-04-25的数据，但是从新闻上看，Google是从2004年开始就上市了，所以之前的哪个GOOGL应该是正确的股票代码。 这个略有一些麻烦，本次实验采用的数据，基本都是从yahoo finance上拿下来的数据，Google finance中的数据似乎是有一些问题，直接用getSymbols函数得到的数据不能显示日期。当然，这个应该是Quantmod包的bug（而且不止这一个，后面会说），不清楚这是否与我的r-base的版本有关。 代码和之前比较类似，如下，</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&gt; getSymbols(<span class="string">"MSFT"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>)</div><div class="line">[<span class="number">1</span>] <span class="string">"MSFT"</span></div><div class="line">&gt; getSymbols(<span class="string">"ORCL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>)</div><div class="line">[<span class="number">1</span>] <span class="string">"ORCL"</span></div><div class="line">&gt; getSymbols(<span class="string">"GOOGL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2014-10-31"</span>)</div><div class="line">[<span class="number">1</span>] <span class="string">"GOOGL"</span></div><div class="line">&gt; ls(envir=myenv)</div><div class="line">[<span class="number">1</span>] <span class="string">"AAPL"</span>  <span class="string">"GOOGL"</span> <span class="string">"MSFT"</span>  <span class="string">"ORCL"</span></div></pre></td></tr></table></figure></p>
+<p>为了可以获得公平的比对，还需要获得股票派息和拆分的数据，代码分别如下</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">&gt; getDividends(<span class="string">"GOOGL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line">&gt; getDividends(<span class="string">"AAPL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line">&gt; getDividends(<span class="string">"MSFT"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line">&gt; getDividends(<span class="string">"ORCL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line"></div><div class="line">&gt; head(get(<span class="string">"GOOGL.div"</span>,env=myenv))</div><div class="line"><span class="literal">NULL</span></div><div class="line">&gt; head(get(<span class="string">"AAPL.div"</span>,env=myenv))</div><div class="line">           [,<span class="number">1</span>]</div><div class="line"><span class="number">2013</span>-<span class="number">02</span>-<span class="number">07</span> <span class="number">2.65</span></div><div class="line"><span class="number">2013</span>-<span class="number">05</span>-<span class="number">09</span> <span class="number">3.05</span></div><div class="line"><span class="number">2013</span>-<span class="number">08</span>-<span class="number">08</span> <span class="number">3.05</span></div><div class="line">&gt; head(get(<span class="string">"MSFT.div"</span>,env=myenv))</div><div class="line">           [,<span class="number">1</span>]</div><div class="line"><span class="number">2013</span>-<span class="number">02</span>-<span class="number">19</span> <span class="number">0.23</span></div><div class="line"><span class="number">2013</span>-<span class="number">05</span>-<span class="number">14</span> <span class="number">0.23</span></div><div class="line"><span class="number">2013</span>-<span class="number">08</span>-<span class="number">13</span> <span class="number">0.23</span></div><div class="line">&gt; head(get(<span class="string">"ORCL.div"</span>,env=myenv))</div><div class="line">           [,<span class="number">1</span>]</div><div class="line"><span class="number">2013</span>-<span class="number">07</span>-<span class="number">10</span> <span class="number">0.12</span></div><div class="line"><span class="number">2013</span>-<span class="number">10</span>-<span class="number">04</span> <span class="number">0.12</span></div><div class="line">&gt; </div><div class="line"></div><div class="line">&gt; getSplits(<span class="string">"GOOGL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line">&gt; getSplits(<span class="string">"AAPL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line">&gt; getSplits(<span class="string">"MSFT"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line">&gt; getSplits(<span class="string">"ORCL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2013-01-01"</span>,to=<span class="string">"2013-10-31"</span>,auto.assign=<span class="literal">TRUE</span>)</div><div class="line"></div><div class="line">&gt; head(get(<span class="string">"GOOGL.spl"</span>,env=myenv))</div><div class="line">[<span class="number">1</span>] <span class="literal">NA</span></div><div class="line">&gt; head(get(<span class="string">"AAPL.spl"</span>,env=myenv))</div><div class="line">[<span class="number">1</span>] <span class="literal">NA</span></div><div class="line">&gt; head(get(<span class="string">"MSFT.spl"</span>,env=myenv))</div><div class="line">[<span class="number">1</span>] <span class="literal">NA</span></div><div class="line">&gt; head(get(<span class="string">"ORCL.spl"</span>,env=myenv))</div><div class="line">[<span class="number">1</span>] <span class="literal">NA</span></div><div class="line">&gt;</div></pre></td></tr></table></figure></p>
+<p>从结果来看，所有股票在此期间都无拆分，GOOGL在此期间无派息，AAPL,MSFT,ORCL分别派息3、3、2次。顺便说一下，getSplits这个函数的help里面有bug，其中提到</p>
+<pre><code>If auto.assign is TRUE, the symbol will be written to the
+environment specified in ‘env’ with a .div appended to the name.</code></pre>
+<p>getSplits的结果存在.div扩展名的变量中，而实际上是存在.spl扩展名的变量中，作者应该是照抄了getDividends的help。 下面以AAPL的股票为例，计算暴涨（up 2%）和暴跌（down 2%）的日期，为了计算正确，需要将前一日收盘价根据派息情况做调整，比如，如果前一日收盘为$100，但是派息$2，那么调整后的收盘价为$98（=100-2），计算调整后收盘价格的代码如下，</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&gt; all_zero&lt;-(xts(matrix(<span class="number">0</span>,nrow=<span class="number">211</span>, ncol=<span class="number">1</span>)[,<span class="number">1</span>], order.by=index(Cl(get(<span class="string">"AAPL"</span>,env=myenv)))))</div><div class="line">&gt; AAPL_mod_cl&lt;-Cl(get(<span class="string">"AAPL"</span>,env=myenv))-merge(all_zero, get(<span class="string">"AAPL.div"</span>,env=myenv), fill = <span class="number">0</span>)[,<span class="number">2</span>]</div></pre></td></tr></table></figure></p>
+<p>虽然看上去只有2行代码，可是我查了好久的文档才找到，其中函数xts和merge的help可以参考r的xts的帮助文档。调整后的收盘价存在AAPL_mod_cl中，下面计算暴涨（up 2%）和暴跌（down 2%）的日期，代码如下</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">&gt; AAPL_updown&lt;-Delt(AAPL_mod_cl,Op(get(<span class="string">"AAPL"</span>,env=myenv)), k=<span class="number">1</span>)</div><div class="line">&gt; head(AAPL_updown)</div><div class="line">           Delt.1.arithmetic</div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">02</span>                <span class="literal">NA</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">03</span>      -<span class="number">0.002094603</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">04</span>      -<span class="number">0.009463199</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">07</span>      -<span class="number">0.009487666</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">08</span>       <span class="number">0.010135522</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">09</span>      -<span class="number">0.005349222</span></div><div class="line"></div><div class="line">&gt; AAPL_updown_dates&lt;-AAPL_updown[AAPL_updown &gt; <span class="number">0.02</span> | AAPL_updown &lt; -<span class="number">0.02</span>]</div><div class="line">&gt; AAPL_updown_dates</div><div class="line">           Delt.1.arithmetic</div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">10</span>        <span class="number">0.02214272</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">14</span>       -<span class="number">0.03386508</span></div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">24</span>       -<span class="number">0.10507578</span></div><div class="line"><span class="number">2013</span>-<span class="number">04</span>-<span class="number">24</span>       -<span class="number">0.03099993</span></div><div class="line"><span class="number">2013</span>-<span class="number">07</span>-<span class="number">24</span>        <span class="number">0.04759063</span></div><div class="line"><span class="number">2013</span>-<span class="number">09</span>-<span class="number">04</span>        <span class="number">0.02247329</span></div><div class="line"><span class="number">2013</span>-<span class="number">09</span>-<span class="number">11</span>       -<span class="number">0.05585881</span></div><div class="line"><span class="number">2013</span>-<span class="number">09</span>-<span class="number">23</span>        <span class="number">0.06138080</span></div></pre></td></tr></table></figure></p>
+<p>先用Delt函数计算AAPL前一日收盘价（调整后的）和下一日开盘价之间的差异，即AAPL_updown，然后再将AAPL_updown中&gt;2%和&lt;-2%的数据抽取出来即可，如上述结果，AAPL的股票有8天是暴涨暴跌的。还有，Delt的help要仔细看，help里面的例子提到</p>
+<pre><code> Delt(Stock.Open,Stock.Close)        #Open to Close pct. change
+ Delt(Stock.Open,Stock.Close,k=0:2)  #...for 0,1, and 2 periods</code></pre>
+<p>例子是计算一段时间内的总体的开盘价（第1天的开盘价）和总体的收盘价（最后1天的收盘价）之间的差异，对于我们的这个例子，要把收盘价放在第1个参数，第2天的开盘价放第二个参数。 同样的方法可以计算其他3个股票，因为GOOGL没有派息和拆分，所以其调整后收盘价和原收盘价一样，以下是代码</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">&gt; GOOGL_mod_cl&lt;-Cl(get(<span class="string">"GOOGL"</span>,env=myenv))</div><div class="line">&gt; GOOGL_updown&lt;-Delt(GOOGL_mod_cl,Op(get(<span class="string">"GOOGL"</span>,env=myenv)), k=<span class="number">1</span>)</div><div class="line">&gt; GOOGL_updown_dates&lt;-GOOGL_updown[GOOGL_updown &gt; <span class="number">0.02</span> | GOOGL_updown &lt; -<span class="number">0.02</span>]</div><div class="line">&gt; GOOGL_updown_dates</div><div class="line">           Delt.1.arithmetic</div><div class="line"><span class="number">2013</span>-<span class="number">01</span>-<span class="number">23</span>        <span class="number">0.04712109</span></div><div class="line"><span class="number">2013</span>-<span class="number">07</span>-<span class="number">19</span>       -<span class="number">0.02643080</span></div><div class="line"><span class="number">2013</span>-<span class="number">10</span>-<span class="number">18</span>        <span class="number">0.09877474</span></div><div class="line"></div><div class="line">&gt; MSFT_mod_cl&lt;-Cl(get(<span class="string">"MSFT"</span>,env=myenv))-merge(all_zero, get(<span class="string">"MSFT.div"</span>,env=myenv), fill = <span class="number">0</span>)[,<span class="number">2</span>]</div><div class="line">&gt; MSFT_updown&lt;-Delt(MSFT_mod_cl,Op(get(<span class="string">"MSFT"</span>,env=myenv)), k=<span class="number">1</span>)</div><div class="line">&gt; MSFT_updown_dates&lt;-MSFT_updown[MSFT_updown &gt; <span class="number">0.02</span> | MSFT_updown &lt; -<span class="number">0.02</span>]</div><div class="line">&gt; MSFT_updown_dates</div><div class="line">           Delt.1.arithmetic</div><div class="line"><span class="number">2013</span>-<span class="number">04</span>-<span class="number">11</span>       -<span class="number">0.03896962</span></div><div class="line"><span class="number">2013</span>-<span class="number">04</span>-<span class="number">19</span>        <span class="number">0.02882945</span></div><div class="line"><span class="number">2013</span>-<span class="number">07</span>-<span class="number">19</span>       -<span class="number">0.08577878</span></div><div class="line"><span class="number">2013</span>-<span class="number">08</span>-<span class="number">23</span>        <span class="number">0.08582896</span></div><div class="line"><span class="number">2013</span>-<span class="number">09</span>-<span class="number">03</span>       -<span class="number">0.04940120</span></div><div class="line"><span class="number">2013</span>-<span class="number">10</span>-<span class="number">25</span>        <span class="number">0.06405694</span></div><div class="line"></div><div class="line">&gt; ORCL_mod_cl&lt;-Cl(get(<span class="string">"ORCL"</span>,env=myenv))-merge(all_zero, get(<span class="string">"ORCL.div"</span>,env=myenv), fill = <span class="number">0</span>)[,<span class="number">2</span>]</div><div class="line">&gt; ORCL_updown&lt;-Delt(ORCL_mod_cl,Op(get(<span class="string">"ORCL"</span>,env=myenv)), k=<span class="number">1</span>)</div><div class="line">&gt; ORCL_updown_dates&lt;-ORCL_updown[ORCL_updown &gt; <span class="number">0.02</span> | ORCL_updown &lt; -<span class="number">0.02</span>]</div><div class="line">&gt; ORCL_updown_dates</div><div class="line">           Delt.1.arithmetic</div><div class="line"><span class="number">2013</span>-<span class="number">03</span>-<span class="number">21</span>       -<span class="number">0.08358960</span></div><div class="line"><span class="number">2013</span>-<span class="number">06</span>-<span class="number">21</span>       -<span class="number">0.07527853</span></div><div class="line"><span class="number">2013</span>-<span class="number">08</span>-<span class="number">27</span>       -<span class="number">0.02133581</span></div></pre></td></tr></table></figure></p>
+<p>可见，GOOGL，MSFT，ORCL的暴涨暴跌的天数分别是3,6,2。造成股票大幅波动的原因很多，列举部分：微软 2013-07-09，可以参考<a href="http://tech.qq.com/a/20130709/013219.htm" target="_blank" rel="external">这里</a>；Oracle 2013-03-21，可以参考<a href="http://tech2ipo.com/58602" target="_blank" rel="external">这里</a>；Google 2013-10-18，可以参考<a href="http://www.huxiu.com/article/21662/1.html" target="_blank" rel="external">这里</a>；苹果 2013-01-24，可以参考<a href="http://www.huxiu.com/article/9453/1.html" target="_blank" rel="external">这里</a>。基本上，造成股价大幅度变动的时间点都在发布财报的时候，也有不是财报影响的，例如：苹果 2013-09-11，可以参考<a href="http://money.163.com/13/0911/13/98GDQ8G300254TI5.html" target="_blank" rel="external">这里</a></p>
+<p>3)截取一段时间内这四家公司股价数据（注意分红派息除权对股价的影响），用R中的相关性分析判断股价之间的相关性，或者用R基础课程第八周所讲的MIC指标对其进行分析 如果要除去派息和拆分等的影响，那最好采用股票调整价格（Adjusted Stock Price）来做分析，即getSymbols获取的数据中的Adjusted那一列，代码如下，</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">&gt; cor(cbind(Ad(get(<span class="string">"AAPL"</span>,env=myenv)),Ad(get(<span class="string">"ORCL"</span>,env=myenv)),Ad(get(<span class="string">"MSFT"</span>,env=myenv)), Ad(get(<span class="string">"GOOGL"</span>,env=myenv))))</div><div class="line">               AAPL.Adjusted ORCL.Adjusted MSFT.Adjusted GOOGL.Adjusted</div><div class="line">AAPL.Adjusted     <span class="number">1.00000000</span>     <span class="number">0.1774047</span>    <span class="number">0.03703686</span>      <span class="number">0.1469590</span></div><div class="line">ORCL.Adjusted     <span class="number">0.17740469</span>     <span class="number">1.0000000</span>   -<span class="number">0.46439928</span>     -<span class="number">0.3614837</span></div><div class="line">MSFT.Adjusted     <span class="number">0.03703686</span>    -<span class="number">0.4643993</span>    <span class="number">1.00000000</span>      <span class="number">0.8411823</span></div><div class="line">GOOGL.Adjusted    <span class="number">0.14695899</span>    -<span class="number">0.3614837</span>    <span class="number">0.84118234</span>      <span class="number">1.0000000</span></div></pre></td></tr></table></figure></p>
+<p>上述代码中，用Ad或者股票调整价格，cbind将数据按列组合起来，cor来计算相关性。 从计算结果可以发现，MSFT和GOOGL的相关性比较高，其他股票之间的相关性不是很明显。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/R/">R</a><a href="/tags/Quantmod/">Quantmod</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Dataguru/">Dataguru</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201404-quantmod-etl/" data-title="R的Quantmod包ETL功能试用 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201405-quantmod-drawing/" title="R的Quantmod包画图功能试用">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  R的Quantmod包画图功能试用</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/README/"  title="开博的第一篇文章">
+ <strong>NEXT:</strong><br/> 
+ <span>开博的第一篇文章
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

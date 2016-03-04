@@ -1,0 +1,558 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>PostgreSQL集群搭建（使用Postgres XC） | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="PostgreSQL本身没有集群功能，但是有开源的第三方解决方案，比较成熟的有Postgres XC（PGXC）和Postgres XL（PGXL）。PGXC跟进PostgreSQl的版本相对比较快，PGXL的功能比较强大一些，主要多了MPP (Massively Parallel Processi">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201409-postgres-cluster/" title="PostgreSQL集群搭建（使用Postgres XC）" itemprop="url">PostgreSQL集群搭建（使用Postgres XC）</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-09-13T01:21:00.000Z" itemprop="datePublished">2014-09-13</time>
+    更新日期:<time datetime="2014-12-03T01:16:04.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>PostgreSQL本身没有集群功能，但是有开源的第三方解决方案，比较成熟的有Postgres XC（PGXC）和Postgres XL（PGXL）。PGXC跟进PostgreSQl的版本相对比较快，PGXL的功能比较强大一些，主要多了MPP (Massively Parallel Processing) Parallelism。PGXC集群的架构主要分全局事务管理器、协调器和数据节点三个部分，通过全局事务管理器（GTM ，Global Transaction Manager）作为单点来控制多个协调器（Coordinator），由协调器来解析SQL并把SQL分到多个数据节点（Data Node）上，取回数据后合并数据集，返回给调用者。大致结构如下图，</p>
+<p><img src="/images/201409-postgres-cluster/pgxc-arch.png" alt=""></p>
+<p>本文使用源码在单机上搭建PostgreSQL的集群，实际的集群环境应该是需要多台服务器，但搭建的操作步骤是类似的。实际上，安装过程本身和PostgreSQL也有很多相似之处。</p>
+<p>先去下载PGXC的源码包，在sourceforge上有最新版，本文使用的版本是pgxc-v1.0.4.tar.gz。建立独立的用户pgxc用于管理集群，并用新的账号解压源码包。</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">[root@anzhy ~]<span class="comment"># adduser pgxc</span></div><div class="line">[root@anzhy ~]<span class="comment"># su - pgxc</span></div><div class="line">[pgxc@anzhy ~]$ <span class="keyword">exit</span></div><div class="line">logout</div><div class="line">[root@anzhy ~]<span class="comment"># cp Downloads/pgxc-v1.0.4.tar.gz ~pgxc/</span></div><div class="line">[root@anzhy ~]<span class="comment"># su - pgxc</span></div><div class="line">[pgxc@anzhy ~]$ ls</div><div class="line">pgxc-v1.<span class="number">0.4</span>.tar.gz</div><div class="line">[pgxc@anzhy ~]$ tar xzf pgxc-v1.<span class="number">0.4</span>.tar.gz</div><div class="line">[pgxc@anzhy ~]$ ls</div><div class="line">pgxc-v1.<span class="number">0.4</span>.tar.gz  postgres-xc-<span class="number">1.0</span>.<span class="number">4</span></div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/add-user-pgxc.png" alt=""></p>
+<p>解压后的源码需要编译，编译的过程和PostgreSQL类似，有一些依赖需要安装，由于之前这台机器在安装PostgreSQL的时候已经装过依赖程序了，所以不会提示缺少依赖的情况。具体可以参考<a href="http://valleylord.sinaapp.com/post/201408-postgres-dev-env#content" target="_blank" rel="external">之前的文章</a>。以下只简单列一下编译的步骤，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ mkdir postgres-xc</div><div class="line">[pgxc@anzhy ~]$ mkdir data</div><div class="line">[pgxc@anzhy ~]$ <span class="built_in">pwd</span></div><div class="line">/home/pgxc</div><div class="line">[pgxc@anzhy ~]$ <span class="built_in">cd</span> postgres-xc-<span class="number">1.0</span>.<span class="number">4</span>/</div><div class="line">......</div><div class="line">[pgxc@anzhy ~]$ ./configure --prefix=<span class="variable">$HOME</span>/postgres-xc</div><div class="line">......</div><div class="line">[pgxc@anzhy ~]$ make</div><div class="line">......</div><div class="line">[pgxc@anzhy ~]$ make install</div><div class="line">......</div></pre></td></tr></table></figure></p>
+<p>一切正常的话，上述每个步骤都会提示成功，Postgres XC最终会安装在<code>$HOME/postgres-xc</code>目录下。下面在.bashrc中配置必要的环境变量，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> PGHOME=/home/pgxc/postgres-xc</div><div class="line"><span class="keyword">export</span> PGPORT=<span class="number">15431</span></div><div class="line"><span class="keyword">export</span> PGDATA=<span class="variable">$PGHOME</span>/../data/db_1/data</div><div class="line"><span class="keyword">export</span> LANG=en_US.utf8</div><div class="line"><span class="keyword">export</span> LD_LIBRARY_PATH=<span class="variable">$PGHOME</span>/lib:<span class="variable">$LD_LIBRARY_PATH</span></div><div class="line"><span class="keyword">export</span> PATH=<span class="variable">$PGHOME</span>/bin:<span class="variable">$PATH</span>:.</div><div class="line"><span class="keyword">export</span> MANPATH=<span class="variable">$PGHOME</span>/share/man:<span class="variable">$MANPATH</span></div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-env.png" alt=""></p>
+<p>接下来就可以初始化数据库了，由于是要模拟双机，所以需要创建db_1和db_2两个数据节点。同样使用initdb命令，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ initdb -D <span class="variable">$HOME</span>/data/db_1/data --nodename db_1</div><div class="line">[pgxc@anzhy ~]$ initdb -D <span class="variable">$HOME</span>/data/db_2/data --nodename db_2</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-initdb.png" alt=""></p>
+<p>修改两个数据节点的postgresql.conf中的参数，主要是GTM的选项，如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">listen_addresses = <span class="string">'*'</span></div><div class="line">port = <span class="number">15431</span>    # <span class="keyword">change</span> <span class="keyword">to</span> <span class="number">15432</span> <span class="keyword">for</span> db_2</div><div class="line">gtm_host = <span class="string">'192.168.1.7'</span></div><div class="line">gtm_port = <span class="number">6666</span></div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-dn-setting1.png" alt=""></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-dn-setting2.png" alt=""></p>
+<p>其中，port参数两个节点不能相同（分别为15431和15432），否则会出错，gtm的地址要写本机的ip地址，其实对于单机的情况写localhost也是可以的。然后修改pg_hba.conf的参数配置数据节点的连接和认证，在IPv4那一段加入以下配置，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">host    <span class="literal">all</span>             <span class="literal">all</span>             <span class="number">192.168</span>.<span class="number">1.7</span>/<span class="number">32</span>          trust</div><div class="line">host    <span class="literal">all</span>             <span class="literal">all</span>             <span class="number">0.0</span>.<span class="number">0.0</span>/<span class="number">0</span>               md5</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-dn-setting3.png" alt=""></p>
+<p>配置完2个数据节点之后，然后去做GTM的初始化，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ initgtm -Z gtm -D <span class="variable">$HOME</span>/data/gtm/data</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-initgtm.png" alt=""></p>
+<p>接下来做协调器的配置，先做初始化，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy data]$ initdb -D <span class="variable">$HOME</span>/data/coor_1/data --nodename coor_1</div><div class="line">[pgxc@anzhy data]$ initdb -D <span class="variable">$HOME</span>/data/coor_2/data --nodename coor_2</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-initcoor.png" alt=""></p>
+<p>从这个命令可以看出，其实协调器和数据节点是很相似的，他们的初始化命令是一样的。同样，也要配置协调器的参数，先是postgresql.conf中的参数，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">listen_addresses = <span class="string">'*'</span></div><div class="line">port = <span class="number">1921</span>    # <span class="keyword">change</span> <span class="keyword">to</span> <span class="number">1922</span> <span class="keyword">for</span> coor_2</div><div class="line">gtm_host = <span class="string">'192.168.1.7'</span></div><div class="line">gtm_port = <span class="number">6666</span></div><div class="line">pooler_port = <span class="number">6667</span> # <span class="keyword">change</span> <span class="keyword">to</span> <span class="number">6668</span> <span class="keyword">for</span> coor_2</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-coor-setting1.png" alt=""></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-coor-setting2.png" alt=""></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-coor-setting3.png" alt=""></p>
+<p>设置中要注意的地方和数据节点一样，协调器的设置中多了一个pooler_port的连接池相关设置，pg_hba.conf的设置和数据节点一样，加入以下配置，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">host    <span class="literal">all</span>             <span class="literal">all</span>             <span class="number">192.168</span>.<span class="number">1.7</span>/<span class="number">32</span>          trust</div><div class="line">host    <span class="literal">all</span>             <span class="literal">all</span>             <span class="number">0.0</span>.<span class="number">0.0</span>/<span class="number">0</span>               md5</div></pre></td></tr></table></figure></p>
+<p>接下来就可以启动集群了，启动的顺序是，GTM-&gt;数据节点-&gt;协调器，先启动GTM，并查看状态。</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ gtm_ctl -Z gtm -D <span class="variable">$HOME</span>/data/gtm/data/ start</div><div class="line">server starting</div><div class="line">[pgxc@anzhy ~]$ gtm_ctl -Z gtm -D <span class="variable">$HOME</span>/data/gtm/data status</div><div class="line">gtm_ctl: server is running (PID: <span class="number">2884</span>)</div><div class="line"> <span class="string">"-D"</span> <span class="string">"/home/pgxc/data/gtm/data"</span></div><div class="line"><span class="number">1</span> master</div></pre></td></tr></table></figure></p>
+<p>也可以简单的直接运行GTM，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ gtm -D <span class="variable">$HOME</span>/data/gtm/data/</div></pre></td></tr></table></figure></p>
+<p>同样，数据节点的启动，也有两种方式，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ pg_ctl start -D <span class="variable">$HOME</span>/data/db_1/data -Z datanode</div><div class="line">[pgxc@anzhy ~]$ pg_ctl start -D <span class="variable">$HOME</span>/data/db_2/data -Z datanode</div></pre></td></tr></table></figure></p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ postgres -X -D <span class="variable">$HOME</span>/data/db_1/data</div><div class="line">[pgxc@anzhy ~]$ postgres -X -D <span class="variable">$HOME</span>/data/db_2/data</div></pre></td></tr></table></figure></p>
+<p>协调器的启动和数据节点是类似的，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ pg_ctl start -D <span class="variable">$HOME</span>/data/coor_1/data -Z coordinator</div><div class="line">[pgxc@anzhy ~]$ pg_ctl start -D <span class="variable">$HOME</span>/data/coor_2/data -Z coordinator</div></pre></td></tr></table></figure></p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ postgres -X -D <span class="variable">$HOME</span>/data/coor_1/data</div><div class="line">[pgxc@anzhy ~]$ postgres -X -D <span class="variable">$HOME</span>/data/coor_2/data</div></pre></td></tr></table></figure></p>
+<p>本文都是使用前一种方法启动的，截图如下，</p>
+<p><img src="/images/201409-postgres-cluster/pgxc-start.png" alt=""></p>
+<p>启动后，可以用netstat和ps查看监听端口，和进程状态，如下图，</p>
+<p><img src="/images/201409-postgres-cluster/pgxc-status.png" alt=""></p>
+<p>将上述启动步骤放在一个脚本中，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"></div><div class="line">gtm_ctl -Z gtm -D <span class="variable">$HOME</span>/data/gtm/data/ start</div><div class="line">sleep <span class="number">3</span>s</div><div class="line"></div><div class="line">gtm_ctl -Z gtm -D <span class="variable">$HOME</span>/data/gtm/data status</div><div class="line"></div><div class="line">pg_ctl start -D <span class="variable">$HOME</span>/data/db_1/data -Z datanode</div><div class="line">pg_ctl start -D <span class="variable">$HOME</span>/data/db_2/data -Z datanode</div><div class="line">sleep <span class="number">2</span>s</div><div class="line"></div><div class="line">pg_ctl start -D <span class="variable">$HOME</span>/data/coor_1/data -Z coordinator</div><div class="line">pg_ctl start -D <span class="variable">$HOME</span>/data/coor_2/data -Z coordinator</div></pre></td></tr></table></figure></p>
+<p>关闭集群的顺序是相反的，协调器-&gt;数据节点-&gt;GTM，如下图，</p>
+<p><img src="/images/201409-postgres-cluster/pgxc-stop.png" alt=""></p>
+<p>同样，将上述操作合并成一个脚本，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"></div><div class="line">pg_ctl stop -D <span class="variable">$HOME</span>/data/coor_2/data -Z coordinator</div><div class="line">pg_ctl stop -D <span class="variable">$HOME</span>/data/coor_1/data -Z coordinator</div><div class="line"></div><div class="line">pg_ctl stop -D <span class="variable">$HOME</span>/data/db_2/data -Z datanode</div><div class="line">pg_ctl stop -D <span class="variable">$HOME</span>/data/db_1/data -Z datanode</div><div class="line"></div><div class="line">gtm_ctl stop -Z gtm -D <span class="variable">$HOME</span>/data/gtm/data/</div></pre></td></tr></table></figure></p>
+<p>然后就可以登陆了，登陆其中一个协调者节点，如下，</p>
+<p><img src="/images/201409-postgres-cluster/pgxc-login.png" alt=""></p>
+<p>最后一步是注册各个节点，如上登陆协调者节点1和2，运行如下脚本，</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">drop</span> node coor_1;</span></div><div class="line"><span class="operator"><span class="keyword">drop</span> node coor_2;</span></div><div class="line"><span class="operator"><span class="keyword">create</span> node coor_1 <span class="keyword">with</span>(TYPE=coordinator,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">1921</span>);</span></div><div class="line"><span class="operator"><span class="keyword">create</span> node coor_2 <span class="keyword">with</span>(TYPE=coordinator,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">1922</span>);</span></div><div class="line"><span class="operator"><span class="keyword">drop</span> node db_1;</span></div><div class="line"><span class="operator"><span class="keyword">drop</span> node db_2;</span></div><div class="line"><span class="operator"><span class="keyword">create</span> node db_1 <span class="keyword">with</span>(TYPE=datanode,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">15431</span>,<span class="keyword">primary</span>=<span class="literal">false</span>);</span></div><div class="line"><span class="operator"><span class="keyword">create</span> node db_2 <span class="keyword">with</span>(TYPE=datanode,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">15432</span>,<span class="keyword">primary</span>=<span class="literal">false</span>);</span></div><div class="line"><span class="operator"><span class="keyword">alter</span> node coor_1 <span class="keyword">with</span>(TYPE=<span class="string">'coordinator'</span>,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">1921</span>);</span></div><div class="line"><span class="operator"><span class="keyword">alter</span> node coor_2 <span class="keyword">with</span>(TYPE=<span class="string">'coordinator'</span>,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">1922</span>);</span></div><div class="line"><span class="operator"><span class="keyword">alter</span> node db_1 <span class="keyword">with</span>(TYPE=datanode,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">15431</span>,<span class="keyword">primary</span>=<span class="literal">true</span>);</span></div><div class="line"><span class="operator"><span class="keyword">alter</span> node db_2 <span class="keyword">with</span>(TYPE=datanode,HOST=<span class="string">'192.168.1.7'</span>,PORT=<span class="number">15432</span>,<span class="keyword">primary</span>=<span class="literal">false</span>);</span></div><div class="line"></div><div class="line"><span class="operator"><span class="keyword">select</span> pgxc_pool_reload();</span></div><div class="line"><span class="operator"><span class="keyword">select</span> * <span class="keyword">from</span> pgxc_node;</span></div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-register.png" alt=""></p>
+<p>如果是第一次运行，drop相关的步骤也可以不运行，运行完之后，就可以看到多个节点正常的运行起来了。<strong>注意，一定要每个协调者节点都运行如上的脚本，否则可能在建数据库的时候报错</strong><a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>，<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">postgres=# <span class="operator"><span class="keyword">create</span> <span class="keyword">database</span> test;</span></div><div class="line">ERROR:  No Datanode defined in cluster</div><div class="line">HINT:  You need to define at least 1 Datanode with <span class="operator"><span class="keyword">CREATE</span> NODE.</span></div><div class="line">STATEMENT:  <span class="keyword">create</span> <span class="keyword">database</span> test;</div><div class="line">ERROR:  No Datanode defined in cluster</div><div class="line">STATEMENT:  <span class="operator"><span class="keyword">create</span> <span class="keyword">database</span> test;</span></div><div class="line">ERROR:  No Datanode defined in cluster</div></pre></td></tr></table></figure></p>
+<p>另外，可以将上述脚本保存成文件<code>pgxc_register.sql</code>，并在之前的启动脚本之后加上注册步骤，每次启动的时候即可自动完成，如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sleep <span class="number">2</span>s</div><div class="line"></div><div class="line">psql <span class="operator">-d</span> postgres -p <span class="number">1921</span> <span class="operator">-f</span> pgxc_register.sql</div><div class="line">psql <span class="operator">-d</span> postgres -p <span class="number">1922</span> <span class="operator">-f</span> pgxc_register.sql</div></pre></td></tr></table></figure></p>
+<p>下面做一些简单的建表测试，先登陆协调节点1，新增数据库，建表，并插入4笔数据，如下，</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">[pgxc@anzhy ~]$ psql -d postgres -p 1921</div><div class="line">psql (PGXC 1.0.4, based on PG 9.1.13)</div><div class="line">Type "<span class="operator"><span class="keyword">help</span><span class="string">" for help.</span></span></div><div class="line"></div><div class="line">postgres=# create database test;</div><div class="line">CREATE DATABASE</div><div class="line">postgres=# \c test</div><div class="line">You are now connected to database "test<span class="string">" as user "</span>pgxc<span class="string">".</span></div><div class="line">test=# create table test_table(id int);</div><div class="line">CREATE TABLE</div><div class="line">test=# insert into test_table values(1);</div><div class="line">INSERT 0 1</div><div class="line">test=# insert into test_table values(2);</div><div class="line">INSERT 0 1</div><div class="line">test=# insert into test_table values(3);</div><div class="line">INSERT 0 1</div><div class="line">test=# insert into test_table values(4);</div><div class="line">INSERT 0 1</div><div class="line">test=# commit;</div><div class="line">COMMIT</div><div class="line">test=# select count(*) from test_table;</div><div class="line"> count</div><div class="line">-------</div><div class="line">     4</div><div class="line">(1 row)</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201409-postgres-cluster/pgxc-test1.png" alt=""></p>
+<p>然后登陆协调节点2，查询刚才新增的表中的数据，发现已经可以查到了，</p>
+<p><img src="/images/201409-postgres-cluster/pgxc-test2.png" alt=""></p>
+<p>分别登陆数据节点1和2，发现数据分散在这2个节点上，每个节点上2条数据，</p>
+<p><img src="/images/201409-postgres-cluster/pgxc-test3.png" alt=""></p>
+<p>至此，Postgres XC的集群搭建已经成功。如果要使用Postgres XL的话，步骤非常类似。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://xmarker.blog.163.com/blog/static/2264840572013923552363/" class="uri" target="_blank" rel="external">http://xmarker.blog.163.com/blog/static/2264840572013923552363/</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://francs3.blog.163.com/blog/static/405767272012532308480/" class="uri" target="_blank" rel="external">http://francs3.blog.163.com/blog/static/405767272012532308480/</a><a href="#fnref2">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Postgres/">Postgres</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Postgres/">Postgres</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201409-postgres-cluster/" data-title="PostgreSQL集群搭建（使用Postgres XC） | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201409-jvm-classloader/" title="JVM自定义classloader实现热替换">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  JVM自定义classloader实现热替换</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201409-jvm-tomcat-throughput/"  title="JMeter测试不同GC参数下Tomcat的吞吐率">
+ <strong>NEXT:</strong><br/> 
+ <span>JMeter测试不同GC参数下Tomcat的吞吐率
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

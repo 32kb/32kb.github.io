@@ -1,0 +1,525 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>MyCAT 日志分析 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="MyCAT 的日志还是相对比较简明的，看系统细节的话需要打开debug级别的 log，修改log4j.xml，
+12345&amp;lt;root&amp;gt;  &amp;lt;level value=&quot;debug&quot; /&amp;gt;  &amp;lt;appender-ref ref=&quot;FILE&quot; /&amp;gt;   &amp;lt;!--&amp;">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201601-mycat-log-analysis/" title="MyCAT 日志分析" itemprop="url">MyCAT 日志分析</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2016-01-23T06:50:21.000Z" itemprop="datePublished">2016-01-23</time>
+    更新日期:<time datetime="2016-01-30T09:58:36.361Z" itemprop="dateModified">2016-01-30</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">MyCAT select 日志分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">动态加载schema.xml</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">MyCAT 字符集</span></a></li></ol>
+		</div>
+		
+		<p>MyCAT 的日志还是相对比较简明的，看系统细节的话需要打开debug级别的 log，修改<code>log4j.xml</code>，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&lt;root&gt;</div><div class="line">  &lt;level value=<span class="string">"debug"</span> /&gt;</div><div class="line">  &lt;appender-<span class="keyword">ref</span> <span class="keyword">ref</span>=<span class="string">"FILE"</span> /&gt;</div><div class="line">   &lt;!--&lt;appender-<span class="keyword">ref</span> <span class="keyword">ref</span>=<span class="string">"FILE"</span> /&gt;--&gt;</div><div class="line">&lt;/root&gt;</div></pre></td></tr></table></figure></p>
+<p>然后启动 MyCAT 就可以看到详细的日志了，日志默认路径在<code>logs/mycat.log</code>。启用之前，设置 Mysql 的字符集为 utf8<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>，即修改/etc/mysql/my.cnf，在[mysqld]后添加character-set-server=utf8。</p>
+<h2>MyCAT select 日志分析</h2>
+<p>运行简单的查询 sql，如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="header">mysql&gt; explain select * from travelrecord;</span></div><div class="line">+-----------+--------------------------------------+</div><div class="line"><span class="header">| DATA_NODE | SQL                                  |</span></div><div class="line">+-----------+--------------------------------------+</div><div class="line">| dn1       | SELECT * FROM travelrecord LIMIT 100 |</div><div class="line">| dn2       | SELECT * FROM travelrecord LIMIT 100 |</div><div class="line"><span class="header">| dn3       | SELECT * FROM travelrecord LIMIT 100 |</span></div><div class="line">+-----------+--------------------------------------+</div><div class="line">3 rows in set (0.25 sec)</div><div class="line"></div><div class="line"><span class="header">mysql&gt; select * from travelrecord;</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line"><span class="header">| id      | user_id | traveldate | fee  | days |</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line">| 1000000 | abc     | 2016-01-02 |  100 |    3 |</div><div class="line"><span class="header">| 7000000 | abc     | 2016-01-02 |  100 |    3 |</span></div><div class="line">+---------+---------+------------+------+------+</div><div class="line">2 rows in set (0.09 sec)</div></pre></td></tr></table></figure></p>
+<p>对应的 debug 日志比较长，以下只列出了执行 select 的日志，explain 的日志没有列出，如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div></pre></td><td class="code"><pre><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.441</span>   INFO [$_NIOREACTOR-<span class="number">0</span>-RW] (FrontendAuthenticator.java:<span class="number">193</span>) -ServerConnection [<span class="variable">id=</span><span class="number">1</span>, <span class="variable">schema=</span>TESTDB, <span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>, <span class="variable">user=</span>test,<span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">schema=</span>TESTDB]'test' login success</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.443</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (ServerQueryHandler.java:<span class="number">56</span>) -ServerConnection [<span class="variable">id=</span><span class="number">1</span>, <span class="variable">schema=</span>TESTDB, <span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>, <span class="variable">user=</span>test,<span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">schema=</span>TESTDB]show databases</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.458</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (ServerQueryHandler.java:<span class="number">56</span>) -ServerConnection [<span class="variable">id=</span><span class="number">1</span>, <span class="variable">schema=</span>TESTDB, <span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>, <span class="variable">user=</span>test,<span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">schema=</span>TESTDB]show tables</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.465</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (ServerQueryHandler.java:<span class="number">56</span>) -ServerConnection [<span class="variable">id=</span><span class="number">1</span>, <span class="variable">schema=</span>TESTDB, <span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>, <span class="variable">user=</span>test,<span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">schema=</span>TESTDB]select * from travelrecord</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.469</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (EnchachePool.java:<span class="number">76</span>) -SQLRouteCache  miss cache ,key:TESTDBselect * from travelrecord</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.589</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (EnchachePool.java:<span class="number">59</span>) -SQLRouteCache add cache ,key:TESTDBselect * from travelrecord value:select * from travelrecord, <span class="variable">route=</span>{</div><div class="line">   <span class="number">1</span> -&gt; dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">   <span class="number">2</span> -&gt; dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">   <span class="number">3</span> -&gt; dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">}</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.589</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (NonBlockingSession.java:<span class="number">113</span>) -ServerConnection [<span class="variable">id=</span><span class="number">1</span>, <span class="variable">schema=</span>TESTDB, <span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>, <span class="variable">user=</span>test,<span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">schema=</span>TESTDB]select * from travelrecord, <span class="variable">route=</span>{</div><div class="line">   <span class="number">1</span> -&gt; dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">   <span class="number">2</span> -&gt; dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">   <span class="number">3</span> -&gt; dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">} rrs </div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.593</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (MultiNodeQueryHandler.java:<span class="number">82</span>) -execute mutinode query select * from travelrecord</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.595</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (MultiNodeQueryHandler.java:<span class="number">97</span>) -has data merge logic </div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.595</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (PhysicalDBPool.java:<span class="number">452</span>) -select read source hostS1 for dataHost:localhost1</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.595</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (MySQLConnection.java:<span class="number">445</span>) -con need syn ,total syn cmd <span class="number">1</span> commands SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;schema change:<span class="constant">false</span> con:MySQLConnection [<span class="variable">id=</span><span class="number">2</span>, <span class="variable">lastTime=</span><span class="number">1453534413595</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">17</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">0</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.596</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (PhysicalDBPool.java:<span class="number">452</span>) -select read source hostS1 for dataHost:localhost1</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.597</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (MySQLConnection.java:<span class="number">445</span>) -con need syn ,total syn cmd <span class="number">1</span> commands SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;schema change:<span class="constant">false</span> con:MySQLConnection [<span class="variable">id=</span><span class="number">4</span>, <span class="variable">lastTime=</span><span class="number">1453534413597</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">16</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">0</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.597</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (PhysicalDBPool.java:<span class="number">452</span>) -select read source hostS1 for dataHost:localhost1</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.597</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (MySQLConnection.java:<span class="number">445</span>) -con need syn ,total syn cmd <span class="number">1</span> commands SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;schema change:<span class="constant">false</span> con:MySQLConnection [<span class="variable">id=</span><span class="number">5</span>, <span class="variable">lastTime=</span><span class="number">1453534413597</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">12</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">0</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.597</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MultiNodeQueryHandler.java:<span class="number">171</span>) -received ok response ,executeResponse:<span class="constant">false</span> from MySQLConnection [<span class="variable">id=</span><span class="number">2</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">17</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">3</span>f164fd2, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.598</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (MultiNodeQueryHandler.java:<span class="number">171</span>) -received ok response ,executeResponse:<span class="constant">false</span> from MySQLConnection [<span class="variable">id=</span><span class="number">5</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">12</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">94</span>bf31, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.599</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (MultiNodeQueryHandler.java:<span class="number">241</span>) -on row end reseponse MySQLConnection [<span class="variable">id=</span><span class="number">5</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">12</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">94</span>bf31, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.598</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (MultiNodeQueryHandler.java:<span class="number">171</span>) -received ok response ,executeResponse:<span class="constant">false</span> from MySQLConnection [<span class="variable">id=</span><span class="number">4</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">16</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">41</span>a599fc, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.600</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (NonBlockingSession.java:<span class="number">229</span>) -release connection MySQLConnection [<span class="variable">id=</span><span class="number">5</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">12</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">94</span>bf31, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.603</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (PhysicalDatasource.java:<span class="number">403</span>) -release channel MySQLConnection [<span class="variable">id=</span><span class="number">5</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">12</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.600</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (DataMergeService.java:<span class="number">94</span>) -field metadata inf:[<span class="variable">DAYS=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">4</span>, <span class="variable">colType=</span><span class="number">3</span>], <span class="variable">USER_ID=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">1</span>, <span class="variable">colType=</span><span class="number">253</span>], <span class="variable">ID=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">0</span>, <span class="variable">colType=</span><span class="number">8</span>], <span class="variable">TRAVELDATE=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">2</span>, <span class="variable">colType=</span><span class="number">10</span>], <span class="variable">FEE=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">3</span>, <span class="variable">colType=</span><span class="number">246</span>]]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.605</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MultiNodeQueryHandler.java:<span class="number">241</span>) -on row end reseponse MySQLConnection [<span class="variable">id=</span><span class="number">2</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">17</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">3</span>f164fd2, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.605</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (NonBlockingSession.java:<span class="number">229</span>) -release connection MySQLConnection [<span class="variable">id=</span><span class="number">2</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">17</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">3</span>f164fd2, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.605</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (PhysicalDatasource.java:<span class="number">403</span>) -release channel MySQLConnection [<span class="variable">id=</span><span class="number">2</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">17</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.607</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (MultiNodeQueryHandler.java:<span class="number">241</span>) -on row end reseponse MySQLConnection [<span class="variable">id=</span><span class="number">4</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">16</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">41</span>a599fc, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.610</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (NonBlockingSession.java:<span class="number">229</span>) -release connection MySQLConnection [<span class="variable">id=</span><span class="number">4</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">16</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">17</span>b029c7, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">41</span>a599fc, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.610</span>  DEBUG [$_NIOREACTOR-<span class="number">0</span>-RW] (PhysicalDatasource.java:<span class="number">403</span>) -release channel MySQLConnection [<span class="variable">id=</span><span class="number">4</span>, <span class="variable">lastTime=</span><span class="number">1453534413593</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">16</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">15</span>:<span class="number">33</span>:<span class="number">33.611</span>  DEBUG [BusinessExecutor5] (DataMergeService.java:<span class="number">296</span>) -prepare mpp merge result for select * from travelrecord</div></pre></td></tr></table></figure></p>
+<p>以上日志中，执行过程如下，</p>
+<ol>
+<li>MyCAT 先收到 sql，然后去路径 cache 中查找是否已经有解析好的路径，但是没有找到，因此提示<code>SQLRouteCache  miss cache</code>，于是解析该 sql，并将路径保存，提示<code>SQLRouteCache add cache</code>；</li>
+<li>接下来，使用<code>NonBlockingSession.java</code>，即非阻塞会话来获取连接，
+还有提示，使用<code>MultiNodeQueryHandler</code>，多节点查询，过程中需要数据合并，即<code>has data merge logic</code>；</li>
+<li>然后，找到了读的数据源，提示<code>select read source hostS1 for dataHost:localhost1</code>，并提示获取连接成功，执行同步命令，<code>-con need syn ,total syn cmd 1 commands</code>，之后发送查询sql，因为 travelrecord 表在 db1、db2、db3 共有3个分片，因此，以上日志在这3个分片上各出现了一次；</li>
+<li>然后，收到返回结果并调用回调函数，<code>on row end reseponse</code>，等数据接收完成还会提示<code>received ok response</code>，同样，也是收到3个分片上各一次；</li>
+<li>执行完后，会释放 MyCAT 会话和 Mysql 连接，<code>release connection MySQLConnection</code>，<code>release channel MySQLConnection</code>；</li>
+<li>收到的结果还需要显示列名，因此，上述执行过程中会提示，<code>field metadata inf</code>；</li>
+<li>等收到3个分片的所有数据后，进行数据合并，<code>prepare mpp merge result</code>；</li>
+</ol>
+<p>以上就是 MyCAT 上执行 sql 的基本步骤。</p>
+<h2>动态加载<code>schema.xml</code></h2>
+<p>MyCAT 的<code>schema.xml</code>是可以动态加载（reload）的。假定新增一个分片表 T_VOTE (ID,PROVINCE)，PROVINCE 列用hash分片。首先需要修改<code>rule.xml</code>，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">tableRule</span> <span class="attribute">name</span>=<span class="value">"sharding-by-stringhash"</span>&gt;</span></div><div class="line">      <span class="tag">&lt;<span class="title">rule</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">columns</span>&gt;</span>province<span class="tag">&lt;/<span class="title">columns</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">algorithm</span>&gt;</span>murmur<span class="tag">&lt;/<span class="title">algorithm</span>&gt;</span></div><div class="line">      <span class="tag">&lt;/<span class="title">rule</span>&gt;</span></div><div class="line">   <span class="tag">&lt;/<span class="title">tableRule</span>&gt;</span></div></pre></td></tr></table></figure></p>
+<p>其中，<code>murmur</code>是一致性 hash 方法。在<code>schema.xml</code>中增加，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;table <span class="variable">name=</span><span class="string">"t_vote"</span> <span class="variable">primaryKey=</span><span class="string">"ID"</span> <span class="variable">dataNode=</span><span class="string">"dn1,dn2,dn3"</span> <span class="variable">rule=</span><span class="string">"sharding-by-stringhash"</span> /&gt;</div></pre></td></tr></table></figure></p>
+<p>修改完文件后，使用管理端，端口9066，登陆MyCAT，用以下命令可以重新加载配置文件，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">mysql&gt;</span> reload <span class="variable">@@config</span>;</span></div><div class="line"><span class="constant">Query</span> <span class="constant">OK</span>, <span class="number">1</span> row affected (<span class="number">0</span>.<span class="number">13</span> sec)</div><div class="line"><span class="constant">Reload</span> config success</div></pre></td></tr></table></figure></p>
+<p>加载完成之后，可以发现用户端，即端口8066，上已经可以看到新增的 T_VOTE 表，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="header">mysql&gt; show tables;</span></div><div class="line">+------------------+</div><div class="line"><span class="header">| Tables in TESTDB |</span></div><div class="line">+------------------+</div><div class="line">| company          |</div><div class="line">| customer         |</div><div class="line">| customer<span class="emphasis">_addr    |</span></div><div class="line">| employee         |</div><div class="line">| goods            |</div><div class="line">| hotnews          |</div><div class="line">| orders           |</div><div class="line">| order_items      |</div><div class="line">| travelrecord     |</div><div class="line"><span class="header">| t_vote           |</span></div><div class="line">+------------------+</div><div class="line">10 rows in set (0.00 sec)</div></pre></td></tr></table></figure></p>
+<p>查看这段时间内的日志，如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">14.003</span>  DEBUG [$_NIOREACTOR-<span class="number">3</span>-RW] (ManagerQueryHandler.java:<span class="number">65</span>) -[<span class="variable">thread=</span>$_NIOREACTOR-<span class="number">3</span>-RW,<span class="variable">class=</span>ManagerConnection,<span class="variable">id=</span><span class="number">7</span>,<span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>,<span class="variable">port=</span><span class="number">9066</span>,<span class="variable">schema=</span>TESTDB]reload @@config</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">14.048</span>   INFO [BusinessExecutor7] (CacheService.java:<span class="number">187</span>) -clear all cache pool </div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">14.048</span>   INFO [BusinessExecutor7] (EnchachePool.java:<span class="number">85</span>) -clear cache ER_SQL2PARENTID</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">14.124</span>   INFO [BusinessExecutor7] (EnchachePool.java:<span class="number">85</span>) -clear cache SQLRouteCache</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">14.125</span>   INFO [BusinessExecutor7] (DefaultLayedCachePool.java:<span class="number">100</span>) -clear cache </div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">14.126</span>   INFO [BusinessExecutor7] (EnchachePool.java:<span class="number">85</span>) -clear cache TableID2DataNodeCache.TESTDB_ORDERS</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">14.128</span>   WARN [BusinessExecutor6] (ReloadConfig.java:<span class="number">166</span>) -send ok package to client [<span class="variable">thread=</span>BusinessExecutor6,<span class="variable">class=</span>ManagerConnection,<span class="variable">id=</span><span class="number">7</span>,<span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>,<span class="variable">port=</span><span class="number">9066</span>,<span class="variable">schema=</span>TESTDB]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">17.674</span>  DEBUG [Timer0] (ConnectionHeartBeatHandler.java:<span class="number">52</span>) -do heartbeat for con MySQLConnection [<span class="variable">id=</span><span class="number">6</span>, <span class="variable">lastTime=</span><span class="number">1453538597657</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">15</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">16</span>:<span class="number">43</span>:<span class="number">17.675</span>  DEBUG [Timer0] (ConnectionHeartBeatHandler.java:<span class="number">52</span>) -do heartbeat for con MySQLConnection [<span class="variable">id=</span><span class="number">4</span>, <span class="variable">lastTime=</span><span class="number">1453538597657</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">16</span>, <span class="variable">charset=</span>utf8, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201601-mycat-log-analysis/mycat-log-reload-config.png"></p>
+<p>可以发现，重新加载的过程中，清理了一些 cache，并重新建立了心跳。</p>
+<h2>MyCAT 字符集</h2>
+<p>以上的实验中，MyCAT 的字符集和 Mysql 客户端的字符集都是采用 utf8，修改 Mysql 客户端的字符集为 latin1，即修改客户端所在机器的/etc/mysql/my.cnf，在[client]后添加default-character-set=latin1。再次执行相同的查询<code>select * from travelrecord;</code>，日志如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div></pre></td><td class="code"><pre><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.877</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (EnchachePool.java:<span class="number">70</span>) -SQLRouteCache hit cache ,key:TESTDBselect * from travelrecord</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.877</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (NonBlockingSession.java:<span class="number">113</span>) -ServerConnection [<span class="variable">id=</span><span class="number">4</span>, <span class="variable">schema=</span>TESTDB, <span class="variable">host=</span><span class="number">192.168</span>.<span class="number">2.201</span>, <span class="variable">user=</span>test,<span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">schema=</span>TESTDB]select * from travelrecord, <span class="variable">route=</span>{</div><div class="line">   <span class="number">1</span> -&gt; dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">   <span class="number">2</span> -&gt; dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">   <span class="number">3</span> -&gt; dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}</div><div class="line">} rrs </div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.877</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MultiNodeQueryHandler.java:<span class="number">82</span>) -execute mutinode query select * from travelrecord</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.877</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MultiNodeQueryHandler.java:<span class="number">97</span>) -has data merge logic </div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.877</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (PhysicalDBPool.java:<span class="number">452</span>) -select read source hostS1 for dataHost:localhost1</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.878</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (PhysicalDBPool.java:<span class="number">452</span>) -select read source hostS1 for dataHost:localhost1</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.878</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MySQLConnection.java:<span class="number">445</span>) -con need syn ,total syn cmd <span class="number">2</span> commands SET names latin1;SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;schema change:<span class="constant">false</span> con:MySQLConnection [<span class="variable">id=</span><span class="number">100</span>, <span class="variable">lastTime=</span><span class="number">1453541417878</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">5</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">0</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.878</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (PhysicalDBPool.java:<span class="number">452</span>) -select read source hostS1 for dataHost:localhost1</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.879</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MySQLConnection.java:<span class="number">445</span>) -con need syn ,total syn cmd <span class="number">2</span> commands SET names latin1;SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;schema change:<span class="constant">false</span> con:MySQLConnection [<span class="variable">id=</span><span class="number">99</span>, <span class="variable">lastTime=</span><span class="number">1453541417878</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">2</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">0</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.879</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (MultiNodeQueryHandler.java:<span class="number">171</span>) -received ok response ,executeResponse:<span class="constant">false</span> from MySQLConnection [<span class="variable">id=</span><span class="number">99</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">2</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">0</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">12</span>bc7f96, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.879</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MultiNodeQueryHandler.java:<span class="number">171</span>) -received ok response ,executeResponse:<span class="constant">false</span> from MySQLConnection [<span class="variable">id=</span><span class="number">100</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">5</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">0</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">327030</span>f, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.880</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (MultiNodeQueryHandler.java:<span class="number">171</span>) -received ok response ,executeResponse:<span class="constant">false</span> from MySQLConnection [<span class="variable">id=</span><span class="number">99</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">2</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">12</span>bc7f96, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.880</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MultiNodeQueryHandler.java:<span class="number">171</span>) -received ok response ,executeResponse:<span class="constant">false</span> from MySQLConnection [<span class="variable">id=</span><span class="number">100</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">5</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">327030</span>f, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.886</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (DataMergeService.java:<span class="number">94</span>) -field metadata inf:[<span class="variable">DAYS=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">4</span>, <span class="variable">colType=</span><span class="number">3</span>], <span class="variable">USER_ID=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">1</span>, <span class="variable">colType=</span><span class="number">253</span>], <span class="variable">ID=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">0</span>, <span class="variable">colType=</span><span class="number">8</span>], <span class="variable">TRAVELDATE=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">2</span>, <span class="variable">colType=</span><span class="number">10</span>], <span class="variable">FEE=</span>ColMeta [<span class="variable">colIndex=</span><span class="number">3</span>, <span class="variable">colType=</span><span class="number">246</span>]]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.887</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (MultiNodeQueryHandler.java:<span class="number">241</span>) -on row end reseponse MySQLConnection [<span class="variable">id=</span><span class="number">99</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">2</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">12</span>bc7f96, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.887</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (NonBlockingSession.java:<span class="number">229</span>) -release connection MySQLConnection [<span class="variable">id=</span><span class="number">99</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">2</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn3{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">12</span>bc7f96, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.888</span>  DEBUG [$_NIOREACTOR-<span class="number">1</span>-RW] (PhysicalDatasource.java:<span class="number">403</span>) -release channel MySQLConnection [<span class="variable">id=</span><span class="number">99</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db3, old <span class="variable">shema=</span>db3, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">2</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.888</span>  DEBUG [$_NIOREACTOR-<span class="number">3</span>-RW] (MultiNodeQueryHandler.java:<span class="number">241</span>) -on row end reseponse MySQLConnection [<span class="variable">id=</span><span class="number">101</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">3</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.888</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (MultiNodeQueryHandler.java:<span class="number">241</span>) -on row end reseponse MySQLConnection [<span class="variable">id=</span><span class="number">100</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">5</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">327030</span>f, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.889</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (NonBlockingSession.java:<span class="number">229</span>) -release connection MySQLConnection [<span class="variable">id=</span><span class="number">100</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">5</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn2{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span>org.opencloudb.mysql.nio.MySQLConnection$StatusSync@<span class="number">327030</span>f, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.889</span>  DEBUG [$_NIOREACTOR-<span class="number">2</span>-RW] (PhysicalDatasource.java:<span class="number">403</span>) -release channel MySQLConnection [<span class="variable">id=</span><span class="number">100</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db2, old <span class="variable">shema=</span>db2, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">5</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.889</span>  DEBUG [$_NIOREACTOR-<span class="number">3</span>-RW] (NonBlockingSession.java:<span class="number">229</span>) -release connection MySQLConnection [<span class="variable">id=</span><span class="number">101</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">3</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span>dn1{SELECT *</div><div class="line">FROM travelrecord</div><div class="line">LIMIT <span class="number">100</span>}, <span class="variable">respHandler=</span>org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler@<span class="number">41</span>d3a141, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.890</span>  DEBUG [$_NIOREACTOR-<span class="number">3</span>-RW] (PhysicalDatasource.java:<span class="number">403</span>) -release channel MySQLConnection [<span class="variable">id=</span><span class="number">101</span>, <span class="variable">lastTime=</span><span class="number">1453541417860</span>, <span class="variable">user=</span>root, <span class="variable">schema=</span>db1, old <span class="variable">shema=</span>db1, <span class="variable">borrowed=</span><span class="constant">true</span>, <span class="variable">fromSlaveDB=</span><span class="constant">false</span>, <span class="variable">threadId=</span><span class="number">3</span>, <span class="variable">charset=</span>latin1, <span class="variable">txIsolation=</span><span class="number">3</span>, <span class="variable">autocommit=</span><span class="constant">true</span>, <span class="variable">attachment=</span><span class="constant">null</span>, <span class="variable">respHandler=</span><span class="constant">null</span>, <span class="variable">host=</span>workstation, <span class="variable">port=</span><span class="number">3316</span>, <span class="variable">statusSync=</span><span class="constant">null</span>, <span class="variable">writeQueue=</span><span class="number">0</span>, <span class="variable">modifiedSQLExecuted=</span><span class="constant">false</span>]</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.891</span>  DEBUG [BusinessExecutor3] (DataMergeService.java:<span class="number">296</span>) -prepare mpp merge result for select * from travelrecord</div><div class="line"><span class="number">01</span>/<span class="number">23</span> <span class="number">17</span>:<span class="number">30</span>:<span class="number">17.892</span>  DEBUG [BusinessExecutor3] (MultiNodeQueryHandler.java:<span class="number">324</span>) -last packet id:<span class="number">10</span></div></pre></td></tr></table></figure></p>
+<p>可以发现，日志差异并不大，只是所有原先是<code>charset=utf8</code>的地方换成了<code>charset=latin1</code>，还有一处重要的变化是执行同步命令<code>con need syn ,total syn cmd 2 commands</code>，多了一个命令<code>SET names latin1</code>用于设置字符集。不过这样做是有问题的，客户端与服务器端的字符集不同，会导致乱码。例如，有中文的情况，如下图，</p>
+<p><img src="/images/201601-mycat-log-analysis/mycat-log-charset.png"></p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://blog.csdn.net/sin90lzc/article/details/7648439" target="_blank" rel="external">http://blog.csdn.net/sin90lzc/article/details/7648439</a><a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/MyCAT/">MyCAT</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MyCAT/">MyCAT</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201601-mycat-log-analysis/" data-title="MyCAT 日志分析 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201601-kubernetes-concepts/" title="Kubernetes原理简介">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  Kubernetes原理简介</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201601-docker-shipyard/"  title="Shipyard管理Docker容器">
+ <strong>NEXT:</strong><br/> 
+ <span>Shipyard管理Docker容器
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">MyCAT select 日志分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">动态加载schema.xml</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">MyCAT 字符集</span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

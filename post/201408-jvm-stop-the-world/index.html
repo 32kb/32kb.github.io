@@ -1,0 +1,498 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>JVM串行GC的stop the world现象分析 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="JVM的串行GC应该是Java最古老的GC了。其基本原理是，用一个额外的单线程来完成垃圾收集动作，该线程与其他线程是互斥的，也就是说，在这个线程进行垃圾收集工作的时候，其他线程全部都需要停下来，等待这个线程工作完成，这也就是垃圾收集里面的“stop the world”现象。多数情况下，如果应用没有">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201408-jvm-stop-the-world/" title="JVM串行GC的stop the world现象分析" itemprop="url">JVM串行GC的stop the world现象分析</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-08-30T13:02:00.000Z" itemprop="datePublished">2014-08-30</time>
+    更新日期:<time datetime="2014-12-03T01:14:14.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>JVM的串行GC应该是Java最古老的GC了。其基本原理是，用一个额外的单线程来完成垃圾收集动作，该线程与其他线程是互斥的，也就是说，在这个线程进行垃圾收集工作的时候，其他线程全部都需要停下来，等待这个线程工作完成，这也就是垃圾收集里面的“stop the world”现象。多数情况下，如果应用没有很高的内存需求和很低的延迟的话，整个收集过程偶尔会有一个几百ms的延迟，通常是可以接受的。但对于一些低延迟的系统，这个延迟通常不能接受，例如一些算法交易系统，算法算出结果通常也都是在ms级别，GC的时间达到几百ms，会极大破坏系统的有效性。</p>
+<p>先来看一下串行GC的stop the world现象，以下代码参考了这里<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>。</p>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> problme1;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.util.HashMap;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Problem1</span> </span>{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>{</div><div class="line">        HashMap&lt;Long, <span class="keyword">byte</span>[]&gt; map = <span class="keyword">new</span> HashMap&lt;Long, <span class="keyword">byte</span>[]&gt;();</div><div class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(){</div><div class="line">            <span class="keyword">while</span>(<span class="keyword">true</span>){</div><div class="line">                <span class="keyword">if</span>(map.size()*<span class="number">512</span>/<span class="number">1024</span>/<span class="number">1024</span>&gt;=<span class="number">400</span>){</div><div class="line">                    map.clear();</div><div class="line">                    System.out.println(<span class="string">"clean map"</span>);</div><div class="line">                }</div><div class="line">                <span class="keyword">byte</span>[] b1;</div><div class="line">                <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">100</span>;i++){</div><div class="line">                    b1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">512</span>];</div><div class="line">                    map.put(System.nanoTime(), b1);</div><div class="line">                }</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    Thread.sleep(<span class="number">1</span>);</div><div class="line">                } <span class="keyword">catch</span> (InterruptedException e) {</div><div class="line">                    e.printStackTrace();</div><div class="line">                }</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">PrintThread</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>{</div><div class="line">        <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> start = System.currentTimeMillis();</div><div class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(){</div><div class="line">            <span class="keyword">while</span>(<span class="keyword">true</span>){</div><div class="line">                <span class="keyword">long</span> t = System.currentTimeMillis()-start;</div><div class="line">                System.out.println(t*<span class="number">1.0</span>/<span class="number">1000</span>);</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    Thread.sleep(<span class="number">1000</span>);</div><div class="line">                } <span class="keyword">catch</span> (InterruptedException e) {</div><div class="line">                    e.printStackTrace();</div><div class="line">                }</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String args[]){</div><div class="line">        MyThread s1 = <span class="keyword">new</span> MyThread();</div><div class="line">        PrintThread p1 = <span class="keyword">new</span> PrintThread();</div><div class="line">        s1.start();</div><div class="line">        p1.start();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure></p>
+<p>代码分2个线程，线程1每隔1ms就向一个HashMap中添加数据，当数据达到大概400M多的时候就清空这个HashMap，打印“clean map”，并重新开始添加数据；线程2每隔1000ms就输出一下系统运行的时间。为了确保看到stop the world现象，运行的时候要使用以下一些JVM参数，<code>-Xmx512M -Xms512M -XX:+UseSerialGC -Xloggc:gc.log -XX:+PrintGCDetails -Xmn1m -XX:PretenureSizeThreshold=50 -XX:MaxTenuringThreshold=1</code>。<code>-Xmx512M -Xms512M</code>表示JVM的堆大小是512M，也就是比HashMap的400M大一些，确保不会发生溢出，也不宜过大，这个后面会分析；<code>-XX:+UseSerialGC</code>是使用串行GC；<code>-Xloggc:gc.log -XX:+PrintGCDetails</code>分别表示将gc的log写入gc.log文件，和打印GC的详细信息。输出如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="number">0.0</span></div><div class="line"><span class="number">1.01</span></div><div class="line"><span class="number">2.014</span></div><div class="line"><span class="number">3.014</span></div><div class="line"><span class="number">4.014</span></div><div class="line"><span class="number">5.015</span></div><div class="line"><span class="number">6.015</span></div><div class="line"><span class="number">7.019</span></div><div class="line"><span class="number">8.022</span></div><div class="line"><span class="number">9.022</span></div><div class="line"><span class="number">10.022</span></div><div class="line"><span class="number">11.023</span></div><div class="line"><span class="number">12.023</span></div><div class="line"><span class="number">13.023</span></div><div class="line"><span class="number">14.024</span></div><div class="line">clean <span class="built_in">map</span></div><div class="line"><span class="number">15.024</span></div><div class="line"><span class="number">16.396</span></div><div class="line"><span class="number">17.396</span></div><div class="line"><span class="number">18.397</span></div><div class="line"><span class="number">19.402</span></div><div class="line"><span class="number">20.403</span></div><div class="line"><span class="number">21.403</span></div><div class="line"><span class="number">22.403</span></div><div class="line"><span class="number">23.403</span></div><div class="line"><span class="number">24.404</span></div><div class="line"><span class="number">25.408</span></div><div class="line"><span class="number">26.408</span></div><div class="line"><span class="number">27.408</span></div><div class="line">clean <span class="built_in">map</span></div><div class="line"><span class="number">28.409</span></div><div class="line"><span class="number">29.409</span></div><div class="line"><span class="number">30.41</span></div><div class="line"><span class="number">31.411</span></div></pre></td></tr></table></figure></p>
+<p>可以看到，线程2每过大约1000ms就打印出当前的时间信息，直到发生需要清空HashMap的时候，线程1打印“clean map”，但是在清空HashMap后不久，发生了一个1400ms的停顿，比平常的停顿多了400ms，多出的这些时间就是串行GC造成的stop the world，此时GC专心收集HashMap的约400M垃圾内存，强制停止了所有线程。由于现在的计算机性能比较好，回收400M多内存有可能也比较快，尤其这些内存可能还是连续的，回收会更快，多运行几次，就有可能出现一次上述的情况。另外，测试程序使用了512M内存，其中HashMap占用了其中80%多的空间，使用这么大的内存的目的就是让GC的工作更多，速度变慢，使得现象更加明显。当然也可以使用更大的内存，只要控制好这个程序中HashMap所占空间的比例，这个现象的重现还是不困难的。</p>
+<p>也可以看一下gc.log中的信息，应该在16s左右发生过一次比较长时间的GC动作，其中部分内容截取如下，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">......</div><div class="line"><span class="number">16.502</span>: [GC (Allocation Failure) <span class="number">16.502</span>: [DefNew: <span class="number">960</span><span class="keyword">K</span>-&gt;<span class="number">63</span><span class="keyword">K</span>(<span class="number">960</span><span class="keyword">K</span>), <span class="number">0.0064995</span> secs] <span class="number">522869</span><span class="keyword">K</span>-&gt;<span class="number">522854</span><span class="keyword">K</span>(<span class="number">524224</span><span class="keyword">K</span>), <span class="number">0.0065793</span> secs] [<span class="keyword">Times</span>: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs]</div><div class="line"><span class="number">16.530</span>: [GC (Allocation Failure) <span class="number">16.530</span>: [DefNew: <span class="number">959</span><span class="keyword">K</span>-&gt;<span class="number">959</span><span class="keyword">K</span>(<span class="number">960</span><span class="keyword">K</span>), <span class="number">0.0000417</span> secs]<span class="number">16.530</span>: [Tenured: <span class="number">522867</span><span class="keyword">K</span>-&gt;<span class="number">52660</span><span class="keyword">K</span>(<span class="number">523264</span><span class="keyword">K</span>), <span class="number">0.4971022</span> secs] <span class="number">523827</span><span class="keyword">K</span>-&gt;<span class="number">52660</span><span class="keyword">K</span>(<span class="number">524224</span><span class="keyword">K</span>), [Metaspace: <span class="number">2462</span><span class="keyword">K</span>-&gt;<span class="number">2462</span><span class="keyword">K</span>(<span class="number">1056768</span><span class="keyword">K</span>)], <span class="number">0.4972655</span> secs] [<span class="keyword">Times</span>: user=<span class="number">0.11</span> sys=<span class="number">0.00</span>, real=<span class="number">0.50</span> secs]</div><div class="line"><span class="number">17.046</span>: [GC (Allocation Failure) <span class="number">17.046</span>: [DefNew: <span class="number">896</span><span class="keyword">K</span>-&gt;<span class="number">63</span><span class="keyword">K</span>(<span class="number">960</span><span class="keyword">K</span>), <span class="number">0.0018982</span> secs] <span class="number">53633</span><span class="keyword">K</span>-&gt;<span class="number">53616</span><span class="keyword">K</span>(<span class="number">524224</span><span class="keyword">K</span>), <span class="number">0.0019434</span> secs] [<span class="keyword">Times</span>: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs]</div><div class="line">......</div><div class="line"><span class="number">29.604</span>: [GC (Allocation Failure) <span class="number">29.604</span>: [DefNew: <span class="number">959</span><span class="keyword">K</span>-&gt;<span class="number">64</span><span class="keyword">K</span>(<span class="number">960</span><span class="keyword">K</span>), <span class="number">0.0033689</span> secs] <span class="number">522769</span><span class="keyword">K</span>-&gt;<span class="number">522754</span><span class="keyword">K</span>(<span class="number">524224</span><span class="keyword">K</span>), <span class="number">0.0034256</span> secs] [<span class="keyword">Times</span>: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.00</span> secs]</div><div class="line"><span class="number">29.625</span>: [GC (Allocation Failure) <span class="number">29.625</span>: [DefNew: <span class="number">960</span><span class="keyword">K</span>-&gt;<span class="number">960</span><span class="keyword">K</span>(<span class="number">960</span><span class="keyword">K</span>), <span class="number">0.0000176</span> secs]<span class="number">29.625</span>: [Tenured: <span class="number">522717</span><span class="keyword">K</span>-&gt;<span class="number">56730</span><span class="keyword">K</span>(<span class="number">523264</span><span class="keyword">K</span>), <span class="number">0.1138260</span> secs] <span class="number">523677</span><span class="keyword">K</span>-&gt;<span class="number">56730</span><span class="keyword">K</span>(<span class="number">524224</span><span class="keyword">K</span>), [Metaspace: <span class="number">2466</span><span class="keyword">K</span>-&gt;<span class="number">2466</span><span class="keyword">K</span>(<span class="number">1056768</span><span class="keyword">K</span>)], <span class="number">0.1139053</span> secs] [<span class="keyword">Times</span>: user=<span class="number">0.11</span> sys=<span class="number">0.00</span>, real=<span class="number">0.11</span> secs]</div><div class="line"><span class="number">29.756</span>: [GC (Allocation Failure) <span class="number">29.756</span>: [DefNew: <span class="number">896</span><span class="keyword">K</span>-&gt;<span class="number">64</span><span class="keyword">K</span>(<span class="number">960</span><span class="keyword">K</span>), <span class="number">0.0017809</span> secs] <span class="number">57652</span><span class="keyword">K</span>-&gt;<span class="number">57637</span><span class="keyword">K</span>(<span class="number">524224</span><span class="keyword">K</span>), <span class="number">0.0018308</span> secs] [<span class="keyword">Times</span>: user=<span class="number">0.00</span> sys=<span class="number">0.00</span>, real=<span class="number">0.00</span> secs]</div><div class="line">......</div><div class="line"><span class="number">32.104</span>: [GC (Allocation Failure) <span class="number">32.104</span>: [DefNew: <span class="number">959</span><span class="keyword">K</span>-&gt;<span class="number">64</span><span class="keyword">K</span>(<span class="number">960</span><span class="keyword">K</span>), <span class="number">0.0062968</span> secs] <span class="number">149350</span><span class="keyword">K</span>-&gt;<span class="number">149336</span><span class="keyword">K</span>(<span class="number">524224</span><span class="keyword">K</span>), <span class="number">0.0063927</span> secs] [<span class="keyword">Times</span>: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs]</div><div class="line">Heap</div><div class="line"> def new generation   total <span class="number">960</span><span class="keyword">K</span>, used <span class="number">766</span><span class="keyword">K</span> [<span class="number">0x00000000e0000000</span>, <span class="number">0x00000000e0100000</span>, <span class="number">0x00000000e0100000</span>)</div><div class="line">  eden space <span class="number">896</span><span class="keyword">K</span>,  <span class="number">78</span>% used [<span class="number">0x00000000e0000000</span>, <span class="number">0x00000000e00af9d8</span>, <span class="number">0x00000000e00e0000</span>)</div><div class="line">  from space <span class="number">64</span><span class="keyword">K</span>, <span class="number">100</span>% used [<span class="number">0x00000000e00e0000</span>, <span class="number">0x00000000e00f0000</span>, <span class="number">0x00000000e00f0000</span>)</div><div class="line">  to   space <span class="number">64</span><span class="keyword">K</span>,   <span class="number">0</span>% used [<span class="number">0x00000000e00f0000</span>, <span class="number">0x00000000e00f0000</span>, <span class="number">0x00000000e0100000</span>)</div><div class="line"> tenured generation   total <span class="number">523264</span><span class="keyword">K</span>, used <span class="number">149291</span><span class="keyword">K</span> [<span class="number">0x00000000e0100000</span>, <span class="number">0x0000000100000000</span>, <span class="number">0x0000000100000000</span>)</div><div class="line">   the space <span class="number">523264</span><span class="keyword">K</span>,  <span class="number">28</span>% used [<span class="number">0x00000000e0100000</span>, <span class="number">0x00000000e92cad38</span>, <span class="number">0x00000000e92cae00</span>, <span class="number">0x0000000100000000</span>)</div><div class="line"> Metaspace       used <span class="number">2474</span><span class="keyword">K</span>, capacity <span class="number">4490</span><span class="keyword">K</span>, committed <span class="number">4864</span><span class="keyword">K</span>, reserved <span class="number">1056768</span><span class="keyword">K</span></div><div class="line">  class space    used <span class="number">269</span><span class="keyword">K</span>, capacity <span class="number">386</span><span class="keyword">K</span>, committed <span class="number">512</span><span class="keyword">K</span>, reserved <span class="number">1048576</span><span class="keyword">K</span></div></pre></td></tr></table></figure></p>
+<p>可以看到，在16.530s的时候，发生了一次GC，使用了0.50s，与我们看到的现象基本吻合。同时，也可以看到，在29.625s的时候也发生了一次类似的GC，但是这一次就没有上一次的现象那么明显，也印证了这个现象并不是每次都能轻易重现的，取决于GC的效率。</p>
+<p>既然串行GC有这个问题，那么为了减轻“stop the world”现象的影响，就需要引入新的GC。例如，并行GC，现在的服务器乃至个人PC都有多个CPU，一个CPU负责垃圾收集，其他CPU还可以运行程序代码，但是，由于内存中的对象是互斥的，比如，标记过程，因为一边标记一边运行程序的话，就有可能产生新的有用内存和垃圾内存，这样每一次gc都不能放心清除没有标记的内存，因为没有标记的内存可能是标记的过程中产生的有用内存；还有一种方法，就是分块收集，将内存分为多个块，每次收集的时候只收集其中一块，在标记的时候，不对标记所在的块做新内存分配，这样就不会清除掉有用内存，其他线程也可以在其他块中正常的工作。这两种GC的思想在JVM后续的版本中都有体现，分别是CMS收集器和G1收集器。</p>
+<p>但是，这样的收集策略都是有潜在问题的，首先，垃圾收集带来的延迟影响是不能完全根除的，因为在标记的过程中，根对象是唯一的，也就是整个系统中的单点，所有线程都必须等待收集器访问根对象完成之后才能建立新对象，另外，即使是上述的分块收集策略，在进行收集的时候，等于内存突然少了一块，在分配内存的效率上必然会有影响；此外，上述的分块并行收集也会有破坏程序对象内存结构的问题，比如，一个大的HashMap，在分配的时候最好能集中分配在一起便于收集，但是分块管理的时候，就可能会将他们分配在不同的块上，这样，在HashMap清空的时候，可能要分块收集多次才能将所有内存收回，降低了内存的使用效率，程序可能要请求更大的内存才能正常工作；同时，不可避免的，引入更加复杂的收集器，会导致收集程序越来越复杂，例如，分块收集器就需要考虑多个块之间的对象如果有相互引用的情况等，万一发生bug极难定位问题。</p>
+<p>如果是延迟要求极低的应用，GC的不可控收集时间，必然是不可接受的，此时还是建议不要使用Java这类动态语言，改为使用一些内存可控静态语言，如C/C++，来完成工作。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://yanguz123.iteye.com/blog/2056401" class="uri" target="_blank" rel="external">http://yanguz123.iteye.com/blog/2056401</a><a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/JVM/">JVM</a><a href="/tags/Java/">Java</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/JVM/">JVM</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201408-jvm-stop-the-world/" data-title="JVM串行GC的stop the world现象分析 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201408-postgres-process-memory/" title="PostgreSQL的进程结构和内存消耗">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  PostgreSQL的进程结构和内存消耗</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201408-jre-thin/"  title="JRE打包精简">
+ <strong>NEXT:</strong><br/> 
+ <span>JRE打包精简
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

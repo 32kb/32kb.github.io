@@ -1,0 +1,638 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>PostgreSQL的进程结构和内存消耗 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="PostgreSQL的进程结构
+PostgreSQL是一个多进程结构的系统，由master主进程fork出一系列子进程，这些进程包括数据库实例的后台进程，例如，Data Writer、Achiver等，也有服务client的session进程。大致结构图如下，
+
+在Postgres启动之后，在">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201408-postgres-process-memory/" title="PostgreSQL的进程结构和内存消耗" itemprop="url">PostgreSQL的进程结构和内存消耗</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-08-31T04:54:00.000Z" itemprop="datePublished">2014-08-31</time>
+    更新日期:<time datetime="2014-12-03T01:15:09.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">PostgreSQL的进程结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">PostgreSQL的内存消耗</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">initdb过程分析</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">PostgreSQL 9.3</span></a>
+		</div>
+		
+		<h2>PostgreSQL的进程结构</h2>
+<p>PostgreSQL是一个多进程结构的系统，由master主进程fork出一系列子进程，这些进程包括数据库实例的后台进程，例如，Data Writer、Achiver等，也有服务client的session进程。大致结构图如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process.png" alt=""></p>
+<p>在Postgres启动之后，在没有client连接上来的时候，用ps可以看到其后台进程，如下</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">[postgres@anzhy ~]ps -ef | grep postgres</div><div class="line">root      <span class="number">5662</span>  <span class="number">5587</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">04</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> su - postgres</div><div class="line">postgres  <span class="number">5663</span>  <span class="number">5662</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">04</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> -bash</div><div class="line">postgres  <span class="number">5770</span>     <span class="number">1</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> /home/postgres/project/bin/postgres</div><div class="line">postgres  <span class="number">5772</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: checkpointer process</div><div class="line">postgres  <span class="number">5773</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: writer process</div><div class="line">postgres  <span class="number">5774</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: wal writer process</div><div class="line">postgres  <span class="number">5775</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: autovacuum launcher process</div><div class="line">postgres  <span class="number">5776</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: stats collector process</div><div class="line">postgres  <span class="number">5825</span>  <span class="number">5663</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">49</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> ps -ef</div><div class="line">postgres  <span class="number">5826</span>  <span class="number">5663</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">49</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> grep postgres</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process1.png" alt=""></p>
+<p>postgres（5770）进程就是master进程，可以看到，它有一些子进程都是以postgres:开头，这些子进程都是Postgres的后台进程。由于当前没有client连接，所以没有session进程。如果加入一个client连接，可以看到进程会多出一些，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">postgres  <span class="number">5663</span>  <span class="number">5662</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">04</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> -bash</div><div class="line">postgres  <span class="number">5770</span>     <span class="number">1</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> /home/postgres/project/bin/postgres</div><div class="line">postgres  <span class="number">5772</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: checkpointer process</div><div class="line">postgres  <span class="number">5773</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: writer process</div><div class="line">postgres  <span class="number">5774</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: wal writer process</div><div class="line">postgres  <span class="number">5775</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: autovacuum launcher process</div><div class="line">postgres  <span class="number">5776</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: stats collector process</div><div class="line">postgres  <span class="number">5844</span>  <span class="number">5639</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> pts/<span class="number">2</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> psql</div><div class="line">postgres  <span class="number">5845</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: postgres postgres [local] idle</div><div class="line">postgres  <span class="number">5846</span>  <span class="number">5663</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> ps -ef</div><div class="line">postgres  <span class="number">5847</span>  <span class="number">5663</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> grep postgres</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process2.png" alt=""></p>
+<p>可以看到，psql进程（5844）连接Postgres之后，Postgres主进程fork了一个session子进程（5845）来服务这个client连接，如果又新增了一个client连接的话，那就会再多一个session子进程。如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">root      <span class="number">5662</span>  <span class="number">5587</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">04</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> su - postgres</div><div class="line">postgres  <span class="number">5663</span>  <span class="number">5662</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">04</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> -bash</div><div class="line">postgres  <span class="number">5770</span>     <span class="number">1</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> /home/postgres/project/bin/postgres</div><div class="line">postgres  <span class="number">5772</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: checkpointer process</div><div class="line">postgres  <span class="number">5773</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: writer process</div><div class="line">postgres  <span class="number">5774</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: wal writer process</div><div class="line">postgres  <span class="number">5775</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: autovacuum launcher process</div><div class="line">postgres  <span class="number">5776</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: stats collector process</div><div class="line">postgres  <span class="number">5844</span>  <span class="number">5639</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> pts/<span class="number">2</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> psql</div><div class="line">postgres  <span class="number">5845</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: postgres postgres [local] idle</div><div class="line">postgres  <span class="number">5908</span>  <span class="number">5615</span>  <span class="number">0</span> <span class="number">14</span>:<span class="number">04</span> pts/<span class="number">3</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> psql</div><div class="line">postgres  <span class="number">5909</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">14</span>:<span class="number">04</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: postgres postgres [local] idle</div><div class="line">postgres  <span class="number">5910</span>  <span class="number">5663</span>  <span class="number">4</span> <span class="number">14</span>:<span class="number">05</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> ps -ef</div><div class="line">postgres  <span class="number">5911</span>  <span class="number">5663</span>  <span class="number">0</span> <span class="number">14</span>:<span class="number">05</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> grep postgres</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process3.png" alt=""></p>
+<p>这次多出来的session进程是（5909），服务的client是（5908），可以看到所有的session进程也是以postgres:开头，并且进程名称中有[local]字样。因为Postgres是多进程结构，kill掉其中一个进程不会影响到其他进程。以kill掉（5909）进程为例说明如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">root      <span class="number">5662</span>  <span class="number">5587</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">04</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> su - postgres</div><div class="line">postgres  <span class="number">5663</span>  <span class="number">5662</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">04</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> -bash</div><div class="line">postgres  <span class="number">5770</span>     <span class="number">1</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> /home/postgres/project/bin/postgres</div><div class="line">postgres  <span class="number">5772</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: checkpointer process</div><div class="line">postgres  <span class="number">5773</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: writer process</div><div class="line">postgres  <span class="number">5774</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: wal writer process</div><div class="line">postgres  <span class="number">5775</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: autovacuum launcher process</div><div class="line">postgres  <span class="number">5776</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">40</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: stats collector process</div><div class="line">postgres  <span class="number">5844</span>  <span class="number">5639</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> pts/<span class="number">2</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> psql</div><div class="line">postgres  <span class="number">5845</span>  <span class="number">5770</span>  <span class="number">0</span> <span class="number">13</span>:<span class="number">54</span> ?        <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> postgres: postgres postgres [local] idle</div><div class="line">postgres  <span class="number">5908</span>  <span class="number">5615</span>  <span class="number">0</span> <span class="number">14</span>:<span class="number">04</span> pts/<span class="number">3</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> psql</div><div class="line">postgres  <span class="number">5937</span>  <span class="number">5663</span>  <span class="number">3</span> <span class="number">14</span>:<span class="number">10</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> ps -ef</div><div class="line">postgres  <span class="number">5938</span>  <span class="number">5663</span>  <span class="number">0</span> <span class="number">14</span>:<span class="number">10</span> pts/<span class="number">1</span>    <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> grep postgres</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process4.png" alt=""></p>
+<p>此时client的进程仍然处于活动状态，但是因为没有服务器端的session进程服务，运行sql的话会报错，提示连接已经断开，如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process5.png" alt=""></p>
+<p>此时另一个client连接依然正常，可以正常执行sql，如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process6.png" alt=""></p>
+<p>如果kill掉master主进程的话，其他现有的进程依然可以正常工作，但是已经无法再创建新的连接，因为子进程已经找不到可以fork的主进程，如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process7.png" alt=""></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process8.png" alt=""></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process9.png" alt=""></p>
+<p>可以看到，虽然仍然有一些进程可以工作，但是，此时的系统是相当不稳定的，因为kill主进程的时候，autovacuum和writer进程在没有主进程的情况下也退出了。</p>
+<p>如果用kill -9来杀死主进程的话，这样会杀死掉所有postgres的子进程，现象与上面的情况类似。如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process10.png" alt=""></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process11.png" alt=""></p>
+<p>此时的client连接仍然可以完成部分功能，原因是，虽然所有的后台进程在杀死主进程的时候已经被全部杀掉，但是服务client的session进程没有被杀掉，而是换了父进程为（1）的系统进程，继续为client提供服务。</p>
+<p>如果kill的不是主进程，而是后台子进程，系统会在必要的时候重新从主进程fork，这个特性可以在某些极端情况下，进程崩溃的时候，自动重启某些后台进程。在实验中发现，如果kill的是比较核心的进程，例如writer进程，系统会立刻重新fork所有后台子进程；而如果kill的是stats collector进程，如果当前没有client连接，那么不会立刻fork这个进程，在下次client连接的时候产生，如果当前有client连接，那么会立刻fork这个进程，其他进程都不受影响。如下图，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process12.png" alt=""></p>
+<p><img src="/images/201408-postgres-process-memory/postgres-process13.png" alt=""></p>
+<h2>PostgreSQL的内存消耗</h2>
+<p>以上是PostgreSQL的进程结构，下面来看一下PostgreSQL的内存使用，以下实验参考了这里<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>。</p>
+<p>运行PostgreSQL之前，内存使用如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-memory1.png" alt=""></p>
+<p>启动一个PostgreSQL数据库实例之后，内存使用如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-memory2.png" alt=""></p>
+<p>启动一个本地psql的连接之后，内存使用如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-memory3.png" alt=""></p>
+<p>切换psql到test数据库之后，内存使用如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-memory4.png" alt=""></p>
+<p>建一个测试表test0之后，建表语句和内存使用如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-memory3.png" alt=""></p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">create</span> <span class="keyword">table</span> test0(id <span class="built_in">int</span>);</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span></span></div></pre></td></tr></table></figure></p>
+<p>在test0中陆续insert大约100w(1048576个int类型)笔数据之后，内存使用如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-memory6.png" alt=""></p>
+<p>从以上的操作来看，PostgreSQL的每个操作使用内存如下，</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">操作</th>
+<th align="right">消耗内存</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">启动PostgreSQL</td>
+<td align="right">39M</td>
+</tr>
+<tr class="even">
+<td align="left">连接PostgreSQL</td>
+<td align="right">2M</td>
+</tr>
+<tr class="odd">
+<td align="left">切换数据库</td>
+<td align="right">3M</td>
+</tr>
+<tr class="even">
+<td align="left">建立测试表</td>
+<td align="right">-3M</td>
+</tr>
+<tr class="odd">
+<td align="left">insert数据</td>
+<td align="right">76M</td>
+</tr>
+</tbody>
+</table>
+<p>可见，PostgreSQL启动所需的内存并不是很高，只有39M；新增一个连接所需的内存是2M；切换数据库所需的内存和建表所需的内存应该都很小，在本测试中应该是临时分配了一些内存然后又被收回了，所有会有3M和-3M这样的结论，当然，也有可能是后台其他进程的干扰；在插入100w笔数据之后，内存使用量增加了76M，插入的数据是1M个int，PostgreSQL中的int是4个byte，所以，实际上单纯这些数据占用的内存空间是4MB，其他是数据库产生的附属信息所需的空间。</p>
+<p>drop测试表test0后，内存使用如下，</p>
+<p><img src="/images/201408-postgres-process-memory/postgres-memory7.png" alt=""></p>
+<p>PostgreSQL没有立刻回收所有内存，而是只回收了37M，因此可以推测，大约33M（37M-4M）空间是数据的附属信息，剩下的39M（76M-37M）可能是和事务等其他系统特性相关信息的大小。</p>
+<h2>initdb过程分析</h2>
+<p>initdb过程是PostgreSQL安装之后初始化系统数据的过程，生成系统的数据字典和基础表。以9.3.4版本的PostgreSQL来分析。</p>
+<p>initdb的主入口程序在<code>src/bin/initdb/initdb.c</code>，main函数在3481行，进入之后是先处理参数，之后开始处理各种设置，每个设置都是一个独立的函数，例如，<code>setup_bin_paths</code>是设置路径，<code>set_info_version</code>是设置版本信息。然后到了<code>initialize_data_directory();</code>，这是主要的处理函数，初始化数据库的数据目录。截取<code>initialize_data_directory</code>的部分代码片段如下，</p>
+<p><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span></div><div class="line">initialize_data_directory(<span class="keyword">void</span>)</div><div class="line">{</div><div class="line">	<span class="keyword">int</span>			i;</div><div class="line"></div><div class="line">	setup_signals();</div><div class="line"></div><div class="line">	umask(S_IRWXG | S_IRWXO);</div><div class="line"></div><div class="line">	create_data_directory();</div><div class="line"></div><div class="line">	create_xlog_symlink();</div><div class="line"></div><div class="line">	<span class="comment">/* Create required subdirectories */</span></div><div class="line">	<span class="built_in">printf</span>(_(<span class="string">"creating subdirectories ... "</span>));</div><div class="line">	fflush(stdout);</div><div class="line"></div><div class="line">	<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; (<span class="keyword">sizeof</span>(subdirs) / <span class="keyword">sizeof</span>(<span class="keyword">char</span> *)); i++)</div><div class="line">	{</div><div class="line">		<span class="keyword">if</span> (!mkdatadir(subdirs[i]))</div><div class="line">			exit_nicely();</div><div class="line">	}</div><div class="line"></div><div class="line">	check_ok();</div><div class="line"></div><div class="line">	<span class="comment">/* Top level PG_VERSION is checked by bootstrapper, so make it first */</span></div><div class="line">	write_version_file(NULL);</div><div class="line"></div><div class="line">	<span class="comment">/* Select suitable configuration settings */</span></div><div class="line">	set_null_conf();</div><div class="line">	test_config_settings();</div><div class="line"></div><div class="line">	<span class="comment">/* Now create all the text config files */</span></div><div class="line">	setup_config();</div><div class="line"></div><div class="line">	<span class="comment">/* Bootstrap template1 */</span></div><div class="line">	bootstrap_template1();</div></pre></td></tr></table></figure></p>
+<p>上述代码最后的bootstrap_template1就是初始化template1库，截取<code>bootstrap_template1</code>的部分代码如下，</p>
+<p><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/*</span></div><div class="line"> * run the BKI script in bootstrap mode to create template1</div><div class="line"> */</div><div class="line"><span class="keyword">static</span> <span class="keyword">void</span></div><div class="line">bootstrap_template1(<span class="keyword">void</span>)</div><div class="line">{</div><div class="line">	PG_CMD_DECL;</div><div class="line">	<span class="keyword">char</span>	  **line;</div><div class="line">	<span class="keyword">char</span>	   *talkargs = <span class="string">""</span>;</div><div class="line">	<span class="keyword">char</span>	  **bki_lines;</div><div class="line">	<span class="keyword">char</span>		headerline[MAXPGPATH];</div><div class="line">	<span class="keyword">char</span>		buf[<span class="number">64</span>];</div><div class="line"></div><div class="line">	<span class="built_in">printf</span>(_(<span class="string">"creating template1 database in %s/base/1 ... "</span>), pg_data);</div><div class="line">	fflush(stdout);</div><div class="line"></div><div class="line">	<span class="keyword">if</span> (debug)</div><div class="line">		talkargs = <span class="string">"-d 5"</span>;</div><div class="line"></div><div class="line">	bki_lines = readfile(bki_file);</div><div class="line"></div><div class="line">	<span class="comment">/* Check that bki file appears to be of the right version */</span></div><div class="line"></div><div class="line">	<span class="built_in">snprintf</span>(headerline, <span class="keyword">sizeof</span>(headerline), <span class="string">"# PostgreSQL %s\n"</span>,</div><div class="line">			 PG_MAJORVERSION);</div><div class="line"></div><div class="line">......</div><div class="line"></div><div class="line">	<span class="built_in">snprintf</span>(cmd, <span class="keyword">sizeof</span>(cmd),</div><div class="line">			 <span class="string">"\"%s\" --boot -x1 %s %s %s"</span>,</div><div class="line">			 backend_exec,</div><div class="line">			 data_checksums ? <span class="string">"-k"</span> : <span class="string">""</span>,</div><div class="line">			 boot_options, talkargs);</div><div class="line"></div><div class="line">	PG_CMD_OPEN;</div><div class="line"></div><div class="line">	<span class="keyword">for</span> (line = bki_lines; *line != NULL; line++)</div><div class="line">	{</div><div class="line">		PG_CMD_PUTS(*line);</div><div class="line">		<span class="built_in">free</span>(*line);</div><div class="line">	}</div><div class="line"></div><div class="line">	PG_CMD_CLOSE;</div><div class="line"></div><div class="line">	<span class="built_in">free</span>(bki_lines);</div><div class="line"></div><div class="line">	check_ok();</div></pre></td></tr></table></figure></p>
+<p>其中用到了4个宏<code>PG_CMD_DECL</code>、<code>PG_CMD_OPEN</code>，<code>PG_CMD_PUTS</code>和<code>PG_CMD_CLOSE</code>，在initdb.c的开头部分有定义，如下，</p>
+<p><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">define</span> PG_CMD_DECL		char cmd[MAXPGPATH]; FILE *cmdfd</span></div><div class="line"></div><div class="line"><span class="preprocessor">#<span class="keyword">define</span> PG_CMD_OPEN \</span></div><div class="line"><span class="keyword">do</span> { \</div><div class="line">	cmdfd = popen_check(cmd, <span class="string">"w"</span>); \</div><div class="line">	<span class="keyword">if</span> (cmdfd == NULL) \</div><div class="line">		exit_nicely(); <span class="comment">/* message already printed by popen_check */</span> \</div><div class="line">} <span class="keyword">while</span> (<span class="number">0</span>)</div><div class="line"></div><div class="line"><span class="preprocessor">#<span class="keyword">define</span> PG_CMD_CLOSE \</span></div><div class="line"><span class="keyword">do</span> { \</div><div class="line">	<span class="keyword">if</span> (pclose_check(cmdfd)) \</div><div class="line">		exit_nicely(); <span class="comment">/* message already printed by pclose_check */</span> \</div><div class="line">} <span class="keyword">while</span> (<span class="number">0</span>)</div><div class="line"></div><div class="line"><span class="preprocessor">#<span class="keyword">define</span> PG_CMD_PUTS(<span class="keyword">line</span>) \</span></div><div class="line"><span class="keyword">do</span> { \</div><div class="line">	<span class="keyword">if</span> (<span class="built_in">fputs</span>(line, cmdfd) &lt; <span class="number">0</span> || fflush(cmdfd) &lt; <span class="number">0</span>) \</div><div class="line">		output_failed = <span class="keyword">true</span>, output_errno = errno; \</div><div class="line">} <span class="keyword">while</span> (<span class="number">0</span>)</div></pre></td></tr></table></figure></p>
+<p>其实就是定义、打开、处理、关闭了一些文件。从<code>bootstrap_template1</code>的注释中可以得知，这个函数的作用是以bootstrap的方式来run一系列bki脚本，来建立template1。那么什么是bki呢？在PostgreSQL9.1的中文翻译文档中可以找到，<a href="http://wiki.postgresql.org/wiki/9.1%E7%AC%AC55%E7%AB%A0" target="_blank" rel="external">第55章</a>。</p>
+<blockquote>
+<p>后端接口（BKI）文件是一些用特殊语言写的脚本，这些脚本是 PostgreSQL 后端能够理解的，以特殊的 &quot;bootstrap&quot;（引导）模式运行，这种模式允许在不存在系统表的零初始条件下执行数据库函数，而普通的 SQL 命令要求系统表必须存在。因此 BKI 文件可以用于在第一时间创建数据库系统。（可能除此以外也没有其它用处。）</p>
+</blockquote>
+<p>该文档后面还给出了一些bki文件语法的示例。在创建一个新的数据库集群时，initdb使用BKI文件 来完成部分工作。initdb使用的文件是作为编译 PostgreSQL的一部分，由一个叫genbki.pl的程序(src/backend/catalog/genbki.pl)创建, 这个程序读取源代码树目录的src/include/catalog/目录里的几个特殊C开头的文件。生成的BKI文件叫postgres.bki， 并且通常安装在安装目录里的share子目录。</p>
+<p>genbki.pl是一个perl程序，程序的末尾有一段简短的说明，如下，</p>
+<p><figure class="highlight perl"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="sub"><span class="keyword">sub</span> usage</span></div><div class="line">{</div><div class="line">	<span class="keyword">die</span> &lt;&lt;EOM;</div><div class="line">Usage: genbki.pl [options] header...</div><div class="line"></div><div class="line">Options:</div><div class="line">    -I               path to include files</div><div class="line">    -o               output path</div><div class="line">    --set-version    PostgreSQL version number <span class="keyword">for</span> initdb cross-check</div><div class="line"></div><div class="line">genbki.pl generates BKI files from specially formatted</div><div class="line">header files.  These BKI files are used to initialize the</div><div class="line">postgres template database.</div><div class="line"></div><div class="line">Report bugs to &lt;pgsql-bugs\<span class="variable">@postgresql</span>.org&gt;.</div><div class="line">EOM</div><div class="line">}</div></pre></td></tr></table></figure></p>
+<p>postgres.bki是用genbki.pl创建的，创建后一般在PostgreSQL安装目录的<code>$POSTGRESQLHOME/share</code>目录下。，参数是catalog.pm。参考bki文档的描述，其输入命令格式有以下一些，</p>
+<blockquote>
+<ul>
+<li>create [bootstrap] [shared_relation] [without_oids] tablename tableoid (name1 = type1 [, name2 = type2, ...])</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>创建一个叫做 tablename，OID 为 tableoid 的表，表字段在圆括弧中给出。 bootstrap.c 直接支持下列字段类型： bool，bytea，char （1 字节）， name，int2，int4， regproc，regclass， regtype，text，oid， tid，xid， cid，int2vector，oidvector， _int4 （数组），_text （数组）， _aclitem（数组）。尽管我们可以创建包含其它类型字段的表， 但是我们只有在创建完 pg_type 并且填充了合适的记录之后才行。 （这实际上就意味着在系统初始化表中，只能使用这些字段类型，而非系统初始化表可以使用任意内置类型。） 如果声明了 bootstrap，那么改表将只在磁盘上创建； 不会向 pg_class，pg_attribute 等系统表里面输入任何东西。 因此这样的表将无法被普通的 SQL 操作访问，直到那些记录用硬办法（用 insert 命令）填入。 这个选项用于创建 pg_class 等自身。 如果声明了 shared_relation，那么表就作为共享表创建。 除非声明了 without_oids，否则将会有 OID。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>open tablename</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>打开一个名为 tablename 的表，准备插入数据。任何当前已经打开的表都会被关闭。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>close [tablename]</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>关闭打开的表。给出的表明是用于交叉检查，但并不是必须的。 》 * insert [OID = oid_value] (value1 value2 ...) 用 value1， value2， 等作为字段值以及 oid_value 作为其 OID（对象标识）向打开的表插入一条新记录，如果 oid_value 为零（0），否则省略了改子句，而表则拥有 OID，并赋予下一个可用的 OID 数值。NULL 可以用特殊的关键字 _null_声明。包含空白的值必须用双引号栝起。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>declare [unique] index indexname indexoid on tablename using amname ( opclass1 name1 [, ...] )</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>在一个叫 tablename 的表上用 amname 访问方法创建一个 OID 是 indexoid 的叫做 indexname 的索引。 索引的字段叫 name1，name2 等，而使用的操作符表分别是 opclass1，opclass2 等。 将会创建索引文件和恰当的系统表记录，但是索引内容不会被此命令初始化。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>build indices</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>填充前面声明的索引。</p>
+</blockquote>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt"></span></span></div><div class="line">系统初始化的bki文件（postgres.bki）结构是有一个比较特殊的规定。因为，open 命令打开的表需要系统事先存在另外一些基本的表， 在这些表存在并拥有数据之前，我们不能使用 open 命令。 （这些最低限度必须存在的表是 pg_class，pg_attribute， pg_proc，和 pg_type。） 为了允许这些表自己被填充，带着 bootstrap 选项的 create 隐含打开所创建的表用于插入数据。因此，postgres.bki 文件的结构必须是这样的，</div><div class="line"></div><div class="line">&gt; <span class="number">1</span>. create bootstrap 其中一个关键表</div><div class="line"><span class="input"><span class="prompt">&gt; 2. insert 数据，这些数据至少描述这些关键表本身</span></span></div><div class="line">&gt; <span class="number">3</span>. close</div><div class="line"><span class="input"><span class="prompt">&gt; 4. 重复创建和填充其它关键表。</span></span></div><div class="line">&gt; <span class="number">5</span>. create （不带 bootstrap）一个非关键表</div><div class="line"><span class="input"><span class="prompt">&gt; 6. open</span></span></div><div class="line">&gt; <span class="number">7</span>. insert 需要的数据</div><div class="line"><span class="input"><span class="prompt">&gt; 8. close</span></span></div><div class="line">&gt; <span class="number">9</span>. 重复创建其它非关键表。</div><div class="line"><span class="input"><span class="prompt">&gt; 10. 定义索引。</span></span></div><div class="line">&gt; <span class="number">11</span>. build indices</div><div class="line"></div><div class="line">当然，肯定还有其它未记录文档的顺序依赖关系。</div><div class="line"></div><div class="line">initdb.c代码中，<span class="keyword">for</span>循环中的`<span class="constant">PG_CMD_PUTS</span>`就是在处理bki文件的每一行。下面看一个postgres.bki中的真实例子来说明其结构。文件的最开头是如下语句，</div></pre></td></tr></table></figure></p>
+<h1>PostgreSQL 9.3</h1>
+<p>create pg_proc 1255 bootstrap rowtype_oid 81 ( proname = name , pronamespace = oid , proowner = oid , prolang = oid , procost = float4 , prorows = float4 , provariadic = oid , protransform = regproc , ......</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">表示创建名为pg_proc的表，由于带了bootstrap，该表是一个关键表，这也表明关键表一定要优先创建的原则。括号里面的内容是每一个列的信息。接下去是一系列的<span class="built_in">insert</span> OID，在大约<span class="number">2454</span>行出现了关闭pg_proc，如下，</div></pre></td></tr></table></figure></p>
+<p>...... insert OID = 3473 ( spg_range_quad_leaf_consistent 11 10 12 1 0 0 0 f f f f t f i 2 0 16 &quot;2281 2281&quot; <em>null</em> <em>null</em> <em>null</em> <em>null</em> spg_range_quad_leaf_consistent <em>null</em> <em>null</em> <em>null</em> ) insert OID = 3566 ( pg_event_trigger_dropped_objects 11 10 12 10 100 0 0 f f f f t t s 0 0 2249 &quot;&quot; &quot;{26,26,23,25,25,25,25}&quot; &quot;{o,o,o,o,o,o,o}&quot; &quot;{classid, objid, objsubid, object_type, schema_name, object_name, object_identity}&quot; <em>null</em> pg_event_trigger_dropped_objects <em>null</em> <em>null</em> <em>null</em> ) close pg_proc ......</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">接下去的步骤也比较类似，接下去处理的是关键表pg_<span class="built_in">type</span>，pg_attribute，pg_class。再后面处理的就不是关键表了，而是非关键表pg_attrdef，如下，</div></pre></td></tr></table></figure></p>
+<p>create pg_attrdef 2604 ( adrelid = oid , adnum = int2 , adbin = pg_node_tree , adsrc = text ) open pg_attrdef close pg_attrdef</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">可以很明显的发现非关键表比关键表多了<span class="keyword">open</span>动作，但是因为这个表没有数据，所以跳过了<span class="built_in">insert</span>动作。很多非关键表都在这里跳过了<span class="built_in">insert</span>动作，例如后续的pg_constraint，pg_inheris，pg_index等，但也有一些表需要在<span class="keyword">open</span>之后有<span class="built_in">insert</span>动作，例如，pg_operator，pg_opfamily，pg_opclass等。之后就一系列非关键表的创建，大约在<span class="number">5421</span>行出现了declare语句，如下，</div></pre></td></tr></table></figure></p>
+<p>declare toast 2830 2831 on pg_attrdef declare toast 2832 2833 on pg_constraint declare toast 2834 2835 on pg_description declare toast 2836 2837 on pg_proc declare toast 2838 2839 on pg_rewrite declare toast 3598 3599 on pg_seclabel declare toast 2840 2841 on pg_statistic declare toast 2336 2337 on pg_trigger declare toast 2846 2847 on pg_shdescription declare toast 2966 2967 on pg_db_role_setting declare unique index pg_aggregate_fnoid_index 2650 on pg_aggregate using btree(aggfnoid oid_ops) declare unique index pg_am_name_index 2651 on pg_am using btree(amname name_ops) declare unique index pg_am_oid_index 2652 on pg_am using btree(oid oid_ops) declare unique index pg_amop_fam_strat_index 2653 on pg_amop using btree(amopfamily oid_ops, amoplefttype oid_ops, amoprighttype oid_ops, amopstrategy int2_ops)</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">从这里开始定义索引，然后就是一系列的定义索引，最后一行是<span class="number">5526</span>行<span class="escape">`b</span>uild indices<span class="escape">`，</span>如下，</div></pre></td></tr></table></figure></p>
+<p>declare unique index pg_shseclabel_object_index 3593 on pg_shseclabel using btree(objoid oid_ops, classoid oid_ops, provider text_ops) declare unique index pg_extension_oid_index 3080 on pg_extension using btree(oid oid_ops) declare unique index pg_extension_name_index 3081 on pg_extension using btree(extname name_ops) declare unique index pg_range_rngtypid_index 3542 on pg_range using btree(rngtypid oid_ops) build indices ```</p>
+<p>从以上的分析，我们已经可以大致掌握住initdb过程的关键，就是产生和执行postgres.bki。其他部分都是一些参数检查，文件操作等辅助功能。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://www.cnblogs.com/gaojian/p/3288350.html" class="uri" target="_blank" rel="external">http://www.cnblogs.com/gaojian/p/3288350.html</a><a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Postgres/">Postgres</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Postgres/">Postgres</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201408-postgres-process-memory/" data-title="PostgreSQL的进程结构和内存消耗 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201409-postgres-backup-restore/" title="PostgreSQL的备份与还原">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  PostgreSQL的备份与还原</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201408-jvm-stop-the-world/"  title="JVM串行GC的stop the world现象分析">
+ <strong>NEXT:</strong><br/> 
+ <span>JVM串行GC的stop the world现象分析
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">PostgreSQL的进程结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">PostgreSQL的内存消耗</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">initdb过程分析</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">PostgreSQL 9.3</span></a>
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

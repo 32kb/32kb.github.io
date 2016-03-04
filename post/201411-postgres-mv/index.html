@@ -1,0 +1,602 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>PostgreSQL物化视图简介 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="PostgreSQL从9.3版本开始支持物化视图(materialized view)。虽然有些功能上不如Oracle来的强大，多数情况下也足够使用了。
+物化视图功能比较
+postgres的物化视图和Oracle的比较如下表，
+
+
+
+
+
+
+
+
+功能点
+PostgreSQL
+">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201411-postgres-mv/" title="PostgreSQL物化视图简介" itemprop="url">PostgreSQL物化视图简介</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-11-23T02:22:00.000Z" itemprop="datePublished">2014-11-23</time>
+    更新日期:<time datetime="2014-12-03T01:17:05.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">物化视图功能比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">postgres物化视图功能演示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">使用create materialized view创建物化视图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">查询物化视图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">修改源表数据，刷新物化视图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">物化视图上建立索引</span></a></li></ol></li></ol>
+		</div>
+		
+		<p>PostgreSQL从9.3版本开始支持物化视图(materialized view)。虽然有些功能上不如Oracle来的强大，多数情况下也足够使用了。</p>
+<h2>物化视图功能比较</h2>
+<p>postgres的物化视图和Oracle的比较如下表，</p>
+<table style="width:28%;">
+<colgroup>
+<col width="12%">
+<col width="8%">
+<col width="6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">功能点</th>
+<th align="left">PostgreSQL</th>
+<th align="left">Oracle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">创建视图</td>
+<td align="left">create materialized view ...</td>
+<td align="left">create materialized view ...</td>
+</tr>
+<tr class="even">
+<td align="left">删除视图</td>
+<td align="left">drop materialized view ...</td>
+<td align="left">drop materialized view ...</td>
+</tr>
+<tr class="odd">
+<td align="left">定时刷新</td>
+<td align="left">通过插件pgagent</td>
+<td align="left">on demand start with ... next 参数</td>
+</tr>
+<tr class="even">
+<td align="left">增量刷新</td>
+<td align="left">不支持</td>
+<td align="left">refresh fast 参数</td>
+</tr>
+<tr class="odd">
+<td align="left">读时刷新</td>
+<td align="left">预期9.4版本支持</td>
+<td align="left">支持</td>
+</tr>
+<tr class="even">
+<td align="left">commit刷新</td>
+<td align="left">通过trigger实现</td>
+<td align="left">on commit 参数</td>
+</tr>
+<tr class="odd">
+<td align="left">手动刷新</td>
+<td align="left">refresh materialized view ...</td>
+<td align="left">EXEC DBMS_MVIEW.REFRESH( ... )</td>
+</tr>
+<tr class="even">
+<td align="left">自动刷新</td>
+<td align="left">不支持</td>
+<td align="left">force 参数</td>
+</tr>
+<tr class="odd">
+<td align="left">添加索引</td>
+<td align="left">create index ...</td>
+<td align="left">create index ...</td>
+</tr>
+<tr class="even">
+<td align="left">视图直接查询</td>
+<td align="left">支持</td>
+<td align="left">支持</td>
+</tr>
+<tr class="odd">
+<td align="left">计划自动替换</td>
+<td align="left">不支持</td>
+<td align="left">支持</td>
+</tr>
+</tbody>
+</table>
+<h2>postgres物化视图功能演示</h2>
+<p>本文使用的测试数据是使用pgbench生成的1600000条数据，详见我的另一篇文章<a href="http://valleylord.sinaapp.com/post/201411-postgres-pgbench#content" target="_blank" rel="external">pgbench压力测试工具简介</a>。在pgbench_accounts表中有1600000条数据，其中bid列有16个取值，每个取值分别有100000条数据。测试用的数据库是PostgreSQL 9.3.4版本</p>
+<h3>使用create materialized view创建物化视图</h3>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">pgbench=# <span class="operator"><span class="keyword">create</span> materialized <span class="keyword">view</span> mv_pgbench_accounts <span class="keyword">as</span> <span class="keyword">select</span> * <span class="keyword">from</span> pgbench_accounts <span class="keyword">where</span> bid &lt; <span class="number">3</span>;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="number">200000</span></span></div></pre></td></tr></table></figure></p>
+<p>默认情况下，创建物化视图的时候会全量刷新视图，即启用<code>with data</code>选项。</p>
+<h3>查询物化视图</h3>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">pgbench=# select count(*) from mv_pgbench_accounts;</div><div class="line"> count  </div><div class="line">--------</div><div class="line"> 200000</div><div class="line">(1 row)</div><div class="line"></div><div class="line">pgbench=# explain select count(*) from mv_pgbench_accounts;</div><div class="line">                                   QUERY PLAN                                    </div><div class="line">---------------------------------------------------------------------------------</div><div class="line"> Aggregate  (cost=5779.00..5779.01 rows=1 width=0)</div><div class="line">   -&gt;  Seq Scan on mv_pgbench_accounts  (cost=0.00..5279.00 rows=200000 width=0)</div><div class="line">(2 rows)</div><div class="line"></div><div class="line">pgbench=#</div></pre></td></tr></table></figure></p>
+<p>从查询计划中可以发现，物化视图已经起作用了。但是，使用等价的直接查询，不能自动转化为物化视图的查询，也就是没有执行计划自动替换功能，如下，</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">pgbench=# explain select count(*) from pgbench_accounts where bid &lt; 3;</div><div class="line">                                  QUERY PLAN                                   </div><div class="line">-------------------------------------------------------------------------------</div><div class="line"> Aggregate  (cost=47134.25..47134.26 rows=1 width=0)</div><div class="line">   -&gt;  Seq Scan on pgbench_accounts  (cost=0.00..46635.38 rows=199548 width=0)</div><div class="line">         Filter: (bid &lt; 3)</div><div class="line">(3 rows)</div><div class="line"></div><div class="line">pgbench=# select count(*) from pgbench_accounts where bid &lt; 3;</div><div class="line"> count  </div><div class="line">--------</div><div class="line"> 200000</div><div class="line">(1 row)</div><div class="line"></div><div class="line">pgbench=#</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201411-postgres-mv/mv-select1.png" alt=""></p>
+<h3>修改源表数据，刷新物化视图</h3>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">pgbench=# <span class="operator"><span class="keyword">insert</span> <span class="keyword">into</span> pgbench_accounts <span class="keyword">select</span> aid+<span class="number">1600000</span>,bid,abalance,filler <span class="keyword">from</span> pgbench_accounts <span class="keyword">where</span> bid = <span class="number">1</span>;</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="number">0</span> <span class="number">100000</span></span></div><div class="line">pgbench=# <span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> pgbench_accounts <span class="keyword">where</span> bid &lt; <span class="number">3</span>;</div><div class="line"> count  </div><div class="line"><span class="comment">--------</span></div><div class="line"> 300000</div><div class="line">(1 row)</div><div class="line"></div><div class="line">pgbench=# <span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> mv_pgbench_accounts;</span></div><div class="line"> count  </div><div class="line"><span class="comment">--------</span></div><div class="line"> 200000</div><div class="line">(1 row)</div><div class="line"></div><div class="line">pgbench=#</div></pre></td></tr></table></figure></p>
+<p>再次插入<code>bid=1</code>的数据100000条到pgbench_accounts中(会话设置为自动commit)，postgres的视图没有自动刷新，需要手动刷新，如下，</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">pgbench=# refresh materialized view mv_pgbench_accounts with no data;</div><div class="line">REFRESH MATERIALIZED VIEW</div><div class="line">pgbench=# <span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> mv_pgbench_accounts;</span></div><div class="line">ERROR:  materialized view "mv_pgbench_accounts" has not been populated</div><div class="line">HINT:  <span class="operator"><span class="keyword">Use</span> the REFRESH MATERIALIZED <span class="keyword">VIEW</span> command.</span></div><div class="line">pgbench=# refresh materialized <span class="keyword">view</span> mv_pgbench_accounts <span class="keyword">with</span> <span class="keyword">data</span>;</div><div class="line">REFRESH MATERIALIZED VIEW</div><div class="line">pgbench=# <span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> mv_pgbench_accounts;</span></div><div class="line"> count  </div><div class="line"><span class="comment">--------</span></div><div class="line"> 300000</div><div class="line">(1 row)</div><div class="line"></div><div class="line">pgbench=#</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201411-postgres-mv/mv-refresh.png" alt=""></p>
+<p>刷新的时候，如果使用了参数<code>with no data</code>，那么会将物化视图的数据重置为未发布的状态；使用<code>with data</code>参数，才会将数据写入。再次查询，就可以得到合理的结果。如果想做到插入数据后自动刷新，可以将刷新动作写在trigger里面。</p>
+<h3>物化视图上建立索引</h3>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">pgbench=# create index mv_pgbench_accounts_bid_idx on mv_pgbench_accounts(bid);</div><div class="line">CREATE INDEX</div><div class="line">pgbench=# explain select count(*) from mv_pgbench_accounts where bid = 2;</div><div class="line">                                                        QUERY PLAN                                                        </div><div class="line">--------------------------------------------------------------------------------------------------------------------------</div><div class="line"> Aggregate  (cost=7370.77..7370.78 rows=1 width=0)</div><div class="line">   -&gt;  Index Only Scan using mv_pgbench_accounts_bid_idx on mv_pgbench_accounts  (cost=0.42..6995.52 rows=150100 width=0)</div><div class="line">         Index Cond: (bid = 2)</div><div class="line">(3 rows)</div><div class="line"></div><div class="line">pgbench=# select count(*) from mv_pgbench_accounts where bid = 2;</div><div class="line"> count  </div><div class="line">--------</div><div class="line"> 100000</div><div class="line">(1 row)</div><div class="line"></div><div class="line">pgbench=#</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201411-postgres-mv/mv-index.png" alt=""></p>
+<p>物化视图上建立索引的方法和表上建立索引的方法几乎一样，使用方法也一样。从执行计划中可以看到，在物化视图上建立的索引可以被查询所用。</p>
+<p>以上是对PostgreSQL的物化视图功能做的简单功能对比和使用方法演示。</p>
+<p>本文参考了以下文章，<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>, <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>, <a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>, <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>, <a href="#fn5" class="footnoteRef" id="fnref5"><sup>5</sup></a>，和PostgreSQL9.3的官方文档<a href="#fn6" class="footnoteRef" id="fnref6"><sup>6</sup></a>, <a href="#fn7" class="footnoteRef" id="fnref7"><sup>7</sup></a>, <a href="#fn8" class="footnoteRef" id="fnref8"><sup>8</sup></a>。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://www.linuxidc.com/Linux/2013-09/90045.htm" class="uri" target="_blank" rel="external">http://www.linuxidc.com/Linux/2013-09/90045.htm</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://www.cnblogs.com/gaojian/archive/2012/11/12/2765749.html" class="uri" target="_blank" rel="external">http://www.cnblogs.com/gaojian/archive/2012/11/12/2765749.html</a><a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p><a href="http://blog.csdn.net/tianlesoftware/article/details/4713553" class="uri" target="_blank" rel="external">http://blog.csdn.net/tianlesoftware/article/details/4713553</a><a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p><a href="http://www.cnblogs.com/Ronger/archive/2012/03/28/2420962.html" class="uri" target="_blank" rel="external">http://www.cnblogs.com/Ronger/archive/2012/03/28/2420962.html</a><a href="#fnref4">↩</a></p></li>
+<li id="fn5"><p><a href="http://soft.chinabyte.com/database/403/12429903.shtml" class="uri" target="_blank" rel="external">http://soft.chinabyte.com/database/403/12429903.shtml</a><a href="#fnref5">↩</a></p></li>
+<li id="fn6"><p><a href="http://www.postgresql.org/docs/9.3/static/rules-materializedviews.html" class="uri" target="_blank" rel="external">http://www.postgresql.org/docs/9.3/static/rules-materializedviews.html</a><a href="#fnref6">↩</a></p></li>
+<li id="fn7"><p><a href="https://wiki.postgresql.org/wiki/Materialized_Views" class="uri" target="_blank" rel="external">https://wiki.postgresql.org/wiki/Materialized_Views</a><a href="#fnref7">↩</a></p></li>
+<li id="fn8"><p><a href="http://www.postgresql.org/docs/9.3/static/sql-creatematerializedview.html" class="uri" target="_blank" rel="external">http://www.postgresql.org/docs/9.3/static/sql-creatematerializedview.html</a><a href="#fnref8">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Postgres/">Postgres</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Postgres/">Postgres</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201411-postgres-mv/" data-title="PostgreSQL物化视图简介 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201411-java-new-features/" title="Java 8新特性(What&#39;s New in Java 8 中文翻译版)">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  Java 8新特性(What&#39;s New in Java 8 中文翻译版)</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201411-postgres-pgbench/"  title="pgbench压力测试工具简介">
+ <strong>NEXT:</strong><br/> 
+ <span>pgbench压力测试工具简介
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">物化视图功能比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">postgres物化视图功能演示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">使用create materialized view创建物化视图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">查询物化视图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">修改源表数据，刷新物化视图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">物化视图上建立索引</span></a></li></ol></li></ol>
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

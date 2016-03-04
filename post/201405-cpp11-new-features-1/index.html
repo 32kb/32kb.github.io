@@ -1,0 +1,540 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>C++11的一些新特性 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="本文的大部分内容翻译自The C++ Standard Library A Tutorial and Reference (2nd Edition)的第三章，书中只列出了一些比较主要的新特性，更多比较详细的C++11特性可以参考C++11FAQ和The C++ Programming Languag">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201405-cpp11-new-features-1/" title="C++11的一些新特性" itemprop="url">C++11的一些新特性</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-05-27T04:55:00.000Z" itemprop="datePublished">2014-05-27</time>
+    更新日期:<time datetime="2014-12-03T01:10:27.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">C++11的新特性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.</span> <span class="toc-text">重要的细节语法调整</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.1.</span> <span class="toc-text">模板表达式中的空格</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.</span> <span class="toc-text">nullptr and std::nullptr_t(空指针和空指针类型)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.2.</span> <span class="toc-text">使用auto自动推断类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.3.</span> <span class="toc-text">统一的初始化和初始化列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.4.</span> <span class="toc-text">基于区间的for循环</span></a></li></ol></li></ol>
+		</div>
+		
+		<p>本文的大部分内容翻译自<a href="http://book.douban.com/subject/10440485/" target="_blank" rel="external">The C++ Standard Library A Tutorial and Reference (2nd Edition)</a>的第三章，书中只列出了一些比较主要的新特性，更多比较详细的C++11特性可以参考<a href="http://www.stroustrup.com/C++11FAQ.html" target="_blank" rel="external">C++11FAQ</a>和<a href="http://book.douban.com/subject/7053134/" target="_blank" rel="external">The C++ Programming Language (4th Edition)</a>。</p>
+<h2>C++11的新特性</h2>
+<h3>重要的细节语法调整</h3>
+<p>首先，我想介绍2个C++11中虽然很细节但是对日常编程很重要的新特性。</p>
+<h4>模板表达式中的空格</h4>
+<p>原先在模板表达式的2个右括号中间需要加空格，现在不需要了</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="stl_container"><span class="built_in">vector</span>&lt;<span class="stl_container"><span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt;</span> &gt;</span>; <span class="comment">// OK in each C++ version</span></div><div class="line"><span class="stl_container"><span class="built_in">vector</span>&lt;<span class="stl_container"><span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt;</span>&gt;</span>; <span class="comment">// OK since C++11</span></div></pre></td></tr></table></figure></p>
+<p>在整本书(包括实际代码)中，你会发现这2种形式。</p>
+<h4><code>nullptr and std::nullptr_t</code>(空指针和空指针类型)</h4>
+<p>在C++11中，你可以使用<code>nullptr</code>表示一个指向空值的指针(注意，这与未定义值不同)，而不用再使用<code>0</code>和<code>NULL</code>了。这个特性对防止空指针被解释成整形数值的发生特别有用。例如：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> f(<span class="keyword">int</span>);</div><div class="line"><span class="keyword">void</span> f(<span class="keyword">void</span>*);</div><div class="line">f(<span class="number">0</span>);           <span class="comment">// calls f(int)</span></div><div class="line">f(NULL);        <span class="comment">// calls f(int) if NULL is 0, ambiguous otherwise</span></div><div class="line">f(<span class="keyword">nullptr</span>);     <span class="comment">// calls f(void*)</span></div></pre></td></tr></table></figure></p>
+<p><code>nullptr</code>是新关键字，它可以自动的转换成任意类型的指针但无法转换为整形数值，其类型是<code>std::nullptr_t</code>，在头文件<code>&lt;cstddef&gt;</code>中定义。所以，你现在可以重载那些需要传入空指针情况的操作，需要注意的是<code>std::nullptr_t</code>是一个基本数据类型(see Section 5.4.2, page 127)。</p>
+<h3>使用<code>auto</code>自动推断类型</h3>
+<p>在C++11中，可以使用<code>auto</code><a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>声明一个变量或对象而不用指明其具体类型。例如：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">auto</span> i = <span class="number">42</span>;    <span class="comment">// i has type int</span></div><div class="line"><span class="keyword">double</span> f();</div><div class="line"><span class="keyword">auto</span> d = f();   <span class="comment">// d has type double</span></div></pre></td></tr></table></figure></p>
+<p>使用<code>auto</code>时，变量的类型是从初始化对象中推断得到的，所以，此时必须对变量做初始化：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">auto</span> i;         <span class="comment">// ERROR: can’t dedulce the type of i</span></div></pre></td></tr></table></figure></p>
+<p>也可以使用其他限制符<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>，例如：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">static</span> <span class="keyword">auto</span> vat = <span class="number">0.19</span>;</div></pre></td></tr></table></figure></p>
+<p>对于表达式长而复杂的类型，<code>auto</code>非常有用。例如：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="stl_container"><span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt;</span> v;</div><div class="line">...</div><div class="line"><span class="keyword">auto</span> pos = v.begin();       <span class="comment">// pos has type vector&lt;string&gt;::iterator</span></div><div class="line"></div><div class="line"><span class="keyword">auto</span> l = [] (<span class="keyword">int</span> x) -&gt; <span class="keyword">bool</span> {   <span class="comment">// l has the type of a lambda</span></div><div class="line">            ...,                <span class="comment">// taking an int and returning a bool</span></div><div class="line">        };</div></pre></td></tr></table></figure></p>
+<p>上述后半部分表示一个lambda对象，在Section 3.1.10, page 28中会有介绍。</p>
+<h3>统一的初始化和初始化列表</h3>
+<p>在C++11之前，程序员，尤其是初学者，很容易对如何初始化一个变量或对象感到困惑。因为初始化可以用括号、大括号以及赋值操作来完成。</p>
+<p>基于这个原因，C++11引入了统一初始化的概念，即可以用一个统一的语法完成所有的初始化。这个语法就是使用大括号，如下：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> values[] { <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span> };</div><div class="line">std::<span class="stl_container"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;</span> v { <span class="number">2</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">11</span>, <span class="number">13</span>, <span class="number">17</span> };</div><div class="line">std::<span class="stl_container"><span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt;</span> cities {</div><div class="line">    <span class="string">"Berlin"</span>, <span class="string">"New York"</span>, <span class="string">"London"</span>, <span class="string">"Braunschweig"</span>, <span class="string">"Cairo"</span>, <span class="string">"Cologne"</span></div><div class="line">};</div><div class="line">std::<span class="keyword">complex</span>&lt;<span class="keyword">double</span>&gt; c{<span class="number">4.0</span>,<span class="number">3.0</span>};    <span class="comment">// equivalent to c(4.0,3.0)</span></div></pre></td></tr></table></figure></p>
+<p>初始化列表强制执行值初始化的操作，也就是说，即使是通常只有未定义值的基础类型的局部变量也会被初始化为0(如果是指针的话，会被初始化为<code>nullptr</code>)。</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> i;      <span class="comment">// i has undeﬁned value</span></div><div class="line"><span class="keyword">int</span> j{};    <span class="comment">// j is initialized by 0</span></div><div class="line"><span class="keyword">int</span>* p;     <span class="comment">// p has undeﬁned value</span></div><div class="line"><span class="keyword">int</span>* q{};   <span class="comment">// q is initialized by nullptr</span></div></pre></td></tr></table></figure></p>
+<p>但是注意，窄化初始化，即会丢失精度或使用传入对象变化后的值的初始化，是无法使用大括号的。例如：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> x1(<span class="number">5.3</span>);    <span class="comment">// OK, but OUCH: x1 becomes 5</span></div><div class="line"><span class="keyword">int</span> x2 = <span class="number">5.3</span>;   <span class="comment">// OK, but OUCH: x2 becomes 5</span></div><div class="line"><span class="keyword">int</span> x3{<span class="number">5.0</span>};    <span class="comment">// ERROR: narrowing</span></div><div class="line"><span class="keyword">int</span> x4 = {<span class="number">5.3</span>}; <span class="comment">// ERROR: narrowing</span></div><div class="line"><span class="keyword">char</span> c1{<span class="number">7</span>};     <span class="comment">// OK: even though 7 is an int, this is not narrowing</span></div><div class="line"><span class="keyword">char</span> c2{<span class="number">99999</span>}; <span class="comment">// ERROR: narrowing (if 99999 doesn’t ﬁt into a char)</span></div><div class="line">std::<span class="stl_container"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;</span> v1 { <span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span> };     <span class="comment">// OK</span></div><div class="line">std::<span class="stl_container"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;</span> v2 { <span class="number">1</span>, <span class="number">2.3</span>, <span class="number">4</span>, <span class="number">5.6</span> }; <span class="comment">// ERROR: narrowing doubles to ints</span></div></pre></td></tr></table></figure></p>
+<p>如上所示，为了检查是否已经应用了窄化，只要编译期可以取值，即使是立即数也需要检查。关于这个例子，正如Bjarne Stroustrup在[Stroustrup:FAQ]中写道：&quot;C++11避免很多不兼容性的方法是当它可以判定初始化对象何处发生了窄化（而非仅仅从类型判定）时，依赖初始化对象的实际值（如上例中的7）。如果传入值可以精确的表示目标值类型的话，这样的类型转换就不是窄化。注意，浮点数转换为整形总是发生了窄化，即使是7.0转换成7这种情况。&quot;</p>
+<p>为了能支持用户自定义的初始化列表，C++11提供了类模板<code>std::initializer_list&lt;&gt;</code>，它可以支持用一组值来执行初始化或者其他任何情况下你希望处理一组值。例如：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> print (std::initializer_list&lt;<span class="keyword">int</span>&gt; vals)</div><div class="line">{</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> p=vals.begin(); p!=vals.end(); ++p) { <span class="comment">// process a list of values</span></div><div class="line">        std::<span class="built_in">cout</span> &lt;&lt; *p &lt;&lt; <span class="string">"\n"</span>;</div><div class="line">    }</div><div class="line">}</div><div class="line"></div><div class="line">print ({<span class="number">12</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">7</span>,<span class="number">11</span>,<span class="number">13</span>,<span class="number">17</span>}); <span class="comment">// pass a list of values to print()</span></div></pre></td></tr></table></figure></p>
+<p>当固定参数的构造函数和初始化列表的构造函数同时存在时，初始化列表会被优先考虑：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> P</div><div class="line">{</div><div class="line">    <span class="keyword">public</span>:</div><div class="line">        P(<span class="keyword">int</span>,<span class="keyword">int</span>);</div><div class="line">        P(std::initializer_list&lt;<span class="keyword">int</span>&gt;);</div><div class="line">};</div><div class="line">P p(<span class="number">77</span>,<span class="number">5</span>);      <span class="comment">// calls P::P(int,int)</span></div><div class="line">P q{<span class="number">77</span>,<span class="number">5</span>};      <span class="comment">// calls P::P(initializer_list)</span></div><div class="line">P r{<span class="number">77</span>,<span class="number">5</span>,<span class="number">42</span>};   <span class="comment">// calls P::P(initializer_list)</span></div><div class="line">P s = {<span class="number">77</span>,<span class="number">5</span>};   <span class="comment">// calls P::P(initializer_list)</span></div></pre></td></tr></table></figure></p>
+<p>如果没有初始化列表的构造函数的话，编译器会用2个<code>int</code>的构造函数初始化<code>q</code>和<code>s</code>，而初始化<code>r</code>的动作是非法的。</p>
+<p>由于初始化列表的引入，<code>explicit</code> 与拥有多个参数的构造函数变得更加相关。现在你可以禁止多个传入值情况下的自动类型转换，对使用&quot;=&quot;语法的初始化也一样：</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> P</div><div class="line">{</div><div class="line">    <span class="keyword">public</span>:</div><div class="line">        P(<span class="keyword">int</span> a, <span class="keyword">int</span> b) {</div><div class="line">            ...</div><div class="line">        }</div><div class="line">        <span class="keyword">explicit</span> P(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> c) {</div><div class="line">            ...</div><div class="line">        }</div><div class="line">};</div><div class="line"></div><div class="line">P x(<span class="number">77</span>,<span class="number">5</span>);          <span class="comment">// OK</span></div><div class="line">P y{<span class="number">77</span>,<span class="number">5</span>};          <span class="comment">// OK</span></div><div class="line">P z {<span class="number">77</span>,<span class="number">5</span>,<span class="number">42</span>};      <span class="comment">// OK</span></div><div class="line">P v = {<span class="number">77</span>,<span class="number">5</span>};       <span class="comment">// OK (implicit type conversion allowed)</span></div><div class="line">P w = {<span class="number">77</span>,<span class="number">5</span>,<span class="number">42</span>};    <span class="comment">// ERROR due to explicit (no implicit type conversion allowed)</span></div><div class="line"></div><div class="line"><span class="keyword">void</span> fp(<span class="keyword">const</span> P&);</div><div class="line"></div><div class="line">fp({<span class="number">47</span>,<span class="number">11</span>});        <span class="comment">// OK, implicit conversion of {47,11} into P</span></div><div class="line">fp({<span class="number">47</span>,<span class="number">11</span>,<span class="number">3</span>});      <span class="comment">// ERROR due to explicit</span></div><div class="line">fp(P{<span class="number">47</span>,<span class="number">11</span>});       <span class="comment">// OK, explicit conversion of {47,11} into P</span></div><div class="line">fp(P{<span class="number">47</span>,<span class="number">11</span>,<span class="number">3</span>});     <span class="comment">// OK, explicit conversion of {47,11,3} into P</span></div></pre></td></tr></table></figure></p>
+<p>相同的情况，参数是初始化列表的<code>explicit</code>构造函数禁止含一个、多个或为空初始化列表的显式转换。</p>
+<h3>基于区间的<code>for</code>循环</h3>
+<p>C++11引入了新式的<code>for</code>循环，</p>
+<p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">```</div></pre></td></tr></table></figure></p>
+<p>cpp</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure></p>
+<p>cpp</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure></p>
+<p>cpp</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure></p>
+<p>cpp</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure></p>
+<p>cpp</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure></p>
+<p>cpp ```</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p>注意，<code>auto</code>是C中的旧关键字，表示一个变量是局部变量，和<code>static</code>相反。实际上从来没有使用过<code>auto</code>，因为不把变量声明为<code>static</code>就默认声明为<code>auto</code>。<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>译注：限制符（qualifiers），例如const, volatile等<a href="#fnref2">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/C-11/">C++11</a><a href="/tags/C/">C++</a><a href="/tags/Translation/">Translation</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/C/">C++</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201405-cpp11-new-features-1/" data-title="C++11的一些新特性 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201408-postgresql-install/" title="PostgreSQL源码安装">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  PostgreSQL源码安装</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201402-sicp-solution-ch2/"  title="我的SICP习题解答-chapter 2 (未完待续)">
+ <strong>NEXT:</strong><br/> 
+ <span>我的SICP习题解答-chapter 2 (未完待续)
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">C++11的新特性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.</span> <span class="toc-text">重要的细节语法调整</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.1.</span> <span class="toc-text">模板表达式中的空格</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.</span> <span class="toc-text">nullptr and std::nullptr_t(空指针和空指针类型)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.2.</span> <span class="toc-text">使用auto自动推断类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.3.</span> <span class="toc-text">统一的初始化和初始化列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.4.</span> <span class="toc-text">基于区间的for循环</span></a></li></ol></li></ol>
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

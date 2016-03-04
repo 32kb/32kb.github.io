@@ -1,0 +1,964 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Docker命令简介 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="Docker命令概要
+常用的Docker命令有以下一些1 2 3。
+1. docker version
+显示 Docker 版本信息。
+2. docker info
+显示 Docker 系统信息，包括镜像和容器数。
+3. docker search
+12docker search [o">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201512-docker-commands/" title="Docker命令简介" itemprop="url">Docker命令简介</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2015-12-18T13:03:00.000Z" itemprop="datePublished">2015-12-18</time>
+    更新日期:<time datetime="2015-12-26T07:51:59.000Z" itemprop="dateModified">2015-12-26</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<h2>Docker命令概要</h2>
+<p>常用的Docker命令有以下一些<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> <a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>。</p>
+<h3>1. docker version</h3>
+<p>显示 Docker 版本信息。</p>
+<h3>2. docker info</h3>
+<p>显示 Docker 系统信息，包括镜像和容器数。</p>
+<h3>3. docker search</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker search [options <span class="string">"o"</span>&gt;] term</div><div class="line">docker search <span class="operator">-s</span>  django</div></pre></td></tr></table></figure></p>
+<p>从 Docker Hub 中搜索符合条件的镜像。</p>
+<p>--automated 只列出 automated build类型的镜像；</p>
+<p>--no-trunc 可显示完整的镜像描述；</p>
+<p>-s 40 列出收藏数不小于40的镜像。</p>
+<h3>4. docker pull</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker pull [<span class="operator">-a</span> <span class="string">"o"</span>&gt;] [user/ <span class="string">"o"</span>&gt;]name[:tag <span class="string">"o"</span>&gt;]</div><div class="line">docker pull laozhu/telescope:latest</div></pre></td></tr></table></figure></p>
+<p>从 Docker Hub 中拉取或者更新指定镜像。</p>
+<p>-a 拉取所有 tagged 镜像 。</p>
+<h3>5. docker login</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">root@moon:~<span class="comment"># docker login</span></div><div class="line">Username: username</div><div class="line">Password: ****</div><div class="line">Email: user@domain.com</div><div class="line">Login Succeeded</div></pre></td></tr></table></figure></p>
+<p>按步骤输入在 Docker Hub 注册的用户名、密码和邮箱即可完成登录。</p>
+<h3>6. docker logout</h3>
+<p>运行后从指定服务器登出，默认为官方服务器。</p>
+<h3>7. docker images</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker images [options <span class="string">"o"</span>&gt;] [name]</div></pre></td></tr></table></figure></p>
+<p>列出本地所有镜像。其中 [name] 对镜像名称进行关键词查询。</p>
+<p>-a 列出所有镜像（含过程镜像）；</p>
+<p>-f 过滤镜像，如： -f ['dangling=true'] 只列出满足dangling=true 条件的镜像；</p>
+<p>--no-trunc 可显示完整的镜像ID；</p>
+<p>-q 仅列出镜像ID。</p>
+<p>--tree 以树状结构列出镜像的所有提交历史。</p>
+<h3>8. docker ps</h3>
+<p>列出所有运行中容器。</p>
+<p>-a 列出所有容器（含沉睡镜像）；</p>
+<p>--before=&quot;nginx&quot; 列出在某一容器之前创建的容器，接受容器名称和ID作为参数；</p>
+<p>--since=&quot;nginx&quot; 列出在某一容器之后创建的容器，接受容器名称和ID作为参数；</p>
+<p>-f [exited=<int>] 列出满足exited=<int> 条件的容器；</int></int></p>
+<p>-l 仅列出最新创建的一个容器；</p>
+<p>--no-trunc 显示完整的容器ID；</p>
+<p>-n=4 列出最近创建的4个容器；</p>
+<p>-q 仅列出容器ID；</p>
+<p>-s 显示容器大小。</p>
+<h3>9. docker rmi</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker rmi [options <span class="string">"o"</span>&gt;] &lt;image&gt;  <span class="string">"o"</span>&gt;[image...]</div><div class="line">docker rmi nginx:latest postgres:latest python:latest</div></pre></td></tr></table></figure></p>
+<p>从本地移除一个或多个指定的镜像。</p>
+<p>-f 强行移除该镜像，即使其正被使用；</p>
+<p>--no-prune 不移除该镜像的过程镜像，默认移除。</p>
+<h3>10. docker rm</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">docker rm [options <span class="string">"o"</span>&gt;] &lt;container&gt;  <span class="string">"o"</span>&gt;[container...]</div><div class="line">docker rm nginx-<span class="number">01</span> nginx-<span class="number">02</span> db-<span class="number">01</span> db-<span class="number">02</span></div><div class="line"><span class="built_in">sudo</span> docker rm <span class="operator">-l</span> /webapp/redis</div></pre></td></tr></table></figure></p>
+<p>-f 强行移除该容器，即使其正在运行；</p>
+<p>-l 移除容器间的网络连接，而非容器本身；</p>
+<p>-v 移除与容器关联的空间。</p>
+<h3>11. docker history</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker history  <span class="string">"o"</span>&gt;[options] &lt;image&gt;</div></pre></td></tr></table></figure></p>
+<p>查看指定镜像的创建历史。</p>
+<p>--no-trunc 显示完整的提交记录；</p>
+<p>-q 仅列出提交记录ID。</p>
+<h3>12. docker start|stop|restart</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker start|stop <span class="string">"p"</span>&gt;|restart [options <span class="string">"o"</span>&gt;] &lt;container&gt;  <span class="string">"o"</span>&gt;[container...]</div></pre></td></tr></table></figure></p>
+<p>启动、停止和重启一个或多个指定容器。</p>
+<p>-a 待完成</p>
+<p>-i 启动一个容器并进入交互模式；</p>
+<p>-t 10 停止或者重启容器的超时时间（秒），超时后系统将杀死进程。</p>
+<h3>13. docker kill</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker kill  <span class="string">"o"</span>&gt;[options <span class="string">"o"</span>&gt;] &lt;container&gt;  <span class="string">"o"</span>&gt;[container...]</div></pre></td></tr></table></figure></p>
+<p>杀死一个或多个指定容器进程。</p>
+<p>-s &quot;KILL&quot; 自定义发送至容器的信号。</p>
+<h3>14. docker events</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">docker events [options <span class="string">"o"</span>&gt;]</div><div class="line">docker events --since= <span class="string">"s2"</span>&gt;<span class="string">"20141020"</span></div><div class="line">docker events --until= <span class="string">"s2"</span>&gt;<span class="string">"20120310"</span></div></pre></td></tr></table></figure></p>
+<p>从服务器拉取个人动态，可选择时间区间。</p>
+<h3>15. docker save</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker save -i <span class="string">"debian.tar"</span></div><div class="line">docker save &gt; <span class="string">"debian.tar"</span></div></pre></td></tr></table></figure></p>
+<p>将指定镜像保存成 tar 归档文件， docker load 的逆操作。保存后再加载（saved-loaded）的镜像不会丢失提交历史和层，可以回滚。</p>
+<p>-o &quot;debian.tar&quot; 指定保存的镜像归档。</p>
+<h3>16. docker load</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">docker load [options]</div><div class="line">docker load &lt; debian.tar</div><div class="line">docker load -i <span class="string">"debian.tar"</span></div></pre></td></tr></table></figure></p>
+<p>从 tar 镜像归档中载入镜像， docker save 的逆操作。保存后再加载（saved-loaded）的镜像不会丢失提交历史和层，可以回滚。</p>
+<p>-i &quot;debian.tar&quot; 指定载入的镜像归档。</p>
+<h3>17. docker export</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker <span class="keyword">export</span> &lt;container&gt;</div><div class="line">docker <span class="keyword">export</span> nginx-<span class="number">01</span> &gt; export.tar</div></pre></td></tr></table></figure></p>
+<p>将指定的容器保存成 tar 归档文件， docker import 的逆操作。导出后导入（exported-imported)）的容器会丢失所有的提交历史，无法回滚。</p>
+<h3>18. docker import</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">docker import url|-  <span class="string">"o"</span>&gt;[repository[:tag <span class="string">"o"</span>&gt;]]</div><div class="line">cat export.tar  <span class="string">"p"</span>&gt;| docker import - imported-nginx:latest</div><div class="line">docker import http://example.com/export.tar</div></pre></td></tr></table></figure></p>
+<p>从归档文件（支持远程文件）创建一个镜像， export 的逆操作，可为导入镜像打上标签。导出后导入（exported-imported)）的容器会丢失所有的提交历史，无法回滚。</p>
+<h3>19. docker top</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker top &lt;running_container&gt;  <span class="string">"o"</span>&gt;[ps options]</div></pre></td></tr></table></figure></p>
+<p>查看一个正在运行容器进程，支持 ps 命令参数。</p>
+<h3>20. docker inspect</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker instpect nginx:latest</div><div class="line">docker inspect nginx-container</div></pre></td></tr></table></figure></p>
+<p>检查镜像或者容器的参数，默认返回 JSON 格式。</p>
+<p>-f 指定返回值的模板文件。</p>
+<h3>21. docker pause</h3>
+<p>暂停某一容器的所有进程。</p>
+<h3>22. docker unpause</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker unpause &lt;container&gt;</div></pre></td></tr></table></figure></p>
+<p>恢复某一容器的所有进程。</p>
+<h3>23. docker tag</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker tag [options <span class="string">"o"</span>&gt;] &lt;image&gt;[:tag <span class="string">"o"</span>&gt;] [repository/ <span class="string">"o"</span>&gt;][username/]name <span class="string">"o"</span>&gt;[:tag]</div></pre></td></tr></table></figure></p>
+<p>标记本地镜像，将其归入某一仓库。</p>
+<p>-f 覆盖已有标记。</p>
+<h3>24. docker push</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker push name[:tag <span class="string">"o"</span>&gt;]</div><div class="line">docker push laozhu/nginx:latest</div></pre></td></tr></table></figure></p>
+<p>将镜像推送至远程仓库，默认为 Docker Hub 。</p>
+<h3>25. docker logs</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker logs [options <span class="string">"o"</span>&gt;] &lt;container&gt;</div><div class="line">docker logs <span class="operator">-f</span> -t --tail= <span class="string">"s2"</span>&gt;<span class="string">"10"</span> insane_babbage</div></pre></td></tr></table></figure></p>
+<p>获取容器运行时的输出日志。</p>
+<p>-f 跟踪容器日志的最近更新；</p>
+<p>-t 显示容器日志的时间戳；</p>
+<p>--tail=&quot;10&quot; 仅列出最新10条容器日志。</p>
+<h3>26. docker run</h3>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">docker run [options <span class="string">"o"</span>&gt;] &lt;image&gt; [ <span class="string">"nb"</span>&gt;command]  <span class="string">"o"</span>&gt;[arg...]</div></pre></td></tr></table></figure></p>
+<p>启动一个容器，在其中运行指定命令。</p>
+<p>-a stdin 指定标准输入输出内容类型，可选 STDIN/STDOUT / STDERR 三项；</p>
+<p>-d 后台运行容器，并返回容器ID；</p>
+<p>-i 以交互模式运行容器，通常与 -t 同时使用；</p>
+<p>-t 为容器重新分配一个伪输入终端，通常与 -i 同时使用；</p>
+<p>--name=&quot;nginx-lb&quot; 为容器指定一个名称；</p>
+<p>--dns 8.8.8.8 指定容器使用的DNS服务器，默认和宿主一致；</p>
+<p>--dns-search example.com 指定容器DNS搜索域名，默认和宿主一致；</p>
+<p>-h &quot;mars&quot; 指定容器的hostname；</p>
+<p>-e username=&quot;ritchie&quot; 设置环境变量；</p>
+<p>--env-file=[] 从指定文件读入环境变量；</p>
+<p>--cpuset=&quot;0-2&quot; or --cpuset=&quot;0,1,2&quot; 绑定容器到指定CPU运行；</p>
+<p>-c 待完成</p>
+<p>-m 待完成</p>
+<p>--net=&quot;bridge&quot; 指定容器的网络连接类型，支持 bridge /host / none/container:<name|id> 四种类型；</name|id></p>
+<p>--link=[] 待完成</p>
+<p>--expose=[] 待完成</p>
+<h2>详解docker run命令</h2>
+<p><code>docker run</code>应该是Docker中最常用的命令了，Docker的官方文档也给予了非常详细的介绍<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a> <a href="#fn5" class="footnoteRef" id="fnref5"><sup>5</sup></a>。</p>
+<p>Docker在执行时会将相关进程封装到相互隔离的容器(container)中。当执行 docker run时，Docker会启动一个进程，同时给这个进程分配其独占的文件系统，独占的网络资源和以此进程为根进程的进程组。在Docker启动container时加载的Image，或许已经定义好了默认的启动进程，需要exposer的网络端口和其他在Dockerfile中定义好的资源。但使用docker run 都可以重新对这个image进行默认定义。这就是为什么run命令参数比docker其他命令参数都多的原因。</p>
+<h3>基本形式</h3>
+<p>最基本的docker run命令是如下格式：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="tag">sudo</span> <span class="tag">docker</span> <span class="tag">run</span> <span class="attr_selector">[OPTIONS]</span> <span class="tag">IMAGE</span><span class="attr_selector">[:TAG]</span> <span class="attr_selector">[COMMAND]</span> <span class="attr_selector">[ARG...]</span></div></pre></td></tr></table></figure></p>
+<p>如果需要查看[OPTIONS]的详细使用说明，请参考Docker关于OPTIONS的说明。这里仅简要介绍Run所使用到的参数。</p>
+<p>OPTIONS总起来说分为两类：</p>
+<pre><code>1. 设定操作执行方式：
+    1. 决定container的运行方式，前台执行还是后台执行
+    2. 设定containerID
+    3. 设定network参数
+    4. 设定container的CPU和Memory参数
+    5. 设定权限(Privileges )和LXC参数
+2. 设定image的默认资源，也就是image使用者可以用此命令来覆盖image开发者在build阶段所设定的默认值。</code></pre>
+<p>docker run [OPTIONS]可以让image使用者完全控制container的生命周期，允许image使用者覆盖所有image开发者在执行docker build时所设定的参数，甚至也可以修改本身由Docker所控制的内核级参数。</p>
+<h3>Operator exclusive options</h3>
+<p>当执行docker run时可以设定的资源如下：</p>
+<pre><code>*Detached vs Foreground
+*Container Identification
+*IPC Setting
+*Network Settings
+*Clean Up (--rm)
+*Runtime Constraints on CPU and Memory
+*Runtime Privilege, Linux Capabilities, and LXC Configuration</code></pre>
+<p>我们依次进行介绍。</p>
+<h3>Detached vs foreground</h3>
+<p>当我们启动一个container时，首先需要确定这个container是运行在前台模式还是运行在后台模式。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-d=<span class="built_in">false</span>: <span class="type">Detached</span> mode: <span class="type">Run</span> container <span class="keyword">in</span> the background, <span class="built_in">print</span> <span class="keyword">new</span> container id</div></pre></td></tr></table></figure></p>
+<h4>Detached (-d)</h4>
+<p>如果在docker run 后面追加-d=true或者-d，则containter将会运行在后台模式(Detached mode)。此时所有I/O数据只能通过网络资源或者共享卷组来进行交互。因为container不再监听你执行docker run的这个终端命令行窗口。但你可以通过执行docker attach 来重新挂载这个container里面。需要注意的时，<em>如果你选择执行-d使container进入后台模式，那么将无法配合&quot;--rm&quot;参数</em>。</p>
+<h4>Foregroud</h4>
+<p>如果在docker run后面没有追加-d参数，则container将默认进入前台模式(Foregroud mode)。Docker会启动这个container，同时将当前的命令行窗口挂载到container的标准输入，标准输出和标准错误中。也就是container中所有的输出，你都可以再当前窗口中查看到。甚至docker可以虚拟出一个TTY窗口，来执行信号中断。这一切都是可以配置的：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">-<span class="ruby">a=[]          　　　　 <span class="symbol">:</span> <span class="constant">Attach</span> to `<span class="constant">STDIN</span>`, `<span class="constant">STDOUT</span>` <span class="keyword">and</span>/<span class="keyword">or</span> `<span class="constant">STDERR</span>`</span></div><div class="line">-<span class="ruby">t=<span class="keyword">false</span>        　　  <span class="symbol">:</span> <span class="constant">Allocate</span> a pseudo-tty</span></div><div class="line">-<span class="ruby">-sig-proxy=<span class="keyword">true</span>　<span class="symbol">:</span> <span class="constant">Proxify</span> all received signal to the process (non-<span class="constant">TTY</span> mode only)</span></div><div class="line">-<span class="ruby">i=<span class="keyword">false</span>        　　  <span class="symbol">:</span> <span class="constant">Keep</span> <span class="constant">STDIN</span> open even <span class="keyword">if</span> <span class="keyword">not</span> attached</span></div></pre></td></tr></table></figure></p>
+<p>如果在执行run命令时没有指定-a，那么docker默认会挂载所有标准数据流，包括输入输出和错误。你可以特别指定挂载哪个标准流。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ sudo docker run -<span class="operator">a</span> <span class="keyword">stdin</span> -<span class="operator">a</span> <span class="keyword">stdout</span> -i -t ubuntu /bin/bash (只挂载标准输入输出)</div></pre></td></tr></table></figure></p>
+<p>对于执行容器内的交互式操作，例如shell脚本。我们必须使用 -i -t来申请一个控制台同容器进行数据交互。但是当通过管道同容器进行交互时，就不能使用-t. 例如这个命令<code>echo test | docker run -i busybox cat</code></p>
+<h3>Container identification</h3>
+<h4>Name (--name)</h4>
+<p>给container命名有三种方式：</p>
+<p>　　1. 使用UUID长命名(&quot;f78375b1c487e03c9438c729345e54db9d20cfa2ac1fc3494b6eb60872e74778&quot;) 　　2. 使用UUID短命令(&quot;f78375b1c487&quot;) 　　3. 使用Name(&quot;evil_ptolemy&quot;)</p>
+<p>这个UUID标示是由Docker deamon来生成的。如果你在执行docker run时没有指定 --name，那么deamon会自动生成一个随机数字符串当做UUID。但是对于一个container来说有个name会非常方便，因为你可以当你需要link其它容器时或者其他类似需要区分其它容器时，使用容器名称会简化操作。无论container运行在前台或者后台，这个名字都是有效的。</p>
+<h4>PID equivalent</h4>
+<p>当你在运行docker时有自动化的要求，那么你可以要求Docker将containerID 输出到你指定的文件中(PIDfile).这种行为就类似于有些应用程序将自身ID输出到文件中，方便后续脚本操作。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">--cidfile=<span class="string">""</span>: <span class="keyword">Write</span> the container ID to the <span class="keyword">file</span></div></pre></td></tr></table></figure></p>
+<h4>Image[:tag]</h4>
+<p>当一个image的名称不足以分辨这个image所代表的含义时，你可以在命令中通过添加<code>image[:tag]</code>来指定特定版本的image以运行容器。例如: <code>docker run ubuntu:14.04</code></p>
+<h3>IPC Settings</h3>
+<p>默认情况下，所有容器都开启了IPC命名空间。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">--ipc=<span class="string">""</span>  : Set the IPC mode <span class="keyword">for</span> the container,</div><div class="line">            <span class="string">'container:&lt;name|id&gt;'</span>: reuses another containe<span class="string">r's IPC namespace</span></div><div class="line">            'host<span class="string">': use the host'</span>s IPC namespace inside the container</div></pre></td></tr></table></figure></p>
+<p>IPC(POSIX/SysV IPC)命名空间提供了相互隔离的命名共享内存，信号灯变量和消息队列。</p>
+<p>共享内存可以提高进程数据交互速度。共享内存一般用在database和高性能应用(C/OpenMPI, C++/using boost libraries)上或者金融服务上。如果需要容器里面部署上述类型的应用，那么就应该在多个容器直接采取共享内存了。</p>
+<h3>Network settings</h3>
+<p>默认情况下，所有的container都开启了网络接口，同时可以接受任何外部的数据请求。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">--dns=[]         : Set custom dns servers <span class="keyword">for</span> the container</div><div class="line">--net=<span class="string">"bridge"</span>   : Set the Network mode <span class="keyword">for</span> the container</div><div class="line">                              <span class="string">'bridge'</span>: creates a new network stack <span class="keyword">for</span> the container on the docker bridge</div><div class="line">                              <span class="string">'none'</span>: no networking <span class="keyword">for</span> this container</div><div class="line">                              <span class="string">'container:&lt;name|id&gt;'</span>: reuses another container network stack</div><div class="line">                              <span class="string">'host'</span>: use the host network stack inside the container</div><div class="line">--add-host=<span class="string">""</span>    : Add a line to /etc/hosts (host:IP)</div><div class="line">--mac-address=<span class="string">""</span> : Sets the containe<span class="string">r's Ethernet device'</span>s MAC address</div></pre></td></tr></table></figure></p>
+<p>可以通过docker run --net none 来关闭网络接口，此时将关闭所有网络数据的输入输出。这时，你只能通过STDIN,STDOUT或者files来完成I/O操作了。默认情况下，container使用host的DNS设置。但是你可以通过--dns来覆盖container内的dns设置。同时docker会对containter默认生成一个MAC地址，你可以通过--mac-address 12:34:56:78:9a:bc 来设置你自己的mac地址。</p>
+<p>以下是网络设置中常用的参数：</p>
+<pre><code>* none 关闭container内的网络连接
+* bridge 通过veth接口来连接contianer 默认选项
+* host 允许container使用host的网络堆栈信息。 注意：这种方式将允许container访问host中类似D-BUS之类的系统服务，所以被认为是不安全的。
+* container 使用另外一个container的网络堆栈信息。</code></pre>
+<h4>None：</h4>
+<p>将网络模式设置为none时，这个container将不允许访问任何外部router。这个container内部只会有一个loopback接口，而且不存在任何可以访问外部网络的router。</p>
+<h4>Bridge：</h4>
+<p>Docker默认是将container设置为bridge模式。此时在host上面讲存在一个docker0的网络接口，同时会针对container创建一对veth接口。其中一个veth接口是在host充当网卡桥接作用，另外一个veth接口存在于container的命名空间中，并且指向container的loopback。Docker会自动给这个container分配一个IP，并且将container内的数据通过桥接转发到外部。</p>
+<h4>Host：</h4>
+<p>当网络模式设置为host时，这个container将完全共享host的网络堆栈。host所有的网络接口将完全对container开放。container的主机名也会存在于host的hostname中。这时，container所有对外暴露的port和对其它container的link，将完全失效。</p>
+<h4>Container：</h4>
+<p>当网络模式设置为Container时，这个container将完全复用另外一个container的网络堆栈。同时使用时这个container的名称必须要符合下面的格式：--net container:<name|id>.</name|id></p>
+<p>比如当前有一个绑定了本地地址localhost的redis container。如果另外一个container需要复用这个网络堆栈，则需要如下操作：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ sudo docker run -d <span class="comment">--name redis example/redis --bind 127.0.0.1</span></div><div class="line">$ # <span class="keyword">use</span> the redis container<span class="attribute">'s</span> network stack <span class="keyword">to</span> <span class="keyword">access</span> localhost</div><div class="line">$ sudo docker run <span class="comment">--rm -ti --net container:redis example/redis-cli -h 127.0.0.1</span></div></pre></td></tr></table></figure></p>
+<h4>Managing /etc/hosts</h4>
+<p>当一个container再启动时，在/etc/hosts文件里面将会存在包括localhost在内的一些hostname信息。我们也可以使用--add-host这个参数来动态添加/etc/hosts里面的数据。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ /docker run -ti --add-host db-<span class="keyword">static</span>:<span class="number">86.75</span>.<span class="number">30.9</span> ubuntu cat /etc/hosts</div><div class="line"><span class="number">172.17</span>.<span class="number">0.22</span>     <span class="number">09</span>d03f76bf2c</div><div class="line">fe00::<span class="number">0</span>         ip6-localnet</div><div class="line">ff00::<span class="number">0</span>         ip6-mcastprefix</div><div class="line">ff02::<span class="number">1</span>         ip6-allnodes</div><div class="line">ff02::<span class="number">2</span>         ip6-allrouters</div><div class="line"><span class="number">127.0</span>.<span class="number">0.1</span>       localhost</div><div class="line">::<span class="number">1</span>             localhost ip6-localhost ip6-loopback</div><div class="line"><span class="number">86.75</span>.<span class="number">30.9</span>      db-<span class="keyword">static</span></div></pre></td></tr></table></figure></p>
+<h4>Clean up (--rm)</h4>
+<p>默认情况下，每个container在退出时，它的文件系统也会保存下来。这样一方面调试会方便些，因为你可以通过查看日志等方式来确定最终状态。另外一方面，你也可以保存container所产生的数据。但是当你仅仅需要短期的运行一个前台container，这些数据同时不需要保留时。你可能就希望docker能在container结束时自动清理其所产生的数据。</p>
+<p>这个时候你就需要--rm这个参数了。 注意：<em>--rm 和 -d不能共用！</em></p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">--rm=<span class="literal">false</span>: <span class="type">Automatically</span> remove the container <span class="keyword">when</span> it exits (incompatible <span class="keyword">with</span> -d)</div></pre></td></tr></table></figure></p>
+<h3>Security configuration</h3>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">-<span class="ruby">-security-opt=<span class="string">"label:user:USER"</span>   <span class="symbol">:</span> <span class="constant">Set</span> the label user <span class="keyword">for</span> the container</span></div><div class="line">-<span class="ruby">-security-opt=<span class="string">"label:role:ROLE"</span>   <span class="symbol">:</span> <span class="constant">Set</span> the label role <span class="keyword">for</span> the container</span></div><div class="line">-<span class="ruby">-security-opt=<span class="string">"label:type:TYPE"</span>   <span class="symbol">:</span> <span class="constant">Set</span> the label type <span class="keyword">for</span> the container</span></div><div class="line">-<span class="ruby">-security-opt=<span class="string">"label:level:LEVEL"</span> <span class="symbol">:</span> <span class="constant">Set</span> the label level <span class="keyword">for</span> the container</span></div><div class="line">-<span class="ruby">-security-opt=<span class="string">"label:disable"</span>     <span class="symbol">:</span> <span class="constant">Turn</span> off label confinement <span class="keyword">for</span> the container</span></div><div class="line">-<span class="ruby">-secutity-opt=<span class="string">"apparmor:PROFILE"</span>  <span class="symbol">:</span> <span class="constant">Set</span> the apparmor profile to be applied  to the container</span></div></pre></td></tr></table></figure></p>
+<p>你可以通过--security-opt修改container中默认的schema标签。比如说，对于一个MLS系统来说(MLS可能是指Multiple Listing System，本人不确定.)，你可以指定MCS/MLS级别。</p>
+<p>下面的这些级别将允许多个container共享content。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"># <span class="tag">docker</span> <span class="tag">run</span> <span class="tag">--security-opt</span> <span class="tag">label</span><span class="pseudo">:level</span><span class="pseudo">:s0</span><span class="pseudo">:c100</span>,<span class="tag">c200</span> <span class="tag">-i</span> <span class="tag">-t</span> <span class="tag">fedora</span> <span class="tag">bash</span></div></pre></td></tr></table></figure></p>
+<p>如果是MLS系统，则使用下面的命令：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"># <span class="tag">docker</span> <span class="tag">run</span> <span class="tag">--security-opt</span> <span class="tag">label</span><span class="pseudo">:level</span><span class="pseudo">:TopSecret</span> <span class="tag">-i</span> <span class="tag">-t</span> <span class="tag">rhel7</span> <span class="tag">bash</span></div></pre></td></tr></table></figure></p>
+<p>使用下面的命令可以在container内禁用安全策略：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"># docker run --security-<span class="keyword">opt</span> labe<span class="variable">l:disable</span> -<span class="keyword">i</span> -<span class="keyword">t</span> fedora bash</div></pre></td></tr></table></figure></p>
+<p>如果你需要在container内执行更为严格的安全策略，那么你可以为这个container指定一个策略替代。比如你可以使用下面的命令来指定container只允许监听apache port</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"># <span class="tag">docker</span> <span class="tag">run</span> <span class="tag">--security-opt</span> <span class="tag">label</span><span class="pseudo">:type</span><span class="pseudo">:svirt_apache_t</span> <span class="tag">-i</span> <span class="tag">-t</span> <span class="tag">centos</span> <span class="tag">bash</span></div></pre></td></tr></table></figure></p>
+<p><em>注意：此时，在你的host环境中必须存在一个名为svirt_apache_t的安全策略。</em></p>
+<h3>Runtime constraints on CPU and memory</h3>
+<p>下面的参数可以用来调整container内的性能参数。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">-<span class="ruby">m=<span class="string">""</span><span class="symbol">:</span> <span class="constant">Memory</span> limit (<span class="symbol">format:</span> &lt;number&gt;&lt;optional unit&gt;, where unit = b, k, m <span class="keyword">or</span> g)</span></div><div class="line">-<span class="ruby">c=<span class="number">0</span> <span class="symbol">:</span> <span class="constant">CPU</span> shares (relative weight)</span></div></pre></td></tr></table></figure></p>
+<p>通过docker run -m 可以很方便的调整container所使用的内存资源。如果host支持swap内存，那么使用-m可以设定比host物理内存还大的值。</p>
+<p>同样，通过-c 可以调整container的cpu优先级。默认情况下，所有的container享有相同的cpu优先级和cpu调度周期。但你可以通过Docker来通知内核给予某个或某几个container更多的cpu计算周期。</p>
+<p>默认情况下，使用-c或者--cpu-shares 参数值为0，可以赋予当前活动container 1024个cpu共享周期。这个0值可以针对活动的container进行修改来调整不同的cpu循环周期。</p>
+<p>比如，我们使用-c或者--cpu-shares =0启动了C0，C1，C2三个container，使用-c/--cpu-shares=512启动了C3.这时，C0，C1，C2可以100%的使用CPU资源(1024)，但C3只能使用50%的CPU资源(512)。如果这个host的OS是时序调度类型的，每个CPU时间片是100微秒，那么C0，C1，C2将完全使用掉这100微秒，而C3只能使用50微秒。</p>
+<h3>Runtime privilege, Linux capabilities, and LXC configuration</h3>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">-<span class="ruby">-cap-<span class="symbol">add:</span> <span class="constant">Add</span> <span class="constant">Linux</span> capabilities</span></div><div class="line">-<span class="ruby">-cap-<span class="symbol">drop:</span> <span class="constant">Drop</span> <span class="constant">Linux</span> capabilities</span></div><div class="line">-<span class="ruby">-privileged=<span class="symbol">false:</span> <span class="constant">Give</span> extended privileges to this container</span></div><div class="line">-<span class="ruby">-device=[]<span class="symbol">:</span> <span class="constant">Allows</span> you to run devices inside the container without the --privileged flag.</span></div><div class="line">-<span class="ruby">-lxc-conf=[]<span class="symbol">:</span> (lxc exec-driver only) <span class="constant">Add</span> custom lxc options --lxc-conf=<span class="string">"lxc.cgroup.cpuset.cpus = 0,1"</span></span></div></pre></td></tr></table></figure></p>
+<p>默认情况下，Docker的container是没有特权的。例如不能再container里面再启动一个container。这是因为默认情况下container是不能访问任何其他设备的。但是通过&quot;privileged&quot;，container就拥有了访问任何其他设备的权限。</p>
+<p>当操作者执行docker run --privileged时，Docker将拥有访问host所有设备的权限，同时Docker也会在apparmor或者selinux做一些设置，使container可以容易的访问那些运行在container外部的设备。你可以访问Docker blog来获取更多关于--privileged的用法。</p>
+<p>同时，你也可以限制container只能访问一些指定的设备。下面的命令将允许container只访问一些特定设备：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ sudo docker run --device=/dev/snd:/dev/snd <span class="keyword">...</span></div></pre></td></tr></table></figure></p>
+<p>默认情况下，container拥有对设备的读，写，创建设备文件的权限。使用:rwm来配合--device，你可以控制这些权限。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>sudo docker run --device=<span class="regexp">/dev/sda</span><span class="symbol">:/dev/xvdc</span> --rm -it ubuntu fdisk  /dev/xvdc</div><div class="line"></div><div class="line"><span class="constant">Command</span> (m <span class="keyword">for</span> help)<span class="symbol">:</span> q</div><div class="line"><span class="variable">$ </span>sudo docker run --device=<span class="regexp">/dev/sda</span><span class="symbol">:/dev/xvdc</span><span class="symbol">:r</span> --rm -it ubuntu fdisk  /dev/xvdc</div><div class="line"><span class="constant">You</span> will <span class="keyword">not</span> be able to write the partition table.</div><div class="line"></div><div class="line"><span class="constant">Command</span> (m <span class="keyword">for</span> help)<span class="symbol">:</span> q</div><div class="line"></div><div class="line"><span class="variable">$ </span>sudo docker run --device=<span class="regexp">/dev/sda</span><span class="symbol">:/dev/xvdc</span><span class="symbol">:w</span> --rm -it ubuntu fdisk  /dev/xvdc</div><div class="line">    crash....</div><div class="line"></div><div class="line"><span class="variable">$ </span>sudo docker run --device=<span class="regexp">/dev/sda</span><span class="symbol">:/dev/xvdc</span><span class="symbol">:m</span> --rm -it ubuntu fdisk  /dev/xvdc</div><div class="line"><span class="symbol">fdisk:</span> unable to open /dev/<span class="symbol">xvdc:</span> <span class="constant">Operation</span> <span class="keyword">not</span> permitted</div></pre></td></tr></table></figure></p>
+<p>使用--cap-add和--cap-drop，配合--privileged，你可以更细致的控制container。默认使用这两个参数的情况下，container拥有一系列的内核修改权限。这两个参数都支持all值，如果你想让某个container拥有除了MKNOD之外的所有内核权限，那么可以执行下面的命令：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ sudo docker run --cap-add=ALL --cap-drop=MKNOD <span class="keyword">...</span></div></pre></td></tr></table></figure></p>
+<p>如果需要修改网络接口数据，那么就建议使用--cap-add=NET_ADMIN，而不是使用--privileged。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ docker run -t -i --rm  ubuntu:<span class="number">14.04</span> <span class="literal">ip</span> link <span class="keyword">add</span> dummy0 type dummy</div><div class="line">RTNETLINK answers: Operation <span class="keyword">not</span> permitted</div><div class="line">$ docker run -t -i --rm --cap-<span class="keyword">add</span>=NET_ADMIN ubuntu:<span class="number">14.04</span> <span class="literal">ip</span> link <span class="keyword">add</span> dummy0 type dummy</div></pre></td></tr></table></figure></p>
+<p>如果要挂载一个FUSE文件系统，那么就需要--cap-add和--device了。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>docker run --rm -it --cap-add <span class="constant">SYS_ADMIN</span> sshfs sshfs sven<span class="variable">@10</span>.<span class="number">10.10</span>.<span class="number">20</span><span class="symbol">:/home/sven</span> /mnt</div><div class="line"><span class="symbol">fuse:</span> failed to open /dev/<span class="symbol">fuse:</span> <span class="constant">Operation</span> <span class="keyword">not</span> permitted</div><div class="line"><span class="variable">$ </span>docker run --rm -it --device /dev/fuse sshfs sshfs sven<span class="variable">@10</span>.<span class="number">10.10</span>.<span class="number">20</span><span class="symbol">:/home/sven</span> /mnt</div><div class="line"><span class="symbol">fusermount:</span> mount <span class="symbol">failed:</span> <span class="constant">Operation</span> <span class="keyword">not</span> permitted</div><div class="line"><span class="variable">$ </span>docker run --rm -it --cap-add <span class="constant">SYS_ADMIN</span> --device /dev/fuse sshfs</div><div class="line"><span class="comment"># sshfs sven@10.10.10.20:/home/sven /mnt</span></div><div class="line"><span class="constant">The</span> authenticity of host <span class="string">'10.10.10.20 (10.10.10.20)'</span> can<span class="string">'t be established.</span></div><div class="line">ECDSA key fingerprint is 25:34:85:75:25:b0:17:46:05:19:04:93:b5:dd:5f:c6.</div><div class="line">Are you sure you want to continue connecting (yes/no)? yes</div><div class="line">sven@10.10.10.20's <span class="symbol">password:</span></div><div class="line">root<span class="variable">@30aa0cfaf1b5</span><span class="symbol">:/</span><span class="comment"># ls -la /mnt/src/docker</span></div><div class="line">total <span class="number">1516</span></div><div class="line">drwxrwxr-x <span class="number">1</span> <span class="number">1000</span> <span class="number">1000</span>   <span class="number">4096</span> <span class="constant">Dec</span>  <span class="number">4</span> <span class="number">06</span><span class="symbol">:</span>08 .</div><div class="line">drwxrwxr-x <span class="number">1</span> <span class="number">1000</span> <span class="number">1000</span>   <span class="number">4096</span> <span class="constant">Dec</span>  <span class="number">4</span> <span class="number">11</span><span class="symbol">:</span><span class="number">46</span> ..</div><div class="line">-rw-rw-r-- <span class="number">1</span> <span class="number">1000</span> <span class="number">1000</span>     <span class="number">16</span> <span class="constant">Oct</span>  <span class="number">8</span> <span class="number">00</span><span class="symbol">:</span>09 .dockerignore</div><div class="line">-rwxrwxr-x <span class="number">1</span> <span class="number">1000</span> <span class="number">1000</span>    <span class="number">464</span> <span class="constant">Oct</span>  <span class="number">8</span> <span class="number">00</span><span class="symbol">:</span>09 .drone.yml</div><div class="line">drwxrwxr-x <span class="number">1</span> <span class="number">1000</span> <span class="number">1000</span>   <span class="number">4096</span> <span class="constant">Dec</span>  <span class="number">4</span> <span class="number">06</span><span class="symbol">:</span><span class="number">11</span> .git</div><div class="line">-rw-rw-r-- <span class="number">1</span> <span class="number">1000</span> <span class="number">1000</span>    <span class="number">461</span> <span class="constant">Dec</span>  <span class="number">4</span> <span class="number">06</span><span class="symbol">:</span>08 .gitignore</div></pre></td></tr></table></figure></p>
+<p>如果docker启动时选择了lxc-driver，(docker -d --exec-driver=lxc)。那么就可以使用--lxc-conf来设定LXC参数。但需要注意的是，未来host上面的docker deamon有可能不会使用LXC，所以这些参数有可能会包含一些没有实现的配置功能。那么意味着，操作者在操作这些参数时必须要十分熟悉LXC。</p>
+<p><em>特别注意：当你使用--lxc-conf修改container参数后，docker deamon将不再管理这些参数，那么必须由操作者自行进行管理。比如说，你使用--lxc-conf修改了container的IP地址，那么在/etc/hosts里面是不会自动体现的，需要你自行维护。</em></p>
+<h3>Overriding Dockerfile image defaults</h3>
+<p>当开发者使用Dockerfile进行build或者使用commit提交container时，开发人员可以设定一些image默认参数。</p>
+<p>这些参数中，有四个是无法被覆盖的：FROM，MAINTAINER，RUN和ADD。其余参数都可以通过docker run进行覆盖。我们将介绍如何对这些参数进行覆盖。</p>
+<pre><code>* CMD (Default Command or Options)
+* ENTRYPOINT (Default Command to Execute at Runtime)
+* EXPOSE (Incoming Ports)
+* ENV (Environment Variables)
+* VOLUME (Shared Filesystems)
+* USER
+* WORKDIR</code></pre>
+<h4>CMD (default command or options)</h4>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ <span class="tag">sudo</span> <span class="tag">docker</span> <span class="tag">run</span> <span class="attr_selector">[OPTIONS]</span> <span class="tag">IMAGE</span><span class="attr_selector">[:TAG]</span> <span class="attr_selector">[COMMAND]</span> <span class="attr_selector">[ARG...]</span></div></pre></td></tr></table></figure></p>
+<p>这条命令中的COMMAND部分是可选的。因为这个IMAGE在build时，开发人员可能已经设定了默认执行的command。作为操作人员，你可以使用上面命令中新的command来覆盖旧的command。</p>
+<p>如果image中设定了ENTRYPOINT，那么命令中的CMD也可以作为参数追加到ENTRYPOINT中。</p>
+<h4>ENTRYPOINT (default command to execute at runtime)</h4>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">--entrypoint=<span class="string">""</span>: Overwrite the <span class="keyword">default</span> entrypoint <span class="keyword">set</span> <span class="keyword">by</span> the image</div></pre></td></tr></table></figure></p>
+<p>这个ENTRYPOINT和COMMAND类似，它指定了当container执行时，需要启动哪些进程。相对COMMAND而言，ENTRYPOINT是比较困难进行覆盖的，这个ENTRYPOINT可以让container设定默认启动行为，所以当container启动时，你可以执行任何一个二进制可执行程序。你也可以通过COMMAND给这个ENTRYPOINT传递参数。但当你需要再container中执行其他进程时，你就可以指定其他ENTRYPOINT了。</p>
+<p>下面就是一个例子，container可以在启动时自动执行shell，然后启动其它进程。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ sudo docker run -i -t <span class="comment">--entrypoint /bin/bash example/redis</span></div><div class="line">#<span class="keyword">or</span> two examples <span class="keyword">of</span> how <span class="keyword">to</span> pass more parameters <span class="keyword">to</span> that ENTRYPOINT:</div><div class="line">$ sudo docker run -i -t <span class="comment">--entrypoint /bin/bash example/redis -c ls -l</span></div><div class="line">$ sudo docker run -i -t <span class="comment">--entrypoint /usr/bin/redis-cli example/redis --help</span></div></pre></td></tr></table></figure></p>
+<h4>EXPOSE (incoming ports)</h4>
+<p>Dockefile在网络方面除了提供一个EXPOSE之外，没有提供其它选项。下面这些参数可以覆盖Dockefile的expose默认值：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">--expose=[]: Expose a port or a range of ports from the container</span></div><div class="line">            <span class="keyword">without</span> publishing <span class="keyword">it</span> <span class="built_in">to</span> your host</div><div class="line">-P=<span class="constant">false</span>   : Publish all exposed ports <span class="built_in">to</span> <span class="operator">the</span> host interfaces</div><div class="line">-p=[]      : Publish <span class="operator">a</span> container᾿s port <span class="built_in">to</span> <span class="operator">the</span> host (<span class="built_in">format</span>:</div><div class="line">             ip:hostPort:containerPort | ip::containerPort |</div><div class="line">             hostPort:containerPort | containerPort)</div><div class="line">             (use <span class="string">'docker port'</span> <span class="built_in">to</span> see <span class="operator">the</span> actual mapping)</div><div class="line"><span class="comment">--link=""  : Add link to another container (name:alias)</span></div></pre></td></tr></table></figure></p>
+<p>--expose可以让container接受外部传入的数据。container内监听的port不需要和外部host的port相同。比如说在container内部，一个HTTP服务监听在80端口，对应外部host的port就可能是49880.</p>
+<p>操作人员可以使用--expose，让新的container访问到这个container。具体有三个方式：</p>
+<p>　　1. 使用-p来启动container。 　　2. 使用-P来启动container。 　　3. 使用--link来启动container。</p>
+<p>如果使用-p或者-P，那么container会开发部分端口到host，只要对方可以连接到host，就可以连接到container内部。当使用-P时，docker会在host中随机从49153 和65535之间查找一个未被占用的端口绑定到container。你可以使用docker port来查找这个随机绑定端口。</p>
+<p>当你使用--link方式时，作为客户端的container可以通过私有网络形式访问到这个container。同时Docker会在客户端的container中设定一些环境变量来记录绑定的IP和PORT。</p>
+<h4>ENV (环境变量)</h4>
+<table style="width:33%;">
+<colgroup>
+<col width="13%">
+<col width="19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Variable</th>
+<th align="left">Variable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">HOME</td>
+<td align="left">Set based on the value of USER</td>
+</tr>
+<tr class="even">
+<td align="left">HOSTNAME</td>
+<td align="left">The hostname associated with the container</td>
+</tr>
+<tr class="odd">
+<td align="left">PATH</td>
+<td align="left">Includes popular directories, such as : /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</td>
+</tr>
+<tr class="even">
+<td align="left">TERM</td>
+<td align="left">xterm if the container is allocated a psuedo-TTY</td>
+</tr>
+</tbody>
+</table>
+<p>当container启动时，会自动在container中初始化这些变量。</p>
+<p>操作人员可以通过-e来设定任意的环境变量。甚至覆盖已经存在的环境变量，或者是在Dockerfile中通过ENV设定的环境变量。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> docker run <span class="operator">-e</span> <span class="string">"deep=purple"</span> --rm ubuntu /bin/bash -c <span class="keyword">export</span></div><div class="line"><span class="keyword">declare</span> -x HOME=<span class="string">"/"</span></div><div class="line"><span class="keyword">declare</span> -x HOSTNAME=<span class="string">"85bc26a0e200"</span></div><div class="line"><span class="keyword">declare</span> -x OLDPWD</div><div class="line"><span class="keyword">declare</span> -x PATH=<span class="string">"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"</span></div><div class="line"><span class="keyword">declare</span> -x PWD=<span class="string">"/"</span></div><div class="line"><span class="keyword">declare</span> -x SHLVL=<span class="string">"1"</span></div><div class="line"><span class="keyword">declare</span> -x container=<span class="string">"lxc"</span></div><div class="line"><span class="keyword">declare</span> -x deep=<span class="string">"purple"</span></div></pre></td></tr></table></figure></p>
+<p>操作人员可以通过-h来设定hostname。也可以使用&quot;--link name:alias&quot;来设定环境变量，当使用--link后，docker将根据后面提供的IP和PORT信息来连接服务端container。下面就是使用redis的例子：</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"># <span class="operator"><span class="keyword">Start</span> the service container, named redis-name</span></div><div class="line">$ sudo docker run -d <span class="comment">--name redis-name dockerfiles/redis</span></div><div class="line"><span class="number">4241164</span>edf6f5aca5b0e9e4c9eccd899b0b8080c64c0cd26efe02166c73208f3</div><div class="line"></div><div class="line"># The redis-name container exposed port <span class="number">6379</span></div><div class="line">$ sudo docker ps</div><div class="line">CONTAINER ID        IMAGE                      COMMAND                CREATED             <span class="keyword">STATUS</span>              PORTS               <span class="keyword">NAMES</span></div><div class="line"><span class="number">4241164</span>edf6f        $ dockerfiles/redis:latest   /redis-stable/src/re   <span class="number">5</span> seconds ago       Up <span class="number">4</span> seconds        <span class="number">6379</span>/tcp            redis-name</div><div class="line"></div><div class="line"># Note that there <span class="keyword">are</span> <span class="keyword">no</span> <span class="keyword">public</span> ports exposed since we didn᾿t <span class="keyword">use</span> -p <span class="keyword">or</span> -P</div><div class="line">$ sudo docker port <span class="number">4241164</span>edf6f <span class="number">6379</span></div><div class="line"><span class="number">2014</span>/<span class="number">01</span>/<span class="number">25</span> <span class="number">00</span>:<span class="number">55</span>:<span class="number">38</span> Error: <span class="keyword">No</span> <span class="keyword">public</span> port <span class="string">'6379'</span> published <span class="keyword">for</span> <span class="number">4241164</span>edf6f</div></pre></td></tr></table></figure></p>
+<p>你使用--link后，就可以获取到关于Redis Container的相关信息。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">$ sudo docker run <span class="comment">--rm --link redis-name:redis_alias --entrypoint /bin/bash dockerfiles/redis -c export</span></div><div class="line"><span class="operator"><span class="keyword">declare</span> -x HOME=<span class="string">"/"</span></span></div><div class="line"><span class="keyword">declare</span> -x HOSTNAME=<span class="string">"acda7f7b1cdc"</span></div><div class="line"><span class="keyword">declare</span> -x OLDPWD</div><div class="line"><span class="keyword">declare</span> -x PATH=<span class="string">"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"</span></div><div class="line"><span class="keyword">declare</span> -x PWD=<span class="string">"/"</span></div><div class="line"><span class="keyword">declare</span> -x REDIS_ALIAS_NAME=<span class="string">"/distracted_wright/redis"</span></div><div class="line"><span class="keyword">declare</span> -x REDIS_ALIAS_PORT=<span class="string">"tcp://172.17.0.32:6379"</span></div><div class="line"><span class="keyword">declare</span> -x REDIS_ALIAS_PORT_6379_TCP=<span class="string">"tcp://172.17.0.32:6379"</span></div><div class="line"><span class="keyword">declare</span> -x REDIS_ALIAS_PORT_6379_TCP_ADDR=<span class="string">"172.17.0.32"</span></div><div class="line"><span class="keyword">declare</span> -x REDIS_ALIAS_PORT_6379_TCP_PORT=<span class="string">"6379"</span></div><div class="line"><span class="keyword">declare</span> -x REDIS_ALIAS_PORT_6379_TCP_PROTO=<span class="string">"tcp"</span></div><div class="line"><span class="keyword">declare</span> -x SHLVL=<span class="string">"1"</span></div><div class="line"><span class="keyword">declare</span> -x container=<span class="string">"lxc"</span></div><div class="line">#<span class="keyword">And</span> we can <span class="keyword">use</span> that information <span class="keyword">to</span> <span class="keyword">connect</span> <span class="keyword">from</span> another container <span class="keyword">as</span> a client:</div><div class="line">$ sudo docker run -i -t <span class="comment">--rm --link redis-name:redis_alias --entrypoint /bin/bash dockerfiles/redis -c '/redis-stable/src/redis-cli -h $REDIS_ALIAS_PORT_6379_TCP_ADDR -p $REDIS_ALIAS_PORT_6379_TCP_PORT'</span></div><div class="line"><span class="number">172.17</span><span class="number">.0</span><span class="number">.32</span>:<span class="number">6379</span>&gt;</div></pre></td></tr></table></figure></p>
+<p>Docker也会将这个alias的IP地址写入到/etc/hosts文件中。然后你就可以通过别名来访问link后的container。</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ sudo docker <span class="command">run</span> -d <span class="comment">--name servicename busybox sleep 30</span></div><div class="line">$ sudo docker <span class="command">run</span> -i -t <span class="comment">--link servicename:servicealias busybox ping -c 1 servicealias</span></div></pre></td></tr></table></figure></p>
+<p>如果你重启了源container(servicename)，相关联的container也会同步更新/etc/hosts。</p>
+<h4>VOLUME (shared filesystems)</h4>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">-v=[]: Create a bind mount <span class="keyword">with</span>: [host-dir]:[container-dir]:[rw|ro].</div><div class="line">       <span class="keyword">If</span> <span class="string">"container-dir"</span> <span class="keyword">is</span> missing, <span class="keyword">then</span> docker creates a <span class="keyword">new</span> volume.</div><div class="line">--volumes-<span class="keyword">from</span>=<span class="string">""</span>: Mount all volumes <span class="keyword">from</span> the given container(s)</div></pre></td></tr></table></figure></p>
+<p>关于volume参数，可以再 Managing data in containers 查看详细说明。需要注意的是开发人员可以在Dockerfile中设定多个volume，但是只能由操作人员设置container直接的volume访问。</p>
+<h4>USER</h4>
+<p>container中默认的用户是root。但是开发人员创建新的用户之后，这些新用户也是可以使用的。开发人员可以通过Dockerfile的USER设定默认的用户，操作人员可以通过&quot;-u &quot;来覆盖这些参数。</p>
+<h4>WORKDIR</h4>
+<p>container中默认的工作目录是根目录(/)。开发人员可以通过Dockerfile的WORKDIR来设定默认工作目录，操作人员可以通过&quot;-w&quot;来覆盖默认的工作目录。</p>
+<h2>docker create与docker run的区别</h2>
+<p>docker create表示新增一个容器，但是并不启动；docker run表示新增一个容器，并启动运行，直到运行结束。参照容器的生命周期<a href="#fn6" class="footnoteRef" id="fnref6"><sup>6</sup></a>，如下图，</p>
+<p><img src="http://7xpbnt.com1.z0.glb.clouddn.com/docker-architecture-v12-15-638.jpg" alt=""></p>
+<p>详细来说，docker create只是新增一个容器，并进入容器生命周期中的created状态；而docker run不但新增一个容器，还立刻start并进入running状态，如运行过程中没有被pause或者kill，会一直运行到程序结束，容器进入stopped状态。因此，docker create命令没有-d参数，而docker run有。在docker run中，-d参数表示后台运行容器，而对于docker create来讲，仅仅只创建了容器，容器并未开始运行，因此也不存在所谓后台运行的概念，因此，docker create没有-d参数。</p>
+<h2>镜像与容器存放的路径</h2>
+<p>镜像的存放路径可以看我的另一篇文章《Docker入门介绍》中有提到，在<code>/var/lib/docker</code>下。具体细节来说，一些镜像本身信息相关的文件放在<code>./graph</code>下，容器相关的设置，如一些网络（eg，ip、hostname、hosts等）、unix mq、unix共享内存等信息放在<code>./containers</code>下，镜像本身的文件和容器相关的文件都放在该目录下的<code>./aufs/diff</code>目录下。该目录下有很多以镜像id和容器id命名的目录，每个目录下都是镜像与容器本身的文件。</p>
+<h2>常用docker命令实践</h2>
+<p>由于docker需要使用root权限，以下命令如无特别说明，均使用root用户执行，运行环境是Ubuntu 14.04 LTS。</p>
+<h3>搭建docker registry</h3>
+<p>docker hub是最大的共有docker镜像仓库，但是对公司内部，往往需要自己的私有仓库，这就是docker registry<a href="#fn7" class="footnoteRef" id="fnref7"><sup>7</sup></a>。搭建registry很简单，只要使用以下命令从docker hub上拉一个镜像下来即可，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">docker</span> <span class="tag">run</span> <span class="tag">-d</span> <span class="tag">-p</span> 5000<span class="pseudo">:5000</span> <span class="tag">--name</span> <span class="tag">registry</span> <span class="tag">registry</span><span class="pseudo">:2</span></div></pre></td></tr></table></figure></p>
+<p>这样，就在本地的5000端口开了一个registry的服务，可以通过localhost、或本机ip来访问该服务。为了访问ip统一，可以通过修改hosts来达到访问一致，例如，在hosts中增加一行，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">&lt;docker registry ip&gt;</span>   reg-server</span></div></pre></td></tr></table></figure></p>
+<p>还需要在docker的配置文件<code>/etc/default/docker</code>中添加参数<code>DOCKER_OPTS=&quot;--insecure-registry reg-server:5000&quot;</code>，本文使用的是Ubuntu，如果是Centos的话，需要修改<code>/etc/sysconfig/docker</code>。</p>
+<p>这样，以后就可以通过访问<code>reg-server</code>来访问该registry，如果registry地址发生变化，也只需要修改hosts文件中的地址就能及时适配。registry的使用与docker hub类似，将在后文中介绍。</p>
+<h3>下载镜像和运行容器</h3>
+<p>假设我们要运行busybox这个镜像，这是一个最小linux环境的镜像，可以使用<code>docker pull</code>，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker pull busybox</span></div><div class="line">Using default tag: latest</div><div class="line">latest: Pulling from library/busybox</div><div class="line">c00ef186408b: Pull complete </div><div class="line">ac6a7980c6c2: Pull complete </div><div class="line">Digest: sha256:e4f93f6ed15a0cdd342f5aae387886fba0ab98af0a102da6276eaf24d6e6ade0</div><div class="line">Status: Downloaded newer image <span class="keyword">for</span> busybox:latest</div></pre></td></tr></table></figure></p>
+<p>使用<code>docker pull</code>的时候，一个命令只能下载一个镜像，但是可以运行多个命令同时下载，这对于需要一次下载多个镜像的情况很有用。</p>
+<p>简单的运行其中的某个命令，只要使用<code>docker run</code>即可，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker run busybox env</span></div><div class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</div><div class="line">HOSTNAME=<span class="number">0</span>ac2c8dee5a9</div><div class="line">HOME=/root</div></pre></td></tr></table></figure></p>
+<p>如果需要后台运行的话，可以使用<code>-d</code>参数，其他<code>docker run</code>的参数可参考上文。</p>
+<h3>镜像和容器维护</h3>
+<p>假设当前系统中下载了多个镜像，可以用<code>docker image</code>查看现有镜像，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">mysql               latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx               latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat              latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">busybox             latest              ac6a7980c6c2        <span class="number">11</span> days ago         <span class="number">1.113</span> MB</div><div class="line">redis               latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world         latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div></pre></td></tr></table></figure></p>
+<p>这里只列出了最上层的镜像，如果需要查看所有镜像的话，需要<code>-a</code>参数；如果需要查看完整镜像id，需要<code>--no-trunc=true</code>参数；如果只列出镜像id，其他信息不列出的话，需要使用<code>-q</code>参数。</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker images -a -q --no-trunc=true |wc -l</span></div><div class="line"><span class="number">66</span></div><div class="line"></div><div class="line"><span class="comment"># docker images -q --no-trunc=true </span></div><div class="line">a07681abeb6<span class="built_in">cd</span>68402477f783d994145137146de3911e42b99f605cecb3e138e</div><div class="line"><span class="number">5328</span>fdfe9b8e0c5a19a0773f3e29f9002d444f86521f8f61f3fcb8216ad5287a</div><div class="line">af28fa31b54b2e45d53e80c5a7cbfd2693f198fdb8ba53d44d8a432832ad1012</div><div class="line">ac6a7980c6c2fb4d29e406efb4f9784b3c67e161eb68a97ffb428d07e3e97693</div><div class="line"><span class="number">0643</span>f0c7d17d348881b2dab88cfdb57ad86dcf32ea22bd0b2<span class="built_in">cd</span>0957b6c7ab8c3</div><div class="line"><span class="number">975</span>b84d108f1024953937167506c2935a081c8c55ae9e9f7b7deee118605367f</div></pre></td></tr></table></figure></p>
+<p>如果需要列出容器，可以使用<code>docker ps</code>，默认情况下列出正在运行的容器。</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker ps</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</div><div class="line"></div><div class="line"><span class="comment"># docker run -d redis redis-server</span></div><div class="line"><span class="number">7</span>d57630f67d10346b2583e7950ce7c55a4225475c5d5a0265682aad83611946d</div><div class="line"></div><div class="line"><span class="comment"># docker ps</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line"><span class="number">7</span>d57630f67d1        redis               <span class="string">"/entrypoint.sh redis"</span>   <span class="number">11</span> seconds ago      Up <span class="number">10</span> seconds       <span class="number">6379</span>/tcp            small_torvalds</div></pre></td></tr></table></figure></p>
+<p><code>-a</code>参数可以列出所有容器，包括已退出运行的容器；<code>-s</code>参数可以列出容器的大小，比较有用；<code>--before=</code>和<code>--since=</code>参数可以列出在某个容器之前和之后运行的容器，参数值是容器id。<code>docker ps</code>也有<code>-q</code>和<code>--no-trunc=true</code>参数，含义与<code>docker images</code>的相同。具体细节如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker ps -a -s</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS               NAMES                SIZE</div><div class="line"><span class="number">800</span>f0acc667c        tomcat              <span class="string">"java -version"</span>          <span class="number">35</span> seconds ago      Exited (<span class="number">0</span>) <span class="number">34</span> seconds ago                       tender_mietner       <span class="number">0</span> B (virtual <span class="number">346.2</span> MB)</div><div class="line"><span class="number">39</span>ea34d89ea3        hello-world         <span class="string">"/hello"</span>                 <span class="number">2</span> minutes ago       Exited (<span class="number">0</span>) <span class="number">2</span> minutes ago                        agitated_blackwell   <span class="number">0</span> B (virtual <span class="number">972</span> B)</div><div class="line"><span class="number">7</span>d57630f67d1        redis               <span class="string">"/entrypoint.sh redis"</span>   <span class="number">28</span> minutes ago      Up <span class="number">28</span> minutes               <span class="number">6379</span>/tcp            small_torvalds       <span class="number">0</span> B (virtual <span class="number">107.5</span> MB)</div><div class="line"><span class="number">0</span>ac2c8dee5a9        busybox             <span class="string">"env"</span>                    <span class="number">52</span> minutes ago      Exited (<span class="number">0</span>) <span class="number">52</span> minutes ago                       cocky_ritchie        <span class="number">0</span> B (virtual <span class="number">1.113</span> MB)</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a -s --before=800f0acc667c --since=0ac2c8dee5a9</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                     PORTS               NAMES                SIZE</div><div class="line"><span class="number">39</span>ea34d89ea3        hello-world         <span class="string">"/hello"</span>                 <span class="number">3</span> minutes ago       Exited (<span class="number">0</span>) <span class="number">3</span> minutes ago                       agitated_blackwell   <span class="number">0</span> B (virtual <span class="number">972</span> B)</div><div class="line"><span class="number">7</span>d57630f67d1        redis               <span class="string">"/entrypoint.sh redis"</span>   <span class="number">28</span> minutes ago      Up <span class="number">28</span> minutes              <span class="number">6379</span>/tcp            small_torvalds       <span class="number">0</span> B (virtual <span class="number">107.5</span> MB)</div></pre></td></tr></table></figure></p>
+<p>如果想删除容器，可以使用<code>docker rm</code>，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker rm 800f0acc667c 39ea34d89ea3</span></div><div class="line"><span class="number">800</span>f0acc667c</div><div class="line"><span class="number">39</span>ea34d89ea3</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a -s</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS               NAMES               SIZE</div><div class="line"><span class="number">7</span>d57630f67d1        redis               <span class="string">"/entrypoint.sh redis"</span>   <span class="number">29</span> minutes ago      Up <span class="number">29</span> minutes               <span class="number">6379</span>/tcp            small_torvalds      <span class="number">0</span> B (virtual <span class="number">107.5</span> MB)</div><div class="line"><span class="number">0</span>ac2c8dee5a9        busybox             <span class="string">"env"</span>                    <span class="number">54</span> minutes ago      Exited (<span class="number">0</span>) <span class="number">54</span> minutes ago                       cocky_ritchie       <span class="number">0</span> B (virtual <span class="number">1.113</span> MB)</div></pre></td></tr></table></figure></p>
+<p><code>-f</code>参数可以强行删除容器，即使容器在运行。<code>docker rm</code>可以一次输入多个容器id，删除多个容器。</p>
+<p>如果需要删除容器，可以使用<code>docker rmi</code>，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker rmi busybox</span></div><div class="line">Error response from daemon: conflict: unable to remove repository reference <span class="string">"busybox"</span> (must force) - container <span class="number">0</span>ac2c8dee5a9 is using its referenced image ac6a7980c6c2</div><div class="line">Error: failed to remove images: [busybox]</div><div class="line"></div><div class="line"><span class="comment"># docker rm 0ac2c8dee5a9</span></div><div class="line"><span class="number">0</span>ac2c8dee5a9</div><div class="line"></div><div class="line"><span class="comment"># docker rmi busybox</span></div><div class="line">Untagged: busybox:latest</div><div class="line">Deleted: ac6a7980c6c2fb4d29e406efb4f9784b3c67e161eb68a97ffb428d07e3e97693</div><div class="line">Deleted: c00ef186408b85d9657e8241f53ccd1e7071f03b3d4b38863b2cdae88845b587</div><div class="line"></div><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">mysql               latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx               latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat              latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">redis               latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world         latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div></pre></td></tr></table></figure></p>
+<blockquote>
+<p>注意：删除容器前，需要先删除所有的镜像，即使该镜像状态是已退出。强制删除，需要使用<code>-f</code>参数，不推荐。</p>
+</blockquote>
+<h3>容器操作</h3>
+<p>多数情况下，我们使用<code>docker run</code>就可以运行一个容器。但是如果希望对容器生命周期加以更细节的控制，可以使用更多的命令。</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">命令</th>
+<th align="left">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>docker create</code></td>
+<td align="left">创建容器</td>
+</tr>
+<tr class="even">
+<td align="left"><code>docker start</code></td>
+<td align="left">启动容器</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>docker stop</code></td>
+<td align="left">停止容器</td>
+</tr>
+<tr class="even">
+<td align="left"><code>docker restart</code></td>
+<td align="left">重启容器</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>docker kill</code></td>
+<td align="left">杀死容器进程</td>
+</tr>
+<tr class="even">
+<td align="left"><code>docker pause</code></td>
+<td align="left">暂停容器进程</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>docker unpause</code></td>
+<td align="left">回复重启进程</td>
+</tr>
+</tbody>
+</table>
+<p>命令如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</div><div class="line"></div><div class="line"><span class="comment"># docker create nginx</span></div><div class="line"><span class="number">427</span>bb755b40aa50c8506862867b41f444e2fd317aac70a3336740d7f8f423e77</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line"><span class="number">427</span>bb755b40a        nginx               <span class="string">"nginx -g 'daemon off"</span>   <span class="number">3</span> seconds ago       Created                                 modest_allen</div><div class="line"></div><div class="line"><span class="comment"># docker start 427bb755b40a</span></div><div class="line"><span class="number">427</span>bb755b40a</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line"><span class="number">427</span>bb755b40a        nginx               <span class="string">"nginx -g 'daemon off"</span>   <span class="number">18</span> seconds ago      Up <span class="number">6</span> seconds        <span class="number">80</span>/tcp, <span class="number">443</span>/tcp     modest_allen</div><div class="line"></div><div class="line"><span class="comment"># docker pause 427bb755b40a</span></div><div class="line"><span class="number">427</span>bb755b40a</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                   PORTS               NAMES</div><div class="line"><span class="number">427</span>bb755b40a        nginx               <span class="string">"nginx -g 'daemon off"</span>   <span class="number">29</span> seconds ago      Up <span class="number">16</span> seconds (Paused)   <span class="number">80</span>/tcp, <span class="number">443</span>/tcp     modest_allen</div><div class="line"></div><div class="line"><span class="comment"># docker unpause 427bb755b40a</span></div><div class="line"><span class="number">427</span>bb755b40a</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line"><span class="number">427</span>bb755b40a        nginx               <span class="string">"nginx -g 'daemon off"</span>   <span class="number">42</span> seconds ago      Up <span class="number">30</span> seconds       <span class="number">80</span>/tcp, <span class="number">443</span>/tcp     modest_allen</div><div class="line"></div><div class="line"><span class="comment"># docker stop 427bb755b40a</span></div><div class="line"><span class="number">427</span>bb755b40a</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS                     PORTS               NAMES</div><div class="line"><span class="number">427</span>bb755b40a        nginx               <span class="string">"nginx -g 'daemon off"</span>   About a minute ago   Exited (<span class="number">0</span>) <span class="number">3</span> seconds ago                       modest_allen</div><div class="line"></div><div class="line"><span class="comment"># docker restart 427bb755b40a</span></div><div class="line"><span class="number">427</span>bb755b40a</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS               NAMES</div><div class="line"><span class="number">427</span>bb755b40a        nginx               <span class="string">"nginx -g 'daemon off"</span>   About a minute ago   Up <span class="number">1</span> seconds        <span class="number">80</span>/tcp, <span class="number">443</span>/tcp     modest_allen</div><div class="line"></div><div class="line"><span class="comment"># docker kill 427bb755b40a</span></div><div class="line"><span class="number">427</span>bb755b40a</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                       PORTS               NAMES</div><div class="line"><span class="number">427</span>bb755b40a        nginx               <span class="string">"nginx -g 'daemon off"</span>   <span class="number">2</span> minutes ago       Exited (<span class="number">137</span>) <span class="number">2</span> seconds ago                       modest_allen</div></pre></td></tr></table></figure></p>
+<p>以上操作的顺序是：create-&gt;start-&gt;pause-&gt;unpause-&gt;stop-&gt;restart-&gt;kill。注意每个操作完成之后，容器的status，主要有以下几个：</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">状态</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Created</td>
+<td align="left">容器已创建，尚未运行</td>
+</tr>
+<tr class="even">
+<td align="left">Running（显示为 Up X seconds）</td>
+<td align="left">容器运行中</td>
+</tr>
+<tr class="odd">
+<td align="left">Paused</td>
+<td align="left">容器已暂停</td>
+</tr>
+<tr class="even">
+<td align="left">Stopped（显示为 Exited X seconds ago ）</td>
+<td align="left">容器已退出运行</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>注意，使用stop和kill两者均能够退出容器，退出容器的区别在于，stop是正常退出，退出的返回码是0；kill是强行退出，退出的返回码是一个异常编号。</p>
+</blockquote>
+<h3>修改和提交镜像</h3>
+<p>由于提交docker hub比较慢，本文都以提交到私有的docker registry为例，即前文的reg-server。</p>
+<p>对于需要修改的镜像，建议先标记tag，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">mysql               latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx               latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat              latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">busybox             latest              ac6a7980c6c2        <span class="number">11</span> days ago         <span class="number">1.113</span> MB</div><div class="line">redis               latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world         latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div><div class="line"></div><div class="line"><span class="comment"># docker tag tomcat reg-server:5000/my-tomcat</span></div><div class="line"></div><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY                  TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">mysql                       latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx                       latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat                      latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">reg-server:<span class="number">5000</span>/my-tomcat   latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">busybox                     latest              ac6a7980c6c2        <span class="number">11</span> days ago         <span class="number">1.113</span> MB</div><div class="line">redis                       latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world                 latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div></pre></td></tr></table></figure></p>
+<p>tag是个很有用的命令，可以用于标记一个本地镜像（通常是即将要修改的），也可以将一个镜像归类到另一个仓库。上述命令就将tomcat镜像归类到reg-server中，并重命名为my-tomcat。注意，虽然tag重新标记了一个镜像，但是这个镜像的id并没有改变，因为镜像的id本质上是一个类似与镜像hash值的概念，只要镜像本身没有发生变化，镜像id就不会变。</p>
+<p>删除tag与删除镜像一样，使用<code>docker rmi</code>，在此不再赘述。</p>
+<p>修改镜像的方法有多种，可以挂载外部的目录到镜像的<code>/mnt</code>上来替换文件，也可以直接修改，本文采用直接修改的方式，比较简单。假设我们希望增加一个脚本<code>bin/datehost.sh</code>，打印当前的时间和hostname。可以如下操作，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</div><div class="line"></div><div class="line"><span class="comment"># docker run -it  reg-server:5000/my-tomcat /bin/bash</span></div><div class="line">root@<span class="number">3</span>fa12ef20974:/usr/local/tomcat<span class="comment"># echo "echo \"\`date\` @ \`hostname\`\"" &gt; bin/datehost.sh</span></div><div class="line">root@eb95d2ffe224:/usr/local/tomcat<span class="comment"># chmod +x bin/datehost.sh </span></div><div class="line">root@eb95d2ffe224:/usr/local/tomcat<span class="comment"># ls -al bin/datehost.sh </span></div><div class="line">-rwxr-xr-x <span class="number">1</span> root root <span class="number">27</span> Dec <span class="number">20</span> <span class="number">05</span>:<span class="number">34</span> bin/datehost.sh</div><div class="line">root@eb95d2ffe224:/usr/local/tomcat<span class="comment"># more bin/datehost.sh </span></div><div class="line"><span class="built_in">echo</span> <span class="string">"`date` @ `hostname`"</span></div><div class="line">root@eb95d2ffe224:/usr/local/tomcat<span class="comment"># exit</span></div><div class="line"><span class="keyword">exit</span></div><div class="line"></div><div class="line">root@Ubuntu-Asus <span class="number">192.168</span>.<span class="number">2.104</span> <span class="number">13</span>:<span class="number">35</span>:<span class="number">51</span> /var/lib/docker</div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE                       COMMAND             CREATED             STATUS                     PORTS               NAMES</div><div class="line">eb95d2ffe224        reg-server:<span class="number">5000</span>/my-tomcat   <span class="string">"/bin/bash"</span>         <span class="number">2</span> minutes ago       Exited (<span class="number">0</span>) <span class="number">6</span> seconds ago                       insane_bhabha</div><div class="line"></div><div class="line"><span class="comment"># docker commit -m "add datehost.sh" eb95d2ffe224 reg-server:5000/my-tomcat</span></div><div class="line"><span class="number">1</span>a4f794fa3d4e507bc81c77d9daab4746f9d3eb51b06aaf6afbe55823ce4668c</div><div class="line"></div><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY                  TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">reg-server:<span class="number">5000</span>/my-tomcat   latest              <span class="number">1</span>a4f794fa3d4        <span class="number">11</span> seconds ago      <span class="number">350.1</span> MB</div><div class="line">mysql                       latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx                       latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat                      latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">busybox                     latest              ac6a7980c6c2        <span class="number">11</span> days ago         <span class="number">1.113</span> MB</div><div class="line">redis                       latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world                 latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div></pre></td></tr></table></figure></p>
+<p>到这里可以发现，my-tomcat镜像已经被修改，其镜像id值已经和原先不再一样。运行一下可以发现改动已经生效，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker run reg-server:5000/my-tomcat bash bin/datehost.sh</span></div><div class="line">Sun Dec <span class="number">20</span> <span class="number">05</span>:<span class="number">43</span>:<span class="number">57</span> UTC <span class="number">2015</span> @ <span class="number">0</span>e903602b939</div></pre></td></tr></table></figure></p>
+<p>修改完成之后，可以将修改后的镜像push到服务器上，如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker push reg-server:5000/my-tomcat</span></div><div class="line">The push refers to a repository [reg-server:<span class="number">5000</span>/my-tomcat] (len: <span class="number">1</span>)</div><div class="line"><span class="number">1</span>a4f794fa3d4: Pushed </div><div class="line">af28fa31b54b: Pushed </div><div class="line"><span class="number">7</span>a2b734804b7: Pushed </div><div class="line">e6c09147e1be: Pushed </div><div class="line"><span class="number">1945</span>b5ae9698: Pushed </div><div class="line"><span class="number">5</span>effacac81b9: Pushed </div><div class="line"><span class="number">0</span>a769fec47c8: Pushed </div><div class="line"><span class="number">5</span>e5f21412e19: Pushed </div><div class="line"><span class="number">9</span>ee13ca3b908: Pushed </div><div class="line">latest: digest: sha256:<span class="number">3</span>f4bc8f312bf0113c8867b8c095f7e6a4420f654e95d93559d8215c838491cb9 size: <span class="number">37164</span></div></pre></td></tr></table></figure></p>
+<p>之后，可以和正常使用其他容器一样使用my-tomcat。</p>
+<h3>查找镜像</h3>
+<p>如果是在docker hub上查询，可以直接使用docker search，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker search redis</span></div><div class="line">NAME                      DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED</div><div class="line">redis                     Redis is an open <span class="built_in">source</span> key-value store th...   <span class="number">1420</span>      [OK]       </div><div class="line">torusware/speedus-redis   Always updated official Redis docker image...   <span class="number">27</span>                   [OK]</div><div class="line">sameersbn/redis                                                           <span class="number">20</span>                   [OK]</div><div class="line">bitnami/redis             Bitnami Redis Docker Image                      <span class="number">9</span>                    [OK]</div><div class="line">orchardup/redis           https://github.com/orchardup/docker-redis       <span class="number">6</span>                    [OK]</div><div class="line">williamyeh/redis          Redis image <span class="keyword">for</span> Docker                          <span class="number">3</span>                    [OK]</div><div class="line">webhippie/redis           Docker images <span class="keyword">for</span> redis                         <span class="number">2</span>                    [OK]</div><div class="line">anapsix/redis             <span class="number">11</span>MB Redis server image over AlpineLinux        <span class="number">2</span>                    [OK]</div><div class="line">clue/redis-benchmark      A minimal docker image to ease running the...   <span class="number">2</span>                    [OK]</div><div class="line">unblibraries/redis        Leverages phusion/baseimage to deploy a ba...   <span class="number">1</span>                    [OK]</div><div class="line">wasabeef/redis            Install latest redis-server                     <span class="number">1</span>                    [OK]</div><div class="line">clue/php-redis-server     The php-redis-server is a pure PHP impleme...   <span class="number">1</span>                    [OK]</div><div class="line">kampka/redis              A Redis image build from <span class="built_in">source</span> on top of ...   <span class="number">1</span>                    [OK]</div><div class="line">greytip/redis             redis <span class="number">3.0</span>.<span class="number">3</span>                                     <span class="number">1</span>                    [OK]</div><div class="line">nicescale/redis           Redis services <span class="keyword">in</span> NiceScale Platform, you ...   <span class="number">1</span>                    [OK]</div><div class="line">nanobox/redis             Redis service <span class="keyword">for</span> nanobox.io                    <span class="number">0</span>                    [OK]</div><div class="line">yfix/redis                Yfix docker redis                               <span class="number">0</span>                    [OK]</div><div class="line">trelllis/redis            Redis Replication                               <span class="number">0</span>                    [OK]</div><div class="line">frodenas/redis            A Docker Image <span class="keyword">for</span> Redis                        <span class="number">0</span>                    [OK]</div><div class="line">appelgriebsch/redis       Configurable redis container based on Alpi...   <span class="number">0</span>                    [OK]</div><div class="line">rounds/<span class="number">10</span>m-redis          redis <span class="keyword">for</span> hubot brain                           <span class="number">0</span>                    [OK]</div><div class="line">envygeeks/redis           A tiny Redis image on Alpine Linux.             <span class="number">0</span>                    [OK]</div><div class="line">khipu/redis               customized redis                                <span class="number">0</span>                    [OK]</div><div class="line">fulbito/redis             redis                                           <span class="number">0</span>                    [OK]</div><div class="line">steeeveen/redis           Redis server configured <span class="keyword">for</span> migration           <span class="number">0</span>                    [OK]</div></pre></td></tr></table></figure></p>
+<p>如果是查找registry上的镜像，可以使用以下命令，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="array"># curl </span>-XGET http:<span class="comment">//reg-server:5000/v2/_catalog</span></div><div class="line">{<span class="string">"repositories"</span>:[<span class="string">"my-hello-world"</span>,<span class="string">"my-tomcat"</span>]}</div></pre></td></tr></table></figure></p>
+<p>可以看到，这里有刚才push到服务器上的my-tomcat。查看单个镜像可以用这个命令，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="array"># curl </span>-XGET http:<span class="comment">//reg-server:5000/v2/my-tomcat/tags/list</span></div><div class="line">{<span class="string">"name"</span>:<span class="string">"my-tomcat"</span>,<span class="string">"tags"</span>:[<span class="string">"latest"</span>]}</div></pre></td></tr></table></figure></p>
+<h3>镜像和容器的导入和导出</h3>
+<p>镜像导出和导入，可以使用<code>docker save</code>和<code>docker load</code>，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker tag mysql test-mysql</span></div><div class="line"></div><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY                  TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">reg-server:<span class="number">5000</span>/my-tomcat   latest              <span class="number">1</span>a4f794fa3d4        <span class="number">27</span> minutes ago      <span class="number">350.1</span> MB</div><div class="line">test-mysql                  latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">mysql                       latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx                       latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat                      latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">busybox                     latest              ac6a7980c6c2        <span class="number">11</span> days ago         <span class="number">1.113</span> MB</div><div class="line">redis                       latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world                 latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div><div class="line"></div><div class="line"><span class="comment"># docker save -o test-mysql.tar test-mysql</span></div><div class="line"></div><div class="line"><span class="comment"># docker rmi test-mysql</span></div><div class="line">Untagged: test-mysql:latest</div><div class="line"></div><div class="line"><span class="comment"># docker images </span></div><div class="line">REPOSITORY                  TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">reg-server:<span class="number">5000</span>/my-tomcat   latest              <span class="number">1</span>a4f794fa3d4        <span class="number">29</span> minutes ago      <span class="number">350.1</span> MB</div><div class="line">mysql                       latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx                       latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat                      latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">busybox                     latest              ac6a7980c6c2        <span class="number">11</span> days ago         <span class="number">1.113</span> MB</div><div class="line">redis                       latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world                 latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div><div class="line"></div><div class="line"><span class="comment"># docker load --input test-mysql.tar </span></div><div class="line"></div><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY                  TAG                 IMAGE ID            CREATED             VIRTUAL SIZE</div><div class="line">reg-server:<span class="number">5000</span>/my-tomcat   latest              <span class="number">1</span>a4f794fa3d4        <span class="number">30</span> minutes ago      <span class="number">350.1</span> MB</div><div class="line">test-mysql                  latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">mysql                       latest              a07681abeb6c        <span class="number">3</span> days ago          <span class="number">360.3</span> MB</div><div class="line">nginx                       latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago          <span class="number">133.9</span> MB</div><div class="line">tomcat                      latest              af28fa31b54b        <span class="number">11</span> days ago         <span class="number">350.1</span> MB</div><div class="line">busybox                     latest              ac6a7980c6c2        <span class="number">11</span> days ago         <span class="number">1.113</span> MB</div><div class="line">redis                       latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago         <span class="number">109.2</span> MB</div><div class="line">hello-world                 latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago         <span class="number">960</span> B</div></pre></td></tr></table></figure></p>
+<p>以上命令中，<code>docker load --input test-mysql.tar</code>也可以用<code>docker load &lt; test-mysql.tar</code>替换。</p>
+<p>容器导出并导入镜像，可以使用<code>docker export</code>和<code>docker import</code>，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line">root@Ubuntu-Asus <span class="number">192.168</span>.<span class="number">2.103</span> <span class="number">13</span>:<span class="number">52</span>:<span class="number">34</span> /var/lib/docker/aufs</div><div class="line"><span class="comment"># docker run -d -e MYSQL_ROOT_PASSWORD=111111 mysql</span></div><div class="line">f89fbfefb0ed4d23251766a4b9906175d01c767e41bf6056f6eb0d76f591774f</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS                      PORTS               NAMES</div><div class="line">f89fbfefb0ed        mysql                       <span class="string">"/entrypoint.sh mysql"</span>   <span class="number">8</span> seconds ago       Up <span class="number">7</span> seconds                <span class="number">3306</span>/tcp            happy_mcnulty</div><div class="line"></div><div class="line"><span class="comment"># docker export f89fbfefb0ed &gt; mysql-container.tar</span></div><div class="line"></div><div class="line"><span class="comment"># cat mysql-container.tar | docker import - test-mysql-container</span></div><div class="line"><span class="number">59</span>d9e79d5010c22648585a3a41d5d0ee6889c0e3b92e866b0dafc99dd6aaa930</div><div class="line"></div><div class="line"><span class="comment"># docker images</span></div><div class="line">REPOSITORY                  TAG                 IMAGE ID            CREATED              VIRTUAL SIZE</div><div class="line">test-mysql-container        latest              <span class="number">59</span>d9e79d5010        About a minute ago   <span class="number">358.4</span> MB</div><div class="line">reg-server:<span class="number">5000</span>/my-tomcat   latest              <span class="number">1</span>a4f794fa3d4        <span class="number">56</span> minutes ago       <span class="number">350.1</span> MB</div><div class="line">test-mysql                  latest              a07681abeb6c        <span class="number">3</span> days ago           <span class="number">360.3</span> MB</div><div class="line">mysql                       latest              a07681abeb6c        <span class="number">3</span> days ago           <span class="number">360.3</span> MB</div><div class="line">nginx                       latest              <span class="number">5328</span>fdfe9b8e        <span class="number">3</span> days ago           <span class="number">133.9</span> MB</div><div class="line">tomcat                      latest              af28fa31b54b        <span class="number">11</span> days ago          <span class="number">350.1</span> MB</div><div class="line">busybox                     latest              ac6a7980c6c2        <span class="number">11</span> days ago          <span class="number">1.113</span> MB</div><div class="line">redis                       latest              <span class="number">0643</span>f0c7d17d        <span class="number">2</span> weeks ago          <span class="number">109.2</span> MB</div><div class="line">hello-world                 latest              <span class="number">975</span>b84d108f1        <span class="number">9</span> weeks ago          <span class="number">960</span> B</div><div class="line"></div><div class="line"><span class="comment"># ls -l *mysql* </span></div><div class="line">-rw-r--r-- <span class="number">1</span> root root <span class="number">365428736</span> <span class="number">12</span>月 <span class="number">20</span> <span class="number">14</span>:<span class="number">15</span> mysql-container.tar</div><div class="line">-rw-r--r-- <span class="number">1</span> root root <span class="number">367499776</span> <span class="number">12</span>月 <span class="number">20</span> <span class="number">14</span>:<span class="number">06</span> test-mysql.tar</div></pre></td></tr></table></figure></p>
+<p>可以发现导入后的test-mysql的镜像id与原先不同，而且两种导出方法导出的文件大小也不一样，容器导出方式产生的文件更小一些。</p>
+<h3>其他命令</h3>
+<p><code>docker history</code>可以用来查看镜像的创建历史，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker history test-mysql</span></div><div class="line">IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT</div><div class="line">a07681abeb6c        <span class="number">3</span> days ago          /bin/sh -c <span class="comment">#(nop) CMD ["mysqld"]                0 B                 </span></div><div class="line"><span class="number">2</span>a044f65c047        <span class="number">3</span> days ago          /bin/sh -c <span class="comment">#(nop) EXPOSE 3306/tcp               0 B                 </span></div><div class="line"><span class="number">0</span>e44274c48b8        <span class="number">3</span> days ago          /bin/sh -c <span class="comment">#(nop) ENTRYPOINT &{["/entrypoint.   0 B                 </span></div><div class="line"><span class="number">993</span>a9b023e8d        <span class="number">3</span> days ago          /bin/sh -c <span class="comment">#(nop) COPY file:64d55f44397821c7f   3.046 kB            </span></div><div class="line">e8dd98df99bf        <span class="number">3</span> days ago          /bin/sh -c <span class="comment">#(nop) VOLUME [/var/lib/mysql]       0 B                 </span></div><div class="line">ccb812e818f0        <span class="number">3</span> days ago          /bin/sh -c sed -Ei <span class="string">'s/^(bind-address|log)/#&/   1.771 kB            </span></div><div class="line">ba90d2543c21        3 days ago          /bin/sh -c {   echo mysql-community-server my   202 MB              </div><div class="line">040e89b06cd2        3 days ago          /bin/sh -c echo "deb http://repo.mysql.com/ap   55 B                </div><div class="line">7aa0121e10fe        3 days ago          /bin/sh -c #(nop) ENV MYSQL_VERSION=5.7.10-1d   0 B                 </div><div class="line">a61429b086f9        2 weeks ago         /bin/sh -c #(nop) ENV MYSQL_MAJOR=5.7           0 B                 </div><div class="line">0d5f060b62c4        2 weeks ago         /bin/sh -c apt-key adv --keyserver ha.pool.sk   20.52 kB            </div><div class="line">1b0e180fd8fa        2 weeks ago         /bin/sh -c apt-get update && apt-get install    32.87 MB            </div><div class="line">e3a6552a83c2        2 weeks ago         /bin/sh -c mkdir /docker-entrypoint-initdb.d    0 B                 </div><div class="line">410c2fae2283        2 weeks ago         /bin/sh -c groupadd -r mysql && useradd -r -g   330.4 kB            </div><div class="line">8b9a99209d5c        2 weeks ago         /bin/sh -c #(nop) CMD ["/bin/bash"]             0 B                 </div><div class="line">6d1ae97ee388        2 weeks ago         /bin/sh -c #(nop) ADD file:863d6edd178364362a   125.1 MB            </div><div class="line"></div><div class="line"># docker history test-mysql-container</div><div class="line">IMAGE               CREATED             CREATED BY          SIZE                COMMENT</div><div class="line">59d9e79d5010        2 minutes ago                           358.4 MB            Imported from -</div></pre></td></tr></table></figure></p>
+<p>由此可以看出，采用镜像导出的方式，导出过程中丢失了每一层的信息，而是把所有层合并到一层里面，也因此，导出文件略小。</p>
+<p><code>docker top</code>可以查看一个容器正在运行的进程，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker run -d redis redis-server</span></div><div class="line"><span class="number">5</span>adefd06e5cc4434674618948e144c202b6a3560550ab42b3a44516994a99a38</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS               NAMES</div><div class="line"><span class="number">5</span>adefd06e5cc        redis               <span class="string">"/entrypoint.sh redis"</span>   <span class="number">9</span> seconds ago       Up <span class="number">8</span> seconds                <span class="number">6379</span>/tcp            sleepy_poitras</div><div class="line"></div><div class="line"><span class="comment"># docker top 5adefd06e5cc</span></div><div class="line">UID                 PID                 PPID                C                   STIME               TTY                 TIME                CMD</div><div class="line"><span class="number">999</span>                 <span class="number">18602</span>               <span class="number">6097</span>                <span class="number">0</span>                   <span class="number">14</span>:<span class="number">39</span>               ?                   <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span>            redis-server *:<span class="number">6379</span></div></pre></td></tr></table></figure></p>
+<p><code>docker inspect</code>可以查看镜像或者容器的参数，返回json格式。查看镜像的时候，与镜像本身的json文件信息一致；查看容器的时候，更多是一些运行时的参数。输出比较长，在此不列出。</p>
+<p><code>docker logs</code>可以查看容器运行时的输出日志，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line"><span class="number">5</span>adefd06e5cc        redis               <span class="string">"/entrypoint.sh redis"</span>   <span class="number">7</span> minutes ago       Up <span class="number">7</span> minutes        <span class="number">6379</span>/tcp            sleepy_poitras</div><div class="line"></div><div class="line">root@Ubuntu-Asus <span class="number">192.168</span>.<span class="number">2.103</span> <span class="number">14</span>:<span class="number">46</span>:<span class="number">12</span> ~</div><div class="line"><span class="comment"># docker logs -f --tail 10 5adefd06e5cc</span></div><div class="line">  `-._    `-._`-.__.-<span class="string">'_.-'</span>    _.-<span class="string">'                                   </span></div><div class="line">      `-._    `-.__.-'    _.-<span class="string">'                                       </span></div><div class="line">          `-._        _.-'                                           </div><div class="line">              `-.__.-<span class="string">'                                               </span></div><div class="line"></div><div class="line">1:M 20 Dec 06:39:11.737 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.</div><div class="line">1:M 20 Dec 06:39:11.737 # Server started, Redis version 3.0.5</div><div class="line">1:M 20 Dec 06:39:11.737 # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = <span class="number">1</span><span class="string">' to /etc/sysctl.conf and then reboot or run the command '</span>sysctl vm.overcommit_memory=<span class="number">1</span><span class="string">' for this to take effect.</span></div><div class="line">1:M 20 Dec 06:39:11.737 # WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command '<span class="built_in">echo</span> never &gt; /sys/kernel/mm/transparent_hugepage/enabled<span class="string">' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.</span></div><div class="line">1:M 20 Dec 06:39:11.737 * The server is now ready to accept connections on port 6379</div></pre></td></tr></table></figure></p>
+<p>其中，<code>-f</code>参数表示以阻塞的方式跟踪输出日志，与linux中tail命令的-f参数含义相似；<code>--tail n</code>表示打印最后n行log。</p>
+<h3><code>docker run</code> 命令</h3>
+<p><code>docker run</code>应该是使用最多，参数也最多的docker命令了，以下介绍其中部分参数。</p>
+<p><code>-d</code>参数，表示后台运行，默认情况下docker是前台运行的，多数情况下，如果启动的是一个服务进程，我们会使用这个参数。上文已经有很多示例，在此不再举例。</p>
+<p><code>-i</code>和<code>-t</code>参数，<code>-t</code>选项让Docker分配一个伪终端(pseudo-tty)并绑定到容器的标准输入上，<code>-i</code>则让容器的标准输入保持打开。也就是说，如果要使用和用户有交互的命令，比如bash，那么需要两个选项都打开；如果只是系统自己运行，不需要与外界有输入，那么两个选项都不需要打开；如果是使用类似管道的方式进行交互，那么可以不需要<code>-t</code>选项，但是需要<code>-i</code>选项。如下，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># echo test | docker run busybox cat</span></div><div class="line"></div><div class="line"><span class="comment"># echo test | docker run -i busybox cat</span></div><div class="line">test</div></pre></td></tr></table></figure></p>
+<p><code>--name</code>参数，可以为容器命名，如下例，注意<code>docker ps -a</code>的最后一列，已经是我们指定的名字，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker run -d --name my-redis-node redis redis-server </span></div><div class="line"><span class="number">8</span>e0cbe8ea2877c0b68d9792804a6b64d5e13105596fae71090c3095393fcf66a</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line"><span class="number">8</span>e0cbe8ea287        redis               <span class="string">"/entrypoint.sh redis"</span>   <span class="number">5</span> seconds ago       Up <span class="number">4</span> seconds        <span class="number">6379</span>/tcp            my-redis-node</div></pre></td></tr></table></figure></p>
+<p><code>-p</code>参数，可以将容器内部的端口映射到宿主机器，可以使用多个<code>-p</code>参数完成多个端口映射。之前启动服务的时候，只是用来演示docker，并没有配这一项，其实这项是非常重要的，因为如果不将端口映射到宿主机器的话，容器内的服务对容器之外的进程都是不可见的。如下例，完成端口映射之后，可以使用宿主机上的redis client访问redis容器，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker run -d -p 16379:6379 redis redis-server </span></div><div class="line">c925ce0df258fe4b36c5295eda2a2f798bc6cde48deff73e81c0238e456c0f0c</div><div class="line"></div><div class="line"><span class="comment"># telnet localhost 16379</span></div><div class="line">Trying <span class="number">127.0</span>.<span class="number">0.1</span>...</div><div class="line">Connected to localhost.</div><div class="line">Escape character is <span class="string">'^]'</span>.</div><div class="line">^]</div><div class="line"></div><div class="line">$ ./redis-cli -p <span class="number">16379</span></div><div class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">16379</span>&gt; scan <span class="number">0</span> count <span class="number">100</span></div><div class="line"><span class="number">1</span>) <span class="string">"0"</span></div><div class="line"><span class="number">2</span>) (empty list or <span class="keyword">set</span>)</div><div class="line"><span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">16379</span>&gt;</div></pre></td></tr></table></figure></p>
+<p><code>-e</code>参数，可以增加和修改环境变量，可以使用多个<code>-e</code>参数完成多个环境变量的增加修改。</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker run busybox env</span></div><div class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</div><div class="line">HOSTNAME=f405a1d5be32</div><div class="line">HOME=/root</div><div class="line"></div><div class="line"><span class="comment"># docker run -e "MYENV=test" -e "HOSTNAME=my-host" busybox env</span></div><div class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</div><div class="line">HOSTNAME=my-host</div><div class="line">MYENV=test</div><div class="line">HOME=/root</div></pre></td></tr></table></figure></p>
+<p><code>-c</code>和<code>-m</code>参数，分别用来表示cpu和内存的使用限制。<code>-c</code>表示容器间使用cpu的优先级，默认使用100%cpu，总的cpu分成1024份，-c参数如果设置为512，那么容器只能使用50%的cpu资源。<code>-m</code>参数表示使用内存的上限，<code>-m=256m</code>表示使用内存上限是256mb。如果想限制使用cpu百分比的上限，可以使用<code>--cpu-quota=0</code>参数。</p>
+<p><code>--rm</code>参数，表示运行容器结束后，删除该容器。之前没有使用这个参数，在容器运行之后，<code>docker ps -a</code>还可以看到这个容器；使用之后，容器被删除，<code>docker ps -a</code>将看不到这个容器。相当与程序中的临时变量的概念。如下例，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</div><div class="line"></div><div class="line"><span class="comment"># docker run --rm busybox env</span></div><div class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</div><div class="line">HOSTNAME=a804e934d55f</div><div class="line">HOME=/root</div><div class="line"></div><div class="line"><span class="comment"># docker ps -a</span></div><div class="line">CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</div></pre></td></tr></table></figure></p>
+<p>以上是<code>docker run</code>的主要参数，还有其他很多参数，在此不一一列举。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://www.server110.com/docker/201411/11122.html" class="uri" target="_blank" rel="external">http://www.server110.com/docker/201411/11122.html</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://www.bubuko.com/infodetail-1027194.html" class="uri" target="_blank" rel="external">http://www.bubuko.com/infodetail-1027194.html</a><a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p><a href="http://www.open-open.com/lib/view/open1422492851548.html" class="uri" target="_blank" rel="external">http://www.open-open.com/lib/view/open1422492851548.html</a><a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p><a href="https://docs.docker.com/engine/reference/run/" class="uri" target="_blank" rel="external">https://docs.docker.com/engine/reference/run/</a><a href="#fnref4">↩</a></p></li>
+<li id="fn5"><p><a href="http://www.open-open.com/lib/view/open1422492851548.html" class="uri" target="_blank" rel="external">http://www.open-open.com/lib/view/open1422492851548.html</a><a href="#fnref5">↩</a></p></li>
+<li id="fn6"><p><a href="http://segmentfault.com/a/1190000000667514" class="uri" target="_blank" rel="external">http://segmentfault.com/a/1190000000667514</a><a href="#fnref6">↩</a></p></li>
+<li id="fn7"><p><a href="https://docs.docker.com/registry/" class="uri" target="_blank" rel="external">https://docs.docker.com/registry/</a><a href="#fnref7">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Docker/">Docker</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Docker/">Docker</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201512-docker-commands/" data-title="Docker命令简介 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201512-docker-build-image/" title="Docker创建镜像">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  Docker创建镜像</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201512-docker-starter/"  title="Docker入门介绍">
+ <strong>NEXT:</strong><br/> 
+ <span>Docker入门介绍
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

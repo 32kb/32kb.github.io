@@ -1,0 +1,525 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>PostgreSQL扩展函数和触发器 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="PostgreSQL是一个对扩展和程序开发很友好的数据库，有很多的外部扩展接口，很易于扩展。本文使用PostgreSQL的C扩展编写扩展函数，并提供给触发器调用，本文的例子来源与官方文档。
+PostgreSQL的扩展函数可以有“version-0”和“version-1”两种格式，但是触发器只支持">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201410-postgres-trigger-example/" title="PostgreSQL扩展函数和触发器" itemprop="url">PostgreSQL扩展函数和触发器</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-10-26T01:38:00.000Z" itemprop="datePublished">2014-10-26</time>
+    更新日期:<time datetime="2014-12-03T01:55:18.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>PostgreSQL是一个对扩展和程序开发很友好的数据库，有很多的外部扩展接口，很易于扩展。本文使用PostgreSQL的C扩展编写扩展函数，并提供给触发器调用，本文的例子来源与官方文档。</p>
+<p>PostgreSQL的扩展函数可以有“version-0”和“version-1”两种格式，但是触发器只支持“version-1”格式，这也是在“version-0”基础上做过改进的一种格式。一段“version-1”的触发器代码如下，</p>
+<p><figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> "postgres.h"</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> "executor/spi.h"        /* 你用SPI的时候要用的头文件 */</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> "commands/trigger.h"    /* 用触发器时要用的头文件 */</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> "utils/rel.h"          /* ... and relations */</span></div><div class="line"></div><div class="line"><span class="preprocessor">#ifdef PG_MODULE_MAGIC</span></div><div class="line">PG_MODULE_MAGIC;</div><div class="line"><span class="preprocessor">#<span class="keyword">endif</span></span></div><div class="line"></div><div class="line"><span class="keyword">extern</span> Datum trigf(PG_FUNCTION_ARGS);</div><div class="line"></div><div class="line">PG_FUNCTION_INFO_V1(trigf);</div><div class="line"></div><div class="line">Datum</div><div class="line">trigf(PG_FUNCTION_ARGS)</div><div class="line">{</div><div class="line">    TriggerData *trigdata = (TriggerData *) fcinfo-&gt;context;</div><div class="line">    TupleDesc   tupdesc;</div><div class="line">    HeapTuple   rettuple;</div><div class="line">    <span class="keyword">char</span>       *when;</div><div class="line">    <span class="keyword">bool</span>        checknull = <span class="keyword">false</span>;</div><div class="line">    <span class="keyword">bool</span>        isnull;</div><div class="line">    <span class="keyword">int</span>         ret, i;</div><div class="line"></div><div class="line">    <span class="comment">/* 确信自己是作为触发器触发的 */</span></div><div class="line">    <span class="keyword">if</span> (!CALLED_AS_TRIGGER(fcinfo))</div><div class="line">        elog(ERROR, <span class="string">"trigf: not fired by trigger manager"</span>);</div><div class="line"></div><div class="line">    <span class="comment">/* 返回给执行者的行 */</span></div><div class="line">    <span class="keyword">if</span> (TRIGGER_FIRED_BY_UPDATE(trigdata-&gt;tg_event))</div><div class="line">        rettuple = trigdata-&gt;tg_newtuple;</div><div class="line">    <span class="keyword">else</span></div><div class="line">        rettuple = trigdata-&gt;tg_trigtuple;</div><div class="line"></div><div class="line">    <span class="comment">/* 检查空值 */</span></div><div class="line">    <span class="keyword">if</span> (!TRIGGER_FIRED_BY_DELETE(trigdata-&gt;tg_event)</div><div class="line">        && TRIGGER_FIRED_BEFORE(trigdata-&gt;tg_event))</div><div class="line">        checknull = <span class="keyword">true</span>;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (TRIGGER_FIRED_BEFORE(trigdata-&gt;tg_event))</div><div class="line">        when = <span class="string">"before"</span>;</div><div class="line">    <span class="keyword">else</span></div><div class="line">        when = <span class="string">"after "</span>;</div><div class="line"></div><div class="line">    tupdesc = trigdata-&gt;tg_relation-&gt;rd_att;</div><div class="line"></div><div class="line">    <span class="comment">/* 与 SPI 管理器连接 */</span></div><div class="line">    <span class="keyword">if</span> ((ret = SPI_connect()) &lt; <span class="number">0</span>)</div><div class="line">        elog(INFO, <span class="string">"trigf (fired %s): SPI_connect returned %d"</span>, when, ret);</div><div class="line"></div><div class="line">    <span class="comment">/* 获取关系中的行数量 */</span></div><div class="line">    ret = SPI_exec(<span class="string">"SELECT count(*) FROM ttest"</span>, <span class="number">0</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>)</div><div class="line">        elog(NOTICE, <span class="string">"trigf (fired %s): SPI_exec returned %d"</span>, when, ret);</div><div class="line"></div><div class="line">    <span class="comment">/* count(*) 返回 int8，所以要小心转换 */</span></div><div class="line">    i = (<span class="keyword">int</span>) DatumGetInt64(SPI_getbinval(SPI_tuptable-&gt;vals[<span class="number">0</span>],</div><div class="line">                                          SPI_tuptable-&gt;tupdesc,</div><div class="line">                                          <span class="number">1</span>,</div><div class="line">                                          &isnull));</div><div class="line"></div><div class="line">    elog (NOTICE, <span class="string">"trigf (fired %s): there are %d tuples in ttest"</span>, when, i);</div><div class="line"></div><div class="line">    SPI_finish();</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (checknull)</div><div class="line">    {</div><div class="line">        (<span class="keyword">void</span>) SPI_getbinval(rettuple, tupdesc, <span class="number">1</span>, &isnull);</div><div class="line">        <span class="keyword">if</span> (isnull)</div><div class="line">            rettuple = NULL;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">return</span> PointerGetDatum(rettuple);</div><div class="line">}</div></pre></td></tr></table></figure></p>
+<p>保存为<code>trigger_func.c</code>，Makefile可以通过<code>pg_config</code>来产生，运行<code>pg_config --help</code>可以看到帮助文档，</p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-pgconfig-help.png" alt=""></p>
+<p>可以发现，<code>--pgxs</code>参数是用于写扩展的Makefile，运行就可以找到所需的Makefile，</p>
+<p><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[postgres@anzhy my_extension]$ pg_config --pgxs</div><div class="line">/home/postgres/postgres2/lib/pgxs/src/makefiles/pgxs.mk</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-pgconfig-pgxs.png" alt=""></p>
+<p>打开这个Makefile文件，发现开头有一段文档描述，如下，</p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-pgxs-doc.png" alt=""></p>
+<p>根据文档的提示，可以写如下Makefile用于编译<code>trigger_func.c</code>，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="constant">MODULES</span> = trigger_func</div><div class="line"></div><div class="line"><span class="constant">PG_CONFIG</span> = pg_config</div><div class="line"><span class="constant">PGXS</span> <span class="symbol">:</span>= <span class="variable">$(</span>shell <span class="variable">$(</span><span class="constant">PG_CONFIG</span>) --pgxs)</div><div class="line"><span class="keyword">include</span> <span class="variable">$(</span><span class="constant">PGXS</span>)</div></pre></td></tr></table></figure></p>
+<p>然后就可以用<code>make</code>编译了，如下，</p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-extension-make.png" alt=""></p>
+<p>注意，要使用和PostgreSQL对应的官方文档中的代码才可以编译，否则可能会报错。然后将编译出来的.so文件copy到PostgreSQL的lib目录下，之后，启动PostgreSQL，并连接test数据库，在test数据库中建表ttest，</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> ttest (</span></div><div class="line">    x <span class="built_in">integer</span></div><div class="line">);</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-create-ttest.png" alt=""></p>
+<p>然后注册触发器函数，</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> trigf() <span class="keyword">RETURNS</span> <span class="keyword">trigger</span></span></div><div class="line">    <span class="keyword">AS</span> <span class="string">'$libdir/trigger_func'</span>, <span class="string">'trigf'</span></div><div class="line">    <span class="keyword">LANGUAGE</span> C;</div></pre></td></tr></table></figure></p>
+<p>由于扩展程序是放在lib目录下，所以，要以<code>$libdir</code>做开头，其他情况可以参考官方文档。注意，如果只是创建一个普通函数，那么这里的返回就不用是<code>trigger</code>，可以是int，相应的，之前的C代码部分，返回也要修改，可以参考<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>。之后，就可以创建触发器，</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> tbefore <span class="keyword">BEFORE</span> <span class="keyword">INSERT</span> <span class="keyword">OR</span> <span class="keyword">UPDATE</span> <span class="keyword">OR</span> <span class="keyword">DELETE</span> <span class="keyword">ON</span> ttest</span></div><div class="line">    <span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="keyword">ROW</span> <span class="keyword">EXECUTE</span> <span class="keyword">PROCEDURE</span> trigf();</div><div class="line"></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> tafter <span class="keyword">AFTER</span> <span class="keyword">INSERT</span> <span class="keyword">OR</span> <span class="keyword">UPDATE</span> <span class="keyword">OR</span> <span class="keyword">DELETE</span> <span class="keyword">ON</span> ttest</span></div><div class="line">    <span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="keyword">ROW</span> <span class="keyword">EXECUTE</span> <span class="keyword">PROCEDURE</span> trigf();</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-create-trigger.png" alt=""></p>
+<p>触发器建立完之后，就可以做一些简单的测试了，如下，</p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-test1.png" alt=""></p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-test2.png" alt=""></p>
+<p>可见，新建的触发器已经发挥了作用。如果是单纯的函数，则更加简单一些，可以在上面的c文件之后，加入如下代码，</p>
+<p><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">PG_FUNCTION_INFO_V1(add_ab);</div><div class="line"></div><div class="line">Datum</div><div class="line">add_ab(PG_FUNCTION_ARGS)</div><div class="line">{</div><div class="line">    int32 arg_a=PG_GETARG_INT32(<span class="number">0</span>);</div><div class="line">    int32 arg_b=PG_GETARG_INT32(<span class="number">1</span>);</div><div class="line"></div><div class="line">    PG_RETURN_INT32(arg_a+arg_b);</div><div class="line">}</div></pre></td></tr></table></figure></p>
+<p>重新编译，并将.so文件copy到PostgreSQL的lib目录下。然后重启PostgreSQL，并新增函数，如下</p>
+<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> <span class="keyword">add</span>(<span class="built_in">int</span>,<span class="built_in">int</span>)</span></div><div class="line"><span class="keyword">RETURNS</span> <span class="built_in">int</span></div><div class="line"><span class="keyword">AS</span> <span class="string">'$libdir/trigger_func'</span>, <span class="string">'add_ab'</span></div><div class="line"><span class="keyword">LANGUAGE</span> C;</div></pre></td></tr></table></figure></p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-create-function.png" alt=""></p>
+<p>测试一下，如下，</p>
+<p><img src="/images/201410-postgres-trigger-example/trigger-function-test1.png" alt=""></p>
+<p>可见，函数已经生效。</p>
+<p>以上是PostgreSQL扩展函数和触发器的建立。本文参考了<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>，还有PostgreSQL 9.3官方文档<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>，<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>，以及8.1中文版文档<a href="#fn5" class="footnoteRef" id="fnref5"><sup>5</sup></a>的对应章节。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://blog.csdn.net/huguangshanse00/article/details/39252073" class="uri" target="_blank" rel="external">http://blog.csdn.net/huguangshanse00/article/details/39252073</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://blog.csdn.net/huguangshanse00/article/details/39252073" class="uri" target="_blank" rel="external">http://blog.csdn.net/huguangshanse00/article/details/39252073</a><a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p><a href="http://www.postgresql.org/docs/9.3/interactive/trigger-example.html" class="uri" target="_blank" rel="external">http://www.postgresql.org/docs/9.3/interactive/trigger-example.html</a><a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p><a href="http://www.postgresql.org/docs/9.3/interactive/xfunc-c.html" class="uri" target="_blank" rel="external">http://www.postgresql.org/docs/9.3/interactive/xfunc-c.html</a><a href="#fnref4">↩</a></p></li>
+<li id="fn5"><p><a href="http://www.php100.com/manual/PostgreSQL8/" class="uri" target="_blank" rel="external">http://www.php100.com/manual/PostgreSQL8/</a><a href="#fnref5">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Postgres/">Postgres</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Postgres/">Postgres</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201410-postgres-trigger-example/" data-title="PostgreSQL扩展函数和触发器 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201411-postgres-pgbench/" title="pgbench压力测试工具简介">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  pgbench压力测试工具简介</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201410-postgres-plpython-install/"  title="PL/Python安装和使用">
+ <strong>NEXT:</strong><br/> 
+ <span>PL/Python安装和使用
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

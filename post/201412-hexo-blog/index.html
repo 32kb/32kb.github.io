@@ -1,0 +1,561 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>用hexo搭建这个博客 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="这个博客是用hexo搭建的，放在github上，这篇文章记录一下搭建这个博客的过程，以及这个过程中踩过的坑。
+如果只是想搭建一个普通的博客，不需要额外的，比如数学公式、脚注等支持，也不在意代码的排版和主题的选择，那么网上能找到的多数文章都可以用作参考，比如1、2、3，其中也介绍了一些额外的配置，比">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201412-hexo-blog/" title="用hexo搭建这个博客" itemprop="url">用hexo搭建这个博客</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-12-08T04:49:00.000Z" itemprop="datePublished">2014-12-08</time>
+    更新日期:<time datetime="2015-12-13T05:58:00.000Z" itemprop="dateModified">2015-12-13</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">1 frontmatter不一致</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">2 使用mathjax支持数学公式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">3 php markdown中脚注的支持</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">4.</span> <span class="toc-text">4 pacman系列主题中的代码内空行bug</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">5.</span> <span class="toc-text">5 代码高亮的着色方案改为monokai</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">6.</span> <span class="toc-text">6 tinny主题的字体修改</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">7.</span> <span class="toc-text">7 主题的顶部横幅(header)宽度调整</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">8.</span> <span class="toc-text">8 仍然存在的bug</span></a></li></ol>
+		</div>
+		
+		<p>这个博客是用hexo搭建的，放在github上，这篇文章记录一下搭建这个博客的过程，以及这个过程中踩过的坑。</p>
+<p>如果只是想搭建一个普通的博客，不需要额外的，比如数学公式、脚注等支持，也不在意代码的排版和主题的选择，那么网上能找到的多数文章都可以用作参考，比如<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>、<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>、<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>，其中也介绍了一些额外的配置，比如rss、域名绑定、博客迁移等等。我建博客的主要步骤也是跟这几篇博客的描述基本类似，由于原先的博客是放在farbox和SAE的JustWriting(以下简称JustWriting)上，直接就是可用的markdown文本，迁移的步骤算是省了不少功夫，以下说一些碰到的坑。</p>
+<h2>1 frontmatter不一致</h2>
+<p>frontmatter不是markdown的标准，应该属于博客系统自定义的扩展，一般是用于表示该篇文章的属性信息，写在文章的开头，例如，本文的frontmatter就是，</p>
+<p><figure class="highlight markdown"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">title: 用hexo搭建这个博客</div><div class="line">date: 2014-12-08 12:49</div><div class="line">tags: [Hexo, Blog]</div><div class="line">category: Blog</div><div class="line"><span class="header">toc: yes</span></div><div class="line">---</div></pre></td></tr></table></figure></p>
+<p>各个博客系统支持的frontmatter各不相同，原先在farbox和JustWriting写的时候，是可以这么写的，</p>
+<p><figure class="highlight markdown"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">Title: 用hexo搭建这个博客</div><div class="line">Date: 2014-12-08 12:49</div><div class="line">Tags: [Hexo, Blog]</div><div class="line">Category: Blog</div><div class="line">Toc: yes</div></pre></td></tr></table></figure></p>
+<p>主要差别有，frontmatter中的title、date什么的都是可以首字母大写的，例如，Title、Date，但是hexo要求必须是全部小写才可以识别，所以就一篇一篇的都改为小写。JustWriting是大小写都可以支持，farbox由于不打算继续用了就没有测试过。</p>
+<p>还有一个是tags里面的写法，hexo要求，如果有多个的话，需要放在方括号([])，并用逗号(,)分隔，如<code>[Hexo, Blog]</code>，而之前farbox和JustWriting是可以不需要方括号，空格分隔，如<code>Hexo Blog</code>。JustWriting经测试是可以支持方括号的写法，farbox没有测试。</p>
+<p>最后的差别是，hexo需要在frontmatter结束后，用<code>---</code>隔开，而JustWriting和farbox不需要。</p>
+<p>改完这些，hexo中就可以在主页正常的显示博文的标题等信息了。感觉起来，hexo要求的写法更加严谨，值得称道的是JustWriting，不仅支持了原先farbox的写法，也支持现在的hexo写法，更加宽泛。虽然这些改动在farbox上都没有测试过，我猜应该也是可以的，JustWriting和farbox非常相似，JustWriting是用php写的，猜测farbox可能也是用php实现的，两者支持的markdown语法应该是一致的。</p>
+<h2>2 使用mathjax支持数学公式</h2>
+<p>公式的支持可以安装hexo-math和hexo-renderer-mathjax来实现，好像是只要安装前者就可以实现了，但是我安装了2个。hexo-math的安装方法可以去该项目的github上去看看，在<a href="https://github.com/akfish/hexo-math" target="_blank" rel="external">这里</a>，按照步骤操作就可以了。hexo-renderer-mathjax的github在<a href="https://github.com/phoenixcw/hexo-renderer-mathjax" target="_blank" rel="external">这里</a>，步骤和前者一样。</p>
+<p>安装完之后应该就能看到公式了，支持行间和行内的公式。测试一下效果，代码如下，</p>
+<p><figure class="highlight markdown"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">测试一下数学公式和尾注[^LaTeX]: </div><div class="line"></div><div class="line">$$E=mc^2$$</div><div class="line"></div><div class="line">[<span class="link_label">^LaTeX</span>]: 支持 <span class="strong">**LaTeX**</span> 编辑显示支持，例如：$\sum<span class="emphasis">_{i=1}^n a_</span>i=0$和$[<span class="link_label">((n-k)/i+m)</span>]$， 访问 [<span class="link_label">MathJax</span>][<span class="link_reference">4</span>] 参考更多使用方法。</div></pre></td></tr></table></figure></p>
+<p>生成的效果可以看<a href="http://valleylord.github.io/post/README/" target="_blank" rel="external">这里</a>。</p>
+<h2>3 php markdown中脚注的支持</h2>
+<p>老实说，之前我从来没有关注过markdown的方言，markdown就是markdown，就跟java就是java的感觉一样。后来知道了有个GFW(Github Flavored Markdown)，感觉它支持代码高亮的方式好一些，于是以为自己写的就是GFW。直到这次做博客迁移的时候才发现，原来我一直写的都是php markdown，比GFW还多一些特性。而hexo默认支持的是GFW，对php markdown的一些特性不支持，而我最需要的就是php markdown中的脚注功能。</p>
+<p>其实主流的markdown方言有以下几种，分别是(摘自pandoc的readme)：markdown (pandoc’s extended markdown), markdown_strict (original unextended markdown), markdown_phpextra (PHP Markdown Extra extended markdown), markdown_github (github extended markdown)，markdown_mmd (MultiMarkdown)。这也看出，原始的markdown支持的写法是很少的，所以才有了这么多各有特色的方言版本，github markdown支持多种编程语言的高亮，pandoc markdown支持的东西很多，写法比较类似tex，我用的php markdown有简易的脚注功能。以上的特性，都可以在pandoc中有选项可以支持。</p>
+<p>说了这么多，那么问题来了，pandoc是什么？在我的理解，pandoc是一个标记语言(也可以说排版语言)转换器。可以将一种标记语言(如markdown、textile、tex、latex、html、epub等)转换到另一种标记语言，感觉很强大有木有？我就是想用pandoc对php markdown的支持来生成博客的html页面。</p>
+<p>问题又来了，那么如何在hexo中使用pandoc来解析php markdown呢？要使用hexo-renderer-pandoc插件，项目主页在github上，<a href="https://github.com/wzpan/hexo-renderer-pandoc" target="_blank" rel="external">这里</a>。其readme中的介绍有些太简略了，对于我这样一个连pandoc都没听过的人，实在不太容易上手。我详细说一下使用时候的步骤，</p>
+<blockquote>
+<ol>
+<li>根据<a href="http://johnmacfarlane.net/pandoc/installing.html" target="_blank" rel="external">pandoc的安装文档</a>，安装pandoc，在windows下要把pandoc配到PATH环境变量下；</li>
+<li>安装这个插件，<code>npm install hexo-renderer-pandoc --save</code>；</li>
+<li>删除默认的markdown插件，<code>npm uninstall hexo-renderer-marked --save</code>，确保是使用pandoc在解析；</li>
+<li>修改该插件的代码，将index.js中的<code>var args = [ '-f', 'markdown', '-t', 'html', '--mathjax', '--smart'];</code>改为<code>var args = [ '-f', 'markdown_phpextra', '-t', 'html', '--mathjax', '--smart'];</code></li>
+</ol>
+</blockquote>
+<p>之后就可以用pandoc解析php markdown了，在<code>hexo generate</code>的时候表现的灰常好。</p>
+<p>说一下需要特别注意的坑，如果是在windows下安装pandoc，一定需要把pandoc的可执行文件目录配置到PATH环境变量中，即，<code>C:\Users\Administrator\AppData\Local\Pandoc</code>(pandoc的默认安装目录)需要加到PATH中，这个坑在pandoc的官方installing中完全没提到，而在我的mint linux中只需要简单的apt-get就一次搞定，差距啊。如果没有配对的话，在<code>hexo server</code>的时候会出现这个错误，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">Error: This socket is closed.</div><div class="line">    at Socket._write (net.js:637:19)</div><div class="line">    at doWrite (_stream_writable.js:226:10)</div><div class="line">    at writeOrBuffer (_stream_writable.js:216:5)</div><div class="line">    at Socket.Writable.write (_stream_writable.js:183:11)</div><div class="line">    at Socket.write (net.js:615:40)</div><div class="line">    at pandoc (E:<span class="command">\my</span>_blog<span class="command">\node</span>_modules<span class="command">\hexo</span>-renderer-pandoc<span class="command">\index</span>.js:23:15)</div><div class="line">    at C:<span class="command">\Users</span><span class="command">\Administrator</span><span class="command">\AppData</span><span class="command">\Roaming</span><span class="command">\npm</span><span class="command">\node</span>_modules<span class="command">\hexo</span><span class="command">\lib</span><span class="command">\core</span><span class="command">\render</span>.js:96:9</div><div class="line">    at fn (C:<span class="command">\Users</span><span class="command">\Administrator</span><span class="command">\AppData</span><span class="command">\Roaming</span><span class="command">\npm</span><span class="command">\node</span>_modules<span class="command">\hexo</span><span class="command">\node</span>_modules<span class="command">\async</span><span class="command">\lib</span><span class="command">\async</span>.js:641:34)</div><div class="line">    at Object._onImmediate (C:<span class="command">\Users</span><span class="command">\Administrator</span><span class="command">\AppData</span><span class="command">\Roaming</span><span class="command">\npm</span><span class="command">\node</span>_modules<span class="command">\hexo</span><span class="command">\node</span>_modules<span class="command">\async</span><span class="command">\lib</span><span class="command">\async</span>.js:557:34)</div><div class="line">    at processImmediate <span class="special">[</span>as _immediateCallback<span class="special">]</span> (timers.js:330:15)</div></pre></td></tr></table></figure></p>
+<p>模模糊糊的，也算指向了找不到pandoc的错误。测试pandoc是否在PATH中了，可以用<code>pandoc -v</code>来查看版本，如果已经设置对了，会看到以下这些，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">F:\&gt;pandoc -v</div><div class="line">pandoc <span class="number">1.13</span>.<span class="number">1</span></div><div class="line">Compiled <span class="keyword">with</span> texmath <span class="number">0.8</span>, highlighting-kate <span class="number">0.5</span>.<span class="number">8.5</span>.</div><div class="line">Syntax highlighting <span class="keyword">is</span> supported <span class="keyword">for</span> the following languages:</div><div class="line">    actionscript, ada, apache, asn1, asp, awk, bash, bibtex, boo, c, changelog,</div><div class="line">    clojure, cmake, coffee, coldfusion, commonlisp, cpp, cs, css, curry, d,</div><div class="line">    diff, djangotemplate, doxygen, doxygenlua, dtd, eiffel, email, erlang,</div><div class="line">    fortran, fsharp, gcc, gnuassembler, go, haskell, haxe, html, ini, isocpp,</div><div class="line">    java, javadoc, javascript, json, jsp, julia, latex, lex, literatecurry,</div><div class="line">    literatehaskell, lua, makefile, mandoc, markdown, matlab, maxima, metafont,</div><div class="line">    mips, modelines, modula2, modula3, monobasic, nasm, noweb, objectivec,</div><div class="line">    objectivecpp, ocaml, octave, <span class="keyword">pascal</span>, perl, php, pike, postscript, prolog,</div><div class="line">    pure, python, r, relaxngcompact, restructuredtext, rhtml, roff, ruby, rust,</div><div class="line">    scala, scheme, sci, sed, sgml, sql, sqlmysql, sqlpostgresql, tcl, texinfo,</div><div class="line">    verilog, vhdl, xml, xorg, xslt, xul, yacc, yaml</div><div class="line"><span class="keyword">Default</span> user data directory: C:\Users\Administrator\AppData\Roaming\pandoc</div><div class="line">Copyright (C) <span class="number">2006</span>-<span class="number">2014</span> John MacFarlane</div><div class="line">Web:  http:<span class="comment">//johnmacfarlane.net/pandoc</span></div><div class="line">This <span class="keyword">is</span> free software; see the source <span class="keyword">for</span> copying conditions.</div><div class="line">There <span class="keyword">is</span> no warranty, <span class="keyword">not</span> even <span class="keyword">for</span> merchantability <span class="keyword">or</span> fitness</div><div class="line"><span class="keyword">for</span> a particular purpose.</div></pre></td></tr></table></figure></p>
+<p>另一个坑是，hexo-renderer-pandoc插件的作者使用的是pandoc markdown，所以默认是只支持pandoc markdown，修改代码之后才可以识别php markdown的脚注，像这样<code>[^1]</code>，示例可以参考前面的例子。</p>
+<p>顺便说一下，hexo-renderer-pandoc插件代码的逻辑还是很清楚的(也很短)，主要就几个部分，打开文件，处理文件，关闭文件，还有按文件扩展名注册文件的代码放在最后。修改的地方就是pandoc运行时候的参数，参考pandoc的User Guide就可以知道这些参数是干什么的，甚至可以通过修改参数获得更多文件的支持。<code>var pandoc = spawn('pandoc', args);</code>这一行是pandoc运行的命令，可以看到pandoc前面没有任何路径信息，所以要放到PATH环境变量中。</p>
+<h2>4 pacman系列主题中的代码内空行bug</h2>
+<p>hexo的主题主要有几个系列，从官方主题更改的landscape系列、light系列，还有开发者自己贡献的pacman系列，我自己比较偏好pacman和landscape系列的主题，pacman中比较喜欢<a href="https://github.com/wizicer/iceman" target="_blank" rel="external">iceman</a>和<a href="https://github.com/zhanglun/hexo-theme/tree/master/Tinny" target="_blank" rel="external">tinny</a>，landscape系列中比较喜欢<a href="https://github.com/xiangming/landscape-plus" target="_blank" rel="external">landscape-plus</a>和<a href="https://github.com/myqianlan/hexo-theme-moyi" target="_blank" rel="external">moyi</a>，还有很多漂亮的主题，虽然有demo，但是我使用的时候都报错。最后还是选取了tinny，其实我更加喜欢landscape系列主题，但是其文章是默认在首页中显示全文的，需要手动加入<code>&lt;!-- more --&gt;</code>才能生成首页预览的效果，我比较懒，不想加了，因此选择了pacman系列的。</p>
+<p>pacman系列主题有一个共有的问题，代码中的空行会被压缩，而landscape系列主题就没有这个问题。干说不是很好理解，看例子，比如这样一段markdown，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">`<span class="javascript"></span>``<span class="javascript">python</span></div><div class="line">import <span class="keyword">this</span></div><div class="line"></div><div class="line">print <span class="string">'something'</span></div><div class="line">``<span class="javascript"></span>`</div></pre></td></tr></table></figure></p>
+<p>中间有一个空行，pacman主题默认情况下会压缩掉这个空行，生成类似这样的页面，</p>
+<p><img src="/images/201412-hexo-blog/hexo-code-err.png" alt=""></p>
+<p>中间的空行不见了，而且代码行数的数字和代码的内容视觉上也没有在同一行上，而实际上，我们想要的是应该是这样的结果</p>
+<p><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> this</div><div class="line"></div><div class="line"><span class="keyword">print</span> <span class="string">'something'</span></div></pre></td></tr></table></figure></p>
+<p>几乎所有，至少是我尝试过的所有的，pacman主题都有这个问题，解决方法是，在主题的<code>source/css/_base/code.styl</code>文件中<code>.gist</code>之前，加入下面两行，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">  .gutter <span class="keyword">pre</span></div><div class="line">    @extend $<span class="built_in">line</span>-numbers</div><div class="line">    text-align <span class="keyword">right</span></div><div class="line">    padding-<span class="keyword">right</span> <span class="number">1.5</span><span class="keyword">em</span></div><div class="line">  </div><div class="line">  // <span class="built_in">add</span> follows</div><div class="line">  .<span class="built_in">line</span></div><div class="line">    heigh<span class="variable">t:</span> <span class="number">24</span>px</div><div class="line">    </div><div class="line">.gist</div><div class="line">  margin <span class="number">0.5</span><span class="keyword">em</span> <span class="number">0</span></div><div class="line">  background <span class="keyword">highlight</span>-background</div></pre></td></tr></table></figure></p>
+<p>加入<code>.line</code>设置，强制指定了代码的每一行的行高都是24px，我尝试了其他的变量来替代，都不是很好，如果有更好的改法，可以联系我。这是整个格式优化中我花时间最长的一个改动，尤其对于我这种从来没做过前端，而且css、js又都不太懂的人。</p>
+<h2>5 代码高亮的着色方案改为monokai</h2>
+<p>代码高亮的着色方案在多数的hexo主题中，都是tomorrow着色，我是monokai着色的忠实粉丝，有木有办法改为monokai呢？</p>
+<p>landscape-plus给出了一个monokai着色的方法，原来主题的颜色都是在code.styl中写死的，只要改这段即可。原本的着色方案可能是这样，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="variable">highlight-background =</span> <span class="comment">#1d1f21</span></div><div class="line"><span class="variable">highlight-current-line =</span> <span class="comment">#282a2e</span></div><div class="line"><span class="variable">highlight-line-numbers =</span> <span class="comment">#666</span></div><div class="line"><span class="variable">highlight-selection =</span> <span class="comment">#373b41</span></div><div class="line"><span class="variable">highlight-foreground =</span> <span class="comment">#c5c8c6</span></div><div class="line"><span class="variable">highlight-comment =</span> <span class="comment">#969896</span></div><div class="line"><span class="variable">highlight-red =</span> <span class="comment">#cc6666</span></div><div class="line"><span class="variable">highlight-orange =</span> <span class="comment">#de935f</span></div><div class="line"><span class="variable">highlight-yellow =</span> <span class="comment">#f0c674</span></div><div class="line"><span class="variable">highlight-green =</span> <span class="comment">#b5bd68</span></div><div class="line"><span class="variable">highlight-aqua =</span> <span class="comment">#8abeb7</span></div><div class="line"><span class="variable">highlight-blue =</span> <span class="comment">#81a2be</span></div><div class="line"><span class="variable">highlight-purple =</span> <span class="comment">#b294bb</span></div></pre></td></tr></table></figure></p>
+<p>可以看到，颜色的rgb值都被赋值在了一系列变量中，只要修改这些常数值即可，这个活儿landscape-plus已经做了，把他们的code.styl中的这一段copy过来替换原有的即可，新的着色方案是这样，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="variable">highlight-background =</span> <span class="comment">#272822</span></div><div class="line"><span class="variable">highlight-current-line =</span> <span class="comment">#3E3D32</span></div><div class="line"><span class="variable">highlight-selection =</span> <span class="comment">#49483E</span></div><div class="line"><span class="variable">highlight-foreground =</span> <span class="comment">#F8F8F2</span></div><div class="line"><span class="variable">highlight-comment =</span> <span class="comment">#75715E</span></div><div class="line"><span class="variable">highlight-red =</span> <span class="comment">#F92672</span></div><div class="line"><span class="variable">highlight-orange =</span> <span class="comment">#FD971F</span></div><div class="line"><span class="variable">highlight-yellow =</span> <span class="comment">#E6DB74</span></div><div class="line"><span class="variable">highlight-green =</span> <span class="comment">#A6E22E</span></div><div class="line"><span class="variable">highlight-aqua =</span> <span class="comment">#A1EFE4</span></div><div class="line"><span class="variable">highlight-blue =</span> <span class="comment">#66D9EF</span></div><div class="line"><span class="variable">highlight-purple =</span> <span class="comment">#AE81FF</span></div></pre></td></tr></table></figure></p>
+<p>code.styl的末尾<code>pre</code>那一行到结束，还有一段不同的代码引用那一种着色方案的声明，同样也用landscape-plus中的相应内容替换。替换完之后，就能发现hexo已经开始用monokai着色了。</p>
+<p>可以看出来，这种着色方案的修改方法比较死板，如果你需要某种着色方案但并不清楚颜色的rgb值，就无解了。其实，tinny主题本身其实提供了highlightjs着色方案，按主题的readme上所说，只要在主题的_config.yml中更改配置项即可，可惜我没有试成功……可能有其他主题可以做到。</p>
+<h2>6 tinny主题的字体修改</h2>
+<p>tinny主题的作者把pacman的一些字体给改了，用了更小更紧凑的一些字体。但是我还是喜欢原先的pacman的字体，怎么办呢？通过和iceman对比文件发现，<code>source/css/_partial/</code>目录下的article.styl的内容有差异，用iceman的这个文件替代；还有，tinny在该目录下多了一个addByMe.styl文件，为了和iceman一致，删除之。</p>
+<p>改完之后，基本和iceman比较相似了，感觉字体还是比较小，不知道为什么。</p>
+<h2>7 主题的顶部横幅(header)宽度调整</h2>
+<p>改完这些之后，设置自己的博客名、作者名、想说的话等等，基本已经挺好的了，还有不足的就是博客的顶部横幅，是这样，</p>
+<p><img src="/images/201412-hexo-blog/hexo-header-err.png" alt=""></p>
+<p>感觉明明可以一行显示的内容，被强迫分在了两行中显示，左上角和右下角的内容如果可以合并在一行里面显示就比较好了。如果需要这样，可以调整做上角的文本的宽度，在<code>source/css/_partial/</code>目录下的header.styl中，大约30多行的位置，有这样一段，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="id">#textlogo</span></div><div class="line">  <span class="attribute">float</span> <span class="attribute">left</span></div><div class="line">  <span class="attribute">margin-left</span> 0<span class="class">.5em</span></div><div class="line">  <span class="attribute">width</span> 65%</div></pre></td></tr></table></figure></p>
+<p>可能表示左上角的文本宽度要占用整个横幅的65%，像我的博客，左上角的文本并不长，缩短这个宽度也是可以的，改为55%就变成现在这样的效果。</p>
+<h2>8 仍然存在的bug</h2>
+<p>我做的主要修改就是以上这些，如果说还有一些值得进一步折腾的话，还可以继续。比如，在顶部的横幅中，目前没有支持categories，但是tags是支持的，如果要设置categories，可以按主题中的说明，在categories目录中建立一个index.md的文件，内容是，</p>
+<p><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">layout: categories</div><div class="line"><span class="header">title: categories</span></div><div class="line">---</div></pre></td></tr></table></figure></p>
+<p>但是，我这样操作了，但是网页的内容还是tags的，所以我把categories从顶部横幅中去掉了。还有一个问题是，代码中的区块注释没有显示对颜色，但是单行注释是没有问题的。错误的颜色如下，</p>
+<p><img src="/images/201412-hexo-blog/hexo-comment-err.png" alt=""></p>
+<p>第一行显示对了颜色，为灰色，但是第二行一直到最后一行都是白色，颜色错误。除此之外，也有整个注释区块都是白色的错误情况，至今没有找到很好的解决办法，试了一些别的主题，多数都有这个问题，只有一些个别的主题，似乎是用动态调用highlightjs的方法解决了这个问题，但是其主题的代码结构和普通的差异很大，不太会改。</p>
+<p>以上是我折腾这个博客的过程，到此为止，已经花了两个周末多了，不能再往下花时间了。基本上，如果使用pandoc，hexo可以变的非常灵活，任何的markdown方言都不在话下。</p>
+<p>感谢文中所有提到的开源项目的贡献者。</p>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn1"><p><a href="http://zipperary.com/2013/05/28/hexo-guide-2/" class="uri" target="_blank" rel="external">http://zipperary.com/2013/05/28/hexo-guide-2/</a><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><a href="http://code.wileam.com/build-a-hexo-blog-and-optimize/" class="uri" target="_blank" rel="external">http://code.wileam.com/build-a-hexo-blog-and-optimize/</a><a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p><a href="http://ibruce.info/2013/11/22/hexo-your-blog/" class="uri" target="_blank" rel="external">http://ibruce.info/2013/11/22/hexo-your-blog/</a><a href="#fnref3">↩</a></p></li>
+</ol>
+</div>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Hexo/">Hexo</a><a href="/tags/Blog/">Blog</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Blog/">Blog</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201412-hexo-blog/" data-title="用hexo搭建这个博客 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201512-docker-starter/" title="Docker入门介绍">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  Docker入门介绍</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201412-postgres-pgcluu/"  title="PostgreSQL的性能监控工具pgCluu试用">
+ <strong>NEXT:</strong><br/> 
+ <span>PostgreSQL的性能监控工具pgCluu试用
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">1 frontmatter不一致</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">2 使用mathjax支持数学公式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">3 php markdown中脚注的支持</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">4.</span> <span class="toc-text">4 pacman系列主题中的代码内空行bug</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">5.</span> <span class="toc-text">5 代码高亮的着色方案改为monokai</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">6.</span> <span class="toc-text">6 tinny主题的字体修改</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">7.</span> <span class="toc-text">7 主题的顶部横幅(header)宽度调整</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">8.</span> <span class="toc-text">8 仍然存在的bug</span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

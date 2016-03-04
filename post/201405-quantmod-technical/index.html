@@ -1,0 +1,501 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>R的Quantmod包技术分析功能试用 | 褚哥说|</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Valleylord">
+    
+    <meta name="description" content="下载某种股票（例如苹果公司股票）在特定时间段内行情数据，计算CCI指标，指出买入卖出时机，并评估该指标信号成功率（最好用程序计算而非肉眼观察）
+以Apple的股票为例 先获取AAPL股票2011~2012年的交易数据，并CCI指标曲线
+12345&amp;gt; myenv&amp;lt;-new.env()&amp;">
+    
+    
+    
+    
+    <link rel="alternative" href="/atom.xml" title="褚哥说|" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+
+	
+	<link href="http://cdn.bootcss.com/highlight.js/8.2/styles/monokai.min.css" rel="stylesheet">
+	<script src="http://cdn.bootcss.com/highlight.js/8.2/highlight.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	
+
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="褚哥说|">褚哥说|</a></h1>
+				<h2 class="blog-motto">我想写一些东西</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul><li> <a href="/atom.xml">RSS</a> </li>
+                    <ul>
+					 
+						<li><a href="/">首页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/links">链接</a></li>
+					
+						<li><a href="http://www.cnblogs.com/valleylord/">旧文</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+					
+					</li>
+                <li><div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div></li>
+
+				</ul>
+			</nav>
+</div>
+
+    </header>
+    <div id="container" class="clearfix">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/post/201405-quantmod-technical/" title="R的Quantmod包技术分析功能试用" itemprop="url">R的Quantmod包技术分析功能试用</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://valleylord.github.io" title="Valleylord">Valleylord</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2014-05-10T09:50:00.000Z" itemprop="datePublished">2014-05-10</time>
+    更新日期:<time datetime="2014-12-03T01:10:39.000Z" itemprop="dateModified">2014-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		</div>
+		
+		<p>下载某种股票（例如苹果公司股票）在特定时间段内行情数据，计算CCI指标，指出买入卖出时机，并评估该指标信号成功率（最好用程序计算而非肉眼观察）</p>
+<p>以Apple的股票为例 先获取AAPL股票2011~2012年的交易数据，并CCI指标曲线</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&gt; myenv&lt;-new.env()</div><div class="line">&gt; getSymbols(<span class="string">"AAPL"</span>,env=myenv,src=<span class="string">"yahoo"</span>,from=<span class="string">"2011-01-01"</span>,to=<span class="string">"2012-12-31"</span>)</div><div class="line">[<span class="number">1</span>] <span class="string">"AAPL"</span></div><div class="line">&gt; chartSeries(get(<span class="string">"AAPL"</span>,myenv),name=<span class="string">"AAPL"</span>,type=<span class="string">"candlesticks"</span>)</div><div class="line">&gt; addCCI()</div></pre></td></tr></table></figure></p>
+<p>AAPL的蜡烛图和CCI曲线如下， <img src="/images/20140510/AAPL_CCI.jpeg" alt="AAPL的蜡烛图和CCI曲线"></p>
+<p>可以自己计算一下CCI数值，代码如下，</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">&gt; AAPL&lt;-get(<span class="string">"AAPL"</span>,myenv)</div><div class="line">&gt; AAPL.CCI&lt;-CCI(Cl(AAPL))</div><div class="line">&gt; head(AAPL.CCI[abs(AAPL.CCI)&gt;<span class="number">100</span>])</div><div class="line">                cci</div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">07</span> <span class="number">167.4110</span></div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">08</span> <span class="number">185.3041</span></div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">09</span> <span class="number">191.5906</span></div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">10</span> <span class="number">127.2951</span></div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">11</span> <span class="number">133.7871</span></div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">14</span> <span class="number">138.8391</span></div></pre></td></tr></table></figure></p>
+<p>根据CCI指标的判定标准，在向上穿过100和向上穿过-100的时候买入，在向下穿过100和向下穿过-100的时候卖出。关于判定标准可以参考<a href="http://fs.591hx.com/Article/2011-05-24/0000010176s_1.shtml" target="_blank" rel="external">这里</a>。由这个标准加以简化成：当前一天的CCI&lt;100并且当天的CCI&gt;100时，买入；当前一天的CCI&lt;-100并且当天的CCI&gt;-100的时候，买入；当前一天的CCI&gt;100并且当天的CCI&lt;100时，卖出；当前一天的CCI&gt;-100并且当天的CCI&lt;-100的时候，卖出。根据CCI获得买点和卖点的代码如下</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">&gt; AAPL.buy &lt;- AAPL.CCI[(AAPL.CCI&gt;<span class="number">100</span> & lag(AAPL.CCI)&lt;<span class="number">100</span>) | (AAPL.CCI&gt; -<span class="number">100</span> & lag(AAPL.CCI)&lt; -<span class="number">100</span>)]</div><div class="line">&gt; head(AAPL.buy)</div><div class="line">                 cci</div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">07</span> <span class="number">167.41103</span></div><div class="line"><span class="number">2011</span>-<span class="number">03</span>-<span class="number">21</span> -<span class="number">71.17054</span></div><div class="line"><span class="number">2011</span>-<span class="number">04</span>-<span class="number">12</span> -<span class="number">92.71218</span></div><div class="line"><span class="number">2011</span>-<span class="number">04</span>-<span class="number">18</span> -<span class="number">90.40401</span></div><div class="line"><span class="number">2011</span>-<span class="number">04</span>-<span class="number">21</span> <span class="number">105.07637</span></div><div class="line"><span class="number">2011</span>-<span class="number">05</span>-<span class="number">19</span> -<span class="number">91.89860</span></div><div class="line">&gt; AAPL.sell &lt;- AAPL.CCI[(AAPL.CCI&lt;<span class="number">100</span> & lag(AAPL.CCI)&gt;<span class="number">100</span>) | (AAPL.CCI&lt; -<span class="number">100</span> & lag(AAPL.CCI)&gt; -<span class="number">100</span>)]</div><div class="line">&gt; head(AAPL.sell)</div><div class="line">                  cci</div><div class="line"><span class="number">2011</span>-<span class="number">02</span>-<span class="number">17</span>   <span class="number">80.81100</span></div><div class="line"><span class="number">2011</span>-<span class="number">03</span>-<span class="number">16</span> -<span class="number">226.77233</span></div><div class="line"><span class="number">2011</span>-<span class="number">04</span>-<span class="number">11</span> -<span class="number">121.86844</span></div><div class="line"><span class="number">2011</span>-<span class="number">04</span>-<span class="number">15</span> -<span class="number">150.78366</span></div><div class="line"><span class="number">2011</span>-<span class="number">04</span>-<span class="number">27</span>   <span class="number">98.61009</span></div><div class="line"><span class="number">2011</span>-<span class="number">05</span>-<span class="number">16</span> -<span class="number">193.65209</span></div></pre></td></tr></table></figure></p>
+<p>为了评估CCI的成功率，我们采用买点之后一周（5个交易日）和一个月（20个交易日）的收益率来判定是否是一次成功的操作。计算周收益率和月收益率的代码如下</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&gt; AAPL.wRet &lt;- Delt(Cl(AAPL), k=<span class="number">5</span>)</div><div class="line">&gt; AAPL.mRet &lt;- Delt(Cl(AAPL), k=<span class="number">20</span>)</div></pre></td></tr></table></figure></p>
+<p>注意，这里没有采用weeklyReturn和monthlyReturn函数，这是因为这2个函数会隔1周（月）来计算，而不是连续交易日计算。 接下来获取买点上的周收益率和月收益率，卖点的分析类似，代码如下</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">&gt; AAPL.wRetCCI &lt;- merge(AAPL.wRet,AAPL.buy)</div><div class="line">&gt; AAPL.mRetCCI &lt;- merge(AAPL.mRet,AAPL.buy)</div><div class="line">&gt; AAPL.wBuy&lt;-AAPL.wRetCCI[is.na(AAPL.wRetCCI[,<span class="number">2</span>])==<span class="literal">F</span> ]</div><div class="line">&gt; AAPL.mBuy&lt;-AAPL.mRetCCI[is.na(AAPL.mRetCCI[,<span class="number">2</span>])==<span class="literal">F</span> ]</div></pre></td></tr></table></figure></p>
+<p>周收益率和月收益率的统计分析，代码如下</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">&gt; ndays(AAPL.wBuy)</div><div class="line">[<span class="number">1</span>] <span class="number">46</span></div><div class="line">&gt; ndays(AAPL.wBuy[AAPL.wBuy[,<span class="number">1</span>]&gt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">27</span></div><div class="line">&gt; ndays(AAPL.wBuy[AAPL.wBuy[,<span class="number">1</span>]&lt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">19</span></div><div class="line">&gt; summary(coredata(AAPL.wBuy[,<span class="number">1</span>]))</div><div class="line"> Delt.5.arithmetic  </div><div class="line"> Min.   :-<span class="number">0.047253</span>  </div><div class="line"> 1st Qu.:-<span class="number">0.017919</span>  </div><div class="line"> Median : <span class="number">0.003219</span>  </div><div class="line"> Mean   : <span class="number">0.008318</span>  </div><div class="line"> 3rd Qu.: <span class="number">0.025278</span>  </div><div class="line"> Max.   : <span class="number">0.141157</span>  </div><div class="line">&gt; var(coredata(AAPL.wBuy[,<span class="number">1</span>]))</div><div class="line">                  Delt.5.arithmetic</div><div class="line">Delt.5.arithmetic       <span class="number">0.001327706</span></div><div class="line"></div><div class="line">&gt; ndays(AAPL.mBuy[AAPL.mBuy[,<span class="number">1</span>]&gt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">22</span></div><div class="line">&gt; ndays(AAPL.mBuy[AAPL.mBuy[,<span class="number">1</span>]&lt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">24</span></div><div class="line">&gt; summary(coredata(AAPL.mBuy[,<span class="number">1</span>]))</div><div class="line"> Delt.20.arithmetic </div><div class="line"> Min.   :-<span class="number">0.105763</span>  </div><div class="line"> 1st Qu.:-<span class="number">0.036321</span>  </div><div class="line"> Median :-<span class="number">0.001552</span>  </div><div class="line"> Mean   : <span class="number">0.012902</span>  </div><div class="line"> 3rd Qu.: <span class="number">0.051984</span>  </div><div class="line"> Max.   : <span class="number">0.204581</span>  </div><div class="line">&gt; var(coredata(AAPL.mBuy[,<span class="number">1</span>]))</div><div class="line">                   Delt.20.arithmetic</div><div class="line">Delt.20.arithmetic        <span class="number">0.005551901</span></div></pre></td></tr></table></figure></p>
+<p>大致总结一下，买点总共有46个，按周收益率判定，买点后1周内，收益率&gt;0的有27个，占比58.7%，均值0.8318%，方差0.1327706%；按月收益率判定，买点后1个月内，收益率&gt;0的有22个，占比47.8%，均值1.2902%，方差0.5551901%。由于CCI是短线操作的超买超卖判定指标，所以短期的收益率应该比较能判定这个指标的性能，因此周收益率应该作为主要的参考。</p>
+<p>同样的分析可以用于卖点的分析，代码如下</p>
+<p><figure class="highlight R"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">&gt; AAPL.wRetCCIs &lt;- merge(AAPL.wRet,AAPL.sell)</div><div class="line">&gt; AAPL.mRetCCIs &lt;- merge(AAPL.mRet,AAPL.sell)</div><div class="line">&gt; AAPL.wSell&lt;-AAPL.wRetCCIs[is.na(AAPL.wRetCCIs[,<span class="number">2</span>])==<span class="literal">F</span> ]</div><div class="line">&gt; AAPL.mSell&lt;-AAPL.mRetCCIs[is.na(AAPL.mRetCCIs[,<span class="number">2</span>])==<span class="literal">F</span> ]</div><div class="line">&gt; ndays(AAPL.wSell)</div><div class="line">[<span class="number">1</span>] <span class="number">46</span></div><div class="line">&gt; ndays(AAPL.wSell[AAPL.wSell[,<span class="number">1</span>]&gt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">18</span></div><div class="line">&gt; ndays(AAPL.wSell[AAPL.wSell[,<span class="number">1</span>]&lt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">28</span></div><div class="line">&gt; summary(coredata(AAPL.wSell[,<span class="number">1</span>]))</div><div class="line"> Delt.5.arithmetic </div><div class="line"> Min.   :-<span class="number">0.10974</span>  </div><div class="line"> 1st Qu.:-<span class="number">0.04421</span>  </div><div class="line"> Median :-<span class="number">0.01815</span>  </div><div class="line"> Mean   :-<span class="number">0.01892</span>  </div><div class="line"> 3rd Qu.: <span class="number">0.01183</span>  </div><div class="line"> Max.   : <span class="number">0.03638</span>  </div><div class="line">&gt; var(coredata(AAPL.wSell[,<span class="number">1</span>]))</div><div class="line">                  Delt.5.arithmetic</div><div class="line">Delt.5.arithmetic       <span class="number">0.001108976</span></div><div class="line"></div><div class="line">&gt; ndays(AAPL.mSell[AAPL.mSell[,<span class="number">1</span>]&gt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">20</span></div><div class="line">&gt; ndays(AAPL.mSell[AAPL.mSell[,<span class="number">1</span>]&lt;<span class="number">0</span>])</div><div class="line">[<span class="number">1</span>] <span class="number">26</span></div><div class="line">&gt; summary(coredata(AAPL.mSell[,<span class="number">1</span>]))</div><div class="line"> Delt.20.arithmetic </div><div class="line"> Min.   :-<span class="number">0.128912</span>  </div><div class="line"> 1st Qu.:-<span class="number">0.040139</span>  </div><div class="line"> Median :-<span class="number">0.009042</span>  </div><div class="line"> Mean   : <span class="number">0.010768</span>  </div><div class="line"> 3rd Qu.: <span class="number">0.063386</span>  </div><div class="line"> Max.   : <span class="number">0.194670</span>  </div><div class="line">&gt; var(coredata(AAPL.mSell[,<span class="number">1</span>]))</div><div class="line">                   Delt.20.arithmetic</div><div class="line">Delt.20.arithmetic        <span class="number">0.006016731</span></div></pre></td></tr></table></figure></p>
+<p>总结一下卖点的分析数据，卖点总共有46个，按周收益率判定，卖点后1周内，收益率&lt;0的有28个，占比60.9%，均值-1.892%，方差0.1108976%；按月收益率判定，卖点后1个月内，收益率&lt;0的有26个，占比56.5%，均值1.0768%，方差0.6016731%。</p>
+<p>总体而言，CCI的判定效果对于AAPL股票并没有很高的成功率，对于算法交易而言，成功率&gt;70%以上的操作才有实用价值。这也说明了，当一个技术指标已经被大众所熟知的时候，就已经难以发挥其原先的效果了。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/R/">R</a><a href="/tags/Quantmod/">Quantmod</a><a href="/tags/Dataguru/">Dataguru</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/Dataguru/">Dataguru</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://valleylord.github.io/post/201405-quantmod-technical/" data-title="R的Quantmod包技术分析功能试用 | 褚哥说|" data-tsina="null" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/post/201402-sicp-solution-ch2/" title="我的SICP习题解答-chapter 2 (未完待续)">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  我的SICP习题解答-chapter 2 (未完待续)</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/post/201405-quantmod-drawing/"  title="R的Quantmod包画图功能试用">
+ <strong>NEXT:</strong><br/> 
+ <span>R的Quantmod包画图功能试用
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+</div>  
+      
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div id="authorInfo">
+	
+		<div class="author-logo"></div>		
+	
+	
+	<section class="author-info">
+		
+			<p> 欢迎来到Valleylord的博客！</p>
+		
+		
+			<p>	本博的文章尽量原创。</p>
+		
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/http://weibo.com/valleylord" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/https://github.com/valleylord" target="_blank" title="github"></a>
+		
+		
+	</div>
+</div>
+<aside class="clearfix">
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/02/">February 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/09/">September 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/08/">August 2014</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/05/">May 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/02/">February 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2000/01/">January 2000</a><span class="archive-list-count">1</span></li></ul>
+  </div>
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+			<li><a href="/categories/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/categories/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Dataguru/" title="Dataguru">Dataguru<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/categories/FP/" title="FP">FP<sup>2</sup></a></li>
+		
+			<li><a href="/categories/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/categories/Java/" title="Java">Java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/categories/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/categories/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/categories/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/categories/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/categories/other/" title="other">other<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			<li><a href="/tags/Blog/" title="Blog">Blog<sup>1</sup></a></li>
+		
+			<li><a href="/tags/C/" title="C++">C++<sup>3</sup></a></li>
+		
+			<li><a href="/tags/C-11/" title="C++11">C++11<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Dataguru/" title="Dataguru">Dataguru<sup>47</sup></a></li>
+		
+			<li><a href="/tags/Docker/" title="Docker">Docker<sup>7</sup></a></li>
+		
+			<li><a href="/tags/Hexo/" title="Hexo">Hexo<sup>1</sup></a></li>
+		
+			<li><a href="/tags/JVM/" title="JVM">JVM<sup>10</sup></a></li>
+		
+			<li><a href="/tags/Java/" title="Java">Java<sup>11</sup></a></li>
+		
+			<li><a href="/tags/Kubernetes/" title="Kubernetes">Kubernetes<sup>3</sup></a></li>
+		
+			<li><a href="/tags/Linux/" title="Linux">Linux<sup>1</sup></a></li>
+		
+			<li><a href="/tags/MyCAT/" title="MyCAT">MyCAT<sup>5</sup></a></li>
+		
+			<li><a href="/tags/Postgres/" title="Postgres">Postgres<sup>18</sup></a></li>
+		
+			<li><a href="/tags/Quantmod/" title="Quantmod">Quantmod<sup>3</sup></a></li>
+		
+			<li><a href="/tags/R/" title="R">R<sup>3</sup></a></li>
+		
+			<li><a href="/tags/REPL/" title="REPL">REPL<sup>1</sup></a></li>
+		
+			<li><a href="/tags/SICP/" title="SICP">SICP<sup>2</sup></a></li>
+		
+			<li><a href="/tags/Tomcat/" title="Tomcat">Tomcat<sup>1</sup></a></li>
+		
+			<li><a href="/tags/Translation/" title="Translation">Translation<sup>2</sup></a></li>
+		
+			<li><a href="/tags/boost/" title="boost">boost<sup>1</sup></a></li>
+		
+			<li><a href="/tags/quantlib/" title="quantlib">quantlib<sup>1</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">标签云</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Blog/" style="font-size: 10.00px;">Blog</a><a href="/tags/C/" style="font-size: 12.50px;">C++</a><a href="/tags/C-11/" style="font-size: 10.00px;">C++11</a><a href="/tags/Dataguru/" style="font-size: 20.00px;">Dataguru</a><a href="/tags/Docker/" style="font-size: 15.00px;">Docker</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/JVM/" style="font-size: 16.25px;">JVM</a><a href="/tags/Java/" style="font-size: 17.50px;">Java</a><a href="/tags/Kubernetes/" style="font-size: 12.50px;">Kubernetes</a><a href="/tags/Linux/" style="font-size: 10.00px;">Linux</a><a href="/tags/MyCAT/" style="font-size: 13.75px;">MyCAT</a><a href="/tags/Postgres/" style="font-size: 18.75px;">Postgres</a><a href="/tags/Quantmod/" style="font-size: 12.50px;">Quantmod</a><a href="/tags/R/" style="font-size: 12.50px;">R</a><a href="/tags/REPL/" style="font-size: 10.00px;">REPL</a><a href="/tags/SICP/" style="font-size: 11.25px;">SICP</a><a href="/tags/Tomcat/" style="font-size: 10.00px;">Tomcat</a><a href="/tags/Translation/" style="font-size: 11.25px;">Translation</a><a href="/tags/boost/" style="font-size: 10.00px;">boost</a><a href="/tags/quantlib/" style="font-size: 10.00px;">quantlib</a><a href="/tags/scheme/" style="font-size: 11.25px;">scheme</a><a href="/tags/shipyard/" style="font-size: 10.00px;">shipyard</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+      <!--
+      <li><a href="http://yangjian.me" target="_blank" title="YangJian">Alimon's Blog</a></li>
+      <li><a href="http://zespia.tw/hexo" target="_blank" title="Hexo">Hexo</a></li>
+      -->
+    </ul>
+</div>
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  //back to top
+  function backToTop(){
+    var buttonHTML = $("<a href=\"#top\" id=\"back-top\">" + "<span>Back to Top</span></a>");
+    buttonHTML.appendTo($("body"));
+    var buttonToTop = $("#back-top");
+    // hide #back-top first
+    buttonToTop.hide();
+
+    // fade in #back-top
+    $(function() {
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 200) {
+                buttonToTop.fadeIn();
+            } else {
+                buttonToTop.fadeOut();
+            }
+        });
+        // scroll body to 0px on click
+        buttonToTop.click(function() {
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+    });
+  }
+  backToTop();
+
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      ta = $('#toc.toc-aside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+
+  var show = true;
+  c.click(function(){
+    if(show == true){
+        a.addClass('fadeOut').css('display', 'none');
+        ta.css('display', 'block').addClass('fadeIn');
+        m.addClass('moveMain');  
+    }else{
+        a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');     
+        ta.css('display', 'none'); 
+        m.removeClass('moveMain');
+        $('#toc.toc-aside').css('display', 'none');
+    }
+    show = !show;
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,240-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
