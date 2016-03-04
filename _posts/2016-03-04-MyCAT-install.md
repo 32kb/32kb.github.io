@@ -1,3 +1,11 @@
+---
+layout: post
+title: MyCAT安装
+keywords: MyCAT, MySQL
+category : MySQL
+tags : [MyCAT, MySQL]
+---
+
 MyCAT安装
 ===============
 
