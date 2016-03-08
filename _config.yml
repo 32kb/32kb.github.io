@@ -1,37 +1,49 @@
-permalink: /blog/:year/:month/:title.html 
-include: ['.htaccess']
-exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md", "CNAME", "Gemfile", "Gemfile.lock"]
-markdown: kramdown
-highlights: pygments
-url: 
-cdn_url: 7u2t01.com1.z0.glb.clouddn.com
-lsi: false
-safe: true
-timezone: Asia/Shanghai
-auto: false 
+# Site settings
+title: "Jekyll template"
+url: "//ihavee.github.io"
+paginate: 5
+author:
+    name: Havee
+    github:
+    email:
+    gitcafe:
+    twitter:
+    facebook:
+    googleplus:
+    weibo:
+atom_path: /atom.xml
+rss_path: /rss.xml
 
-paginate: 8
-paginate_path: "page:num"
-
+# Build settings
 kramdown:
-  auto_ids: true,
-  footnote_nr: 1
-  entity_output: as_char
-  toc_levels: 1..6
-  use_coderay: false
+    input: GFM
+permalink: /:categories/:year-:month/:title.html
+gems: [jekyll-paginate]
+exclude: [Gemfile, Gemfile.lock, qrsync, Rakefile]
+assets_path: /assets
+sass:
+    sass_dir: assets/_sass
+    style: :compressed
 
-JB :
-  IMAGE_PATH : 
+# comment
+comments:
+    duoshuo:
+        name:                               # short name
+        rcomments:
+            num: 10
+            avatar: 0
+            time: 0
+            title: 0
+            admin: 0
+            length: 26
 
-# presonal config
-domain: 
-title: 听风吹雨
-description: Draw my life with code
-author: 32kb
-email: 
-github: 32kb
+# tinysou.com
+search:
+    tinysou:
+        engineKey: 
 
-config:
-  js_dir:
-  img_dir:
-  css_dir:
+# 网站统计
+analytics:
+    baidu:
+        siteid:                             # 百度统计 js 代码后的字符串
+
