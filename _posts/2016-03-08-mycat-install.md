@@ -1,20 +1,17 @@
 ---
-layout: post
-title: Java编程Tips
-description: Java编程中“为了性能”尽量要做到的一些地方
-keywords: java
-categories: [java]
-tags: [java, 性能]
+layout: postlayout
+title: MyCAT安装
+description: MyCAT安装
+keywords: MyCAT
+categories: [MySQL]
+tags: [MySQL, MyCAT]
 ---
 
-MyCAT安装
-===============
-
-[TOC]
-
----------------
+* any list
+{:toc}
 
 ## 一、测试环境
+
 | 属性          | 值           |
 | ------------- |:-------------|
 |Ubuntu版本     |Ubuntu 14.04.2 LTS|
@@ -59,7 +56,7 @@ echo $MYCAT_HOME
 
 #### 3. 配置Mycat
 
-- **`修改my.cnf`**
+- `修改my.cnf`
 
 ``` shell
 vim /etc/my.cnf
@@ -76,13 +73,13 @@ vim $MYCAT_HOME/conf/schema.xml
 ```
 
 ``` xml
-<writeHost host="hostM1" url="localhost:3306" user="root"
-                        password="123456">
+<writeHost host="hostM1" url="localhost:3306" user="root" password="123456">
 ```
+
 修改为
+
 ``` xml
-<writeHost host="hostM1" url="10.1.6.101:3307" user="gaizai"
-                        password="123">
+<writeHost host="hostM1" url="10.1.6.101:3307" user="gaizai" password="123">
 ```
 
 #### 4. 创建MySQL数据库
@@ -127,6 +124,7 @@ $MYCAT_HOME/bin/mycat stop
 ```
 
 travelrecord表，是根据ID主键的范围进行分片，分布在dn1,dn2,dn3三个节点，对应着conf/autopartition-long.txt文件
+
 ``` txt
 # range start-end ,data node index
 # K=1000,M=10000.
@@ -191,6 +189,7 @@ vim $MYCAT_HOME/conf/wrapper.conf
 # Java Application
 wrapper.java.command=wrapper.java.command=/usr/local/java/jdk1.7.0_67/bin/java
 ```
+
 2. 在mycat上看到了很多表，其实在db1、db2、db3是没有这些表的，mycat看到的只是配置文件中标签中设置的表；
 
 2. 标签中primaryKey的作用
@@ -238,22 +237,27 @@ logs:
  - conf/server.xml
 
 - **`schema.xml`**
+
 Schema中主要配置 Mycat 数据库，MySQL表，分片规则，分片类型
+
 ``` shell
 vim $MYCAT_HOME/conf/schema.xml
 ```
+
 ``` xml
 <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
 <!-- auto sharding by id (long) -->
 <table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
 <table name="company" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
 ```
-\# Mycat 数据库 TESTDB
+
+> \# Mycat 数据库 TESTDB
 \# MySQL表 travelrecord
 \#  MySQL 节点dn1,dn2,dn3
 \# 分片规则  auto-sharding-long
 \# rule分片规则 具体在 conf/rule.xml 中定义
 \# global表示全局表，即每个库的数据都是一样的
+
 ``` xml
 <dataNode name="dn1" dataHost="localhost1" database="db1" />
 <dataNode name="dn2" dataHost="localhost1" database="db2" />
@@ -261,25 +265,31 @@ vim $MYCAT_HOME/conf/schema.xml
 <dataHost name="localhost1" maxCon="1000" minCon="10" balance="0"
                 writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
 ```
+
 \# 以上为MySQL节点信息
 \# dn1，dn2，dn3为分片的MySQL节点，既分片会存放到 3个MySQL或者群集中
 \# db1，db2，db3为 MySQL数据库中三个库
+
 ``` xml
 <writeHost host="hostM1" url="localhost:3306" user="root"
                         password="123456">
 ```
+
 MySQL节点连接，用户名，密码
 
 - **`rule .xml`**
+
 ``` shell
 vim $MYCAT_HOME/conf/rule.xml
 ```
+
 \# auto-sharding-long（基于主键的范围分片）
 \# mod-long（基于主键的取模分片）
 \# sharding-by-intfile（基于sharding_id的哈希分片）
 \# ER分片
 
 - **`server.xml`**
+
 ``` shell
 vim $MYCAT_HOME/conf/server.xml
 ```
@@ -292,6 +302,7 @@ vim $MYCAT_HOME/conf/server.xml
       <property name="schemas">TESTDB</property>
    </user>
 ```
+
 \# serverPortMycat登录端口默认为 8066
 \# managerPort管理端口 默认为 9066
 \# username 为登录Mycat 用户
@@ -299,19 +310,23 @@ vim $MYCAT_HOME/conf/server.xml
 \# schemas 为上面schema name= 中设定的 Mycat 数据库名
 
 ## 四、错误处理
+
 1. 错误1：
 ERROR 3009 (HY000): java.lang.IllegalArgumentException: Invalid DataSource:0
+
 > **解决：**
 在示例的2个数据hostM1和hostS1上，新建3个数据库db1,db2,db3，如不新建，可能提示找不到数据
 
 2. 错误2：
 ERROR 3009 (HY000): java.lang.IllegalArgumentException: Invalid DataSource:1
+
 > **解决：**
 这个有可能是Mycat和MySQL部署在同一台机器上，而在schema.xml是使用了IP的，但是账号只能使用localhost登陆，所以会出现本地的Mycat无法连接MySQL
 
 3. 错误3：
 mysql> create table abc (id bigint not null primary key, name varchar(100));
 ERROR 1064 (HY000): op table not in schema----ABC
+
 > **解决：**
 表abc如果建立的表之前没有在schema.xml中定义，那么不可以建立此表。
 

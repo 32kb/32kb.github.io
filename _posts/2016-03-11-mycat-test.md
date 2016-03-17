@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: postlayout
 title: MyCAT默认表测试
 description: MyCAT默认表测试
 keywords: MyCAT
@@ -37,7 +37,8 @@ tags: [MySQL, MyCAT]
 <!-- more -->
 
 travelrecord表，是根据ID主键的范围进行分片，分布在dn1,dn2,dn3三个节点，对应着conf/autopartition-long.txt文件
-``` txt
+
+``` html
 # range start-end ,data node index
 # K=1000,M=10000.
 0-500M=0
@@ -45,7 +46,7 @@ travelrecord表，是根据ID主键的范围进行分片，分布在dn1,dn2,dn3�
 1000M-1500M=2
 ```
 
-``` sql
+```sql
 (product)test@10.1.1.167 [(none)]> use TESTDB;
 Database changed
 
@@ -128,7 +129,12 @@ insert into company(id,name) values(3,'oracle');
 3 rows in set (0.00 sec)
 ```
 
-#### 3、测试 `goods` 表
+#### 3、测试 `goods` 表测试测试测试测试
+
+#### 3、测试 `goods` 表测试测试测试测试
+
+#### 3、测试 `goods` 表测试测试测试测试
+
 
 ``` xml
 <table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2" />
@@ -225,7 +231,8 @@ insert into hotnews(id,title,created_time) values(5,'five',now());
 ```
 
 employee表，根据sharding-by-intfile （分片字段为sharding_id）规则进行分片，只在dn1,dn2存储数据，对应着conf/partition-hash-int.txt文件
-``` txt
+
+``` html
 10000=0
 10010=1
 ```
@@ -349,8 +356,8 @@ insert into orders(id,customer_id) values(3,2);
 
 ## 三、参考文献
 
-> [MyCAT安装与部署][1]
-> [Mycat 安装配置][2]
+> _[MyCAT安装与部署][1]
+> _[Mycat 安装配置][2]
 
 [1]: http://valleylord.github.io/post/201601-mycat-install/
 [2]: http://jicki.blog.51cto.com/1323993/1658603

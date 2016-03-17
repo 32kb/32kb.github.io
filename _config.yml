@@ -1,49 +1,38 @@
-# Site settings
-title: "Jekyll template"
-url: "//ihavee.github.io"
-paginate: 5
-author:
-    name: Havee
-    github:
-    email:
-    gitcafe:
-    twitter:
-    facebook:
-    googleplus:
-    weibo:
-atom_path: /atom.xml
-rss_path: /rss.xml
+# visit https://github.com/mojombo/jekyll/wiki/Configuration for more settings
 
-# Build settings
+paginate: 10 # pagination based on number of posts
+paginate_path: "page:num" #pagination generated sub path format
+#pygments: true #for support {% highlight %}
+#highlighter: pygments
+markdown: kramdown #use kramdown to parse markdown
 kramdown:
     input: GFM
-permalink: /:categories/:year-:month/:title.html
+    toc_levels: 2..4
+    auto_ids: true
+    auto_id_prefix: 'id-'
 gems: [jekyll-paginate]
-exclude: [Gemfile, Gemfile.lock, qrsync, Rakefile]
-assets_path: /assets
-sass:
-    sass_dir: assets/_sass
-    style: :compressed
+encoding: utf-8
 
-# comment
-comments:
-    duoshuo:
-        name:                               # short name
-        rcomments:
-            num: 10
-            avatar: 0
-            time: 0
-            title: 0
-            admin: 0
-            length: 26
+defaults:
+  -
+    scope:
+      path: "" # empty string for all files
+    values:
+      title: "32kb Tech Space"
 
-# tinysou.com
-search:
-    tinysou:
-        engineKey: 
+description: "32kb Tech Space, share technology post"
+author:
+  name: 32kb
+  email: 
+  github: 32kb
+  twitter: 32kb
+  pinterest: 32kb
+  linkedin: 32kb
+  bio: Do not build on quicksand high
+  email_md5: 726351295ec82e145928582f595aa3aa
 
-# 网站统计
-analytics:
-    baidu:
-        siteid:                             # 百度统计 js 代码后的字符串
+rss_path: rss.xml
+categories_path: category.html
+tags_path: tag.html
 
+BASE_PATH: 

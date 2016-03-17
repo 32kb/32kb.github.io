@@ -1,8 +1,3 @@
-_site
-Gemfile.lock
-!.gitkeep
-.sass-cache
+_site/*
+*Thumbs.db
 .DS_Store
-.Spotlight-v100
-qrsync
-_qiniu.json
