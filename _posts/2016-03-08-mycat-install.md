@@ -1,6 +1,6 @@
 ---
 layout: postlayout
-title: MyCAT安装
+title: 32kb Tech Space
 description: MyCAT安装
 keywords: MyCAT
 categories: [MySQL]
