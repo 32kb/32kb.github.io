@@ -1,6 +1,6 @@
 ---
 layout: postlayout
-title: 32kb Tech Space
+title: MyCAT默认表测试
 keywords: MyCAT
 categories: [MySQL]
 tags: [MySQL, MyCAT]
