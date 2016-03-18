@@ -7,8 +7,8 @@ categories: [MySQL]
 tags: [MySQL, MyCAT]
 ---
 
-* any list
-{:toc}
+MyCAT安装指南
+
 
 ## 一、测试环境
 
@@ -22,6 +22,7 @@ tags: [MySQL, MyCAT]
 |Mycat-MySQL版本|Server version: 5.5.8-mycat-1.5-GA-20160215160037 MyCat Server (OpenCloundDB)|
 |MySQL账号密码  |gaizai/123|
 |Mycat账号密码  |test/test|
+
 
 ## 二、安装步骤
 
@@ -179,6 +180,7 @@ insert into travelrecord (id,user_id,traveldate,fee,days) values(7000000,'abc','
 2 rows in set (0.01 sec)
 ```
 更多表测试可以参考【1.4 Mycat默认表测试.md】
+
 
 ## 三、补充说明
 
