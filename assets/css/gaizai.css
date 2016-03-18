@@ -1,0 +1,19 @@
+﻿#markdown:before {
+    content: "我";
+    font-weight: bold;
+}
+ul#markdown-toc {
+    list-style: none;
+    position: fixed;
+    padding: 0px;
+    right: 10px;
+    bottom: 200px;
+    border-radius: 0.3em;
+    box-shadow: rgba(0,0,0,0.15) 0 1px 4px;
+    box-sizing: border-box;
+    border: #fff 0.5em solid;
+    margin:0;
+    width: 14%;
+    font-size: 12px;
+    top: 220px;
+}
