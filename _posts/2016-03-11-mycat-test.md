@@ -1,11 +1,13 @@
 ---
 layout: postlayout
 title: MyCAT默认表测试
-description: MyCAT默认表测试
 keywords: MyCAT
 categories: [MySQL]
 tags: [MySQL, MyCAT]
 ---
+
+接触iOS开发半年，曾经也被这个主题坑的摸不着头脑，也在淘宝上买过企业证书签名这些服务，有大神都做了一个全自动的发布打包（不过此大神现在不卖企业证书了），甚是羡慕和崇拜。于是，花了一点时间去研究了一下iOS这套证书和签名机制，并撰文分享给需要的朋友。由于本人才疏学浅，多有遗漏或错误之处，还请大神多多指教。
+
 
 ## 一、测试环境
 
@@ -27,14 +29,12 @@ tags: [MySQL, MyCAT]
 /usr/local/mariadb/bin/mysql -h10.1.1.167 -P8066 -utest -p
 ```
 
-#### 1、测试 `travelrecord` 表
+### 1、测试 `travelrecord` 表
 
 ``` xml
 <!-- auto sharding by id (long) -->
 <table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
 ```
-
-<!-- more -->
 
 travelrecord表，是根据ID主键的范围进行分片，分布在dn1,dn2,dn3三个节点，对应着conf/autopartition-long.txt文件
 
@@ -92,7 +92,7 @@ insert into travelrecord (id,user_id,traveldate,fee,days) values(7000000,'abc','
 2 rows in set (0.01 sec)
 ```
 
-#### 2、测试 `company` 表
+### 2、测试 `company` 表
 
 ``` xml
 <!-- global table is auto cloned to all defined data nodes ,so can join
@@ -361,7 +361,3 @@ insert into orders(id,customer_id) values(3,2);
 
 [1]: http://valleylord.github.io/post/201601-mycat-install/
 [2]: http://jicki.blog.51cto.com/1323993/1658603
-
-
-* any list
-{:toc}

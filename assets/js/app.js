@@ -88,11 +88,11 @@ var BlogDirectory = {
     mt 和 st 分别表示主标题和次级标题的标签名称（如 H2、H3，大写或小写都可以！），
     interval 表示移动的速度
     */
-    createBlogDirectory:function (el, mt, st, interval){
+    createBlogDirectory:function (el, mt, st, lt, interval){
          //获取博文正文div容器
         if(!el || el.length < 1) return false;
         //获取div中所有元素结点mt和st元素
-        var nodes = el.find(mt+','+st);
+        var nodes = el.find(mt+','+st+','+lt);
         //创建博客目录的div容器
         var divSideBar = $('#sideBar');
         var divSideBarTab = $('<div class="sideBar" id="sideBarTab"></div>');
@@ -111,6 +111,7 @@ var BlogDirectory = {
         var num = 0;//统计找到的mt和st
         mt = mt.toUpperCase();//转化成大写
         st = st.toUpperCase();//转化成大写
+	lt = lt.toUpperCase();//转化成大写
 
         //遍历所有元素结点
         $.each(nodes,function(){
@@ -127,6 +128,9 @@ var BlogDirectory = {
                     item = $("<dt></dt>");
                     break;
                 case st:    //若为子标题
+                    item = $("<dd></dd>");
+                    break;
+		case lt:    //若为子标题
                     item = $("<dd></dd>");
                     break;
             }
@@ -166,7 +170,7 @@ jQuery(function($) {
         $('.qrcode').html('').qrcode(opt);
 
         /*页面加载完成之后生成博客目录*/
-        /*BlogDirectory.createBlogDirectory($("#article_body"),"h2","h3",10);*/
+        BlogDirectory.createBlogDirectory($("#article_body"),"h2","h3","h4",10);
         //stick
         $('#sideBar').stickUp();
     });
